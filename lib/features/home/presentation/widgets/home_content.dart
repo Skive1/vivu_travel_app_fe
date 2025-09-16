@@ -1,0 +1,80 @@
+import 'package:flutter/material.dart';
+
+import 'home_header.dart';
+import 'home_body.dart';
+import 'home_bottom_nav.dart';
+
+class HomeContent extends StatefulWidget {
+  const HomeContent({super.key});
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Header Section
+        const HomeHeader(),
+        
+        // Body Section - Scrollable Content
+        Expanded(
+          child: HomeBody(
+            onRefresh: () async {
+              // Simulate refresh
+              await Future.delayed(const Duration(seconds: 2));
+            },
+          ),
+        ),
+        
+        // Bottom Navigation
+        HomeBottomNav(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+            _handleNavigation(index);
+          },
+        ),
+      ],
+    );
+  }
+
+  void _handleNavigation(int index) {
+    switch (index) {
+      case 0:
+        // Home - already here
+        break;
+      case 1:
+        // Explore
+        _showSnackBar('Khám phá - Coming soon!');
+        break;
+      case 2:
+        // Plan
+        _showSnackBar('Kế hoạch - Coming soon!');
+        break;
+      case 3:
+        // Messages
+        _showSnackBar('Nhắn tin - Coming soon!');
+        break;
+      case 4:
+        // Profile
+        _showSnackBar('Hồ sơ - Coming soon!');
+        break;
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+}
