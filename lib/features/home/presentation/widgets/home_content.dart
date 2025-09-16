@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../routes.dart';
 import 'home_header.dart';
 import 'home_body.dart';
 import 'home_bottom_nav.dart';
@@ -63,8 +64,12 @@ class _HomeContentState extends State<HomeContent> {
         _showSnackBar('Nhắn tin - Coming soon!');
         break;
       case 4:
-        // Profile
-        _showSnackBar('Hồ sơ - Coming soon!');
+        // Profile - Navigate to ProfileScreen
+        Navigator.pushNamed(context, AppRoutes.profile);
+        // Reset currentIndex after navigation
+        setState(() {
+          _currentIndex = 0;
+        });
         break;
     }
   }

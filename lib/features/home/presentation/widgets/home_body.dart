@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import 'search_section.dart';
-import 'categories_section.dart';
 import 'popular_destinations_section.dart';
 import 'recent_trips_section.dart';
 
@@ -29,11 +28,6 @@ class HomeBody extends StatelessWidget {
             
             // Search Section
             const SearchSection(),
-            
-            const SizedBox(height: 32),
-            
-            // Categories Section
-            const CategoriesSection(),
             
             const SizedBox(height: 32),
             

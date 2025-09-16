@@ -48,14 +48,14 @@ class _HomeScreenState extends State<HomeScreen>
       statusBarIconBrightness: Brightness.dark,
     ));
 
-    return Container(
-      color: AppColors.background,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: const SafeArea(
-          child: HomeContainer(),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: const SizedBox.expand(
+            child: HomeContainer(),
+          ),
         ),
-      ),
     );
   }
 }

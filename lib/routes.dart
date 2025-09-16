@@ -11,6 +11,7 @@ import 'features/onboarding/presentation/screens/animated_onboarding_screen.dart
 import 'features/authentication/presentation/screens/login_screen.dart';
 import 'features/authentication/presentation/screens/register_screen.dart';
 import 'features/home/presentation/screens/home_screen.dart';
+import 'features/user/presentation/screens/profile_screen.dart';
 import 'injection_container.dart' as di;
 
 import '../../../../core/constants/app_colors.dart';
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
+  static const String profile = '/profile';
   
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -49,6 +51,11 @@ class AppRoutes {
       case home:
         return MaterialPageRoute(
           builder: (_) => const HomeScreen(),
+        );
+        
+      case profile:
+        return MaterialPageRoute(
+          builder: (_) => const ProfileScreen(),
         );
         
       default:
