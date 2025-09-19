@@ -5,6 +5,11 @@ class AppStrings {
   // Splash
   static const String loading = 'Đang khởi tạo...';
   static const String welcomeMessage = 'Khám phá thế giới cùng bạn...';
+
+  // Onboarding
+  static const String skip = 'Bỏ qua';
+  static const String next = 'Tiếp theo';
+  static const String getStarted = 'Bắt đầu';
   
   // Authentication
   static const String login = 'Đăng nhập';

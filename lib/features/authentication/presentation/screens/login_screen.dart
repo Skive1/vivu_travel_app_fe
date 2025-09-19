@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../routes.dart';
+import '../../../../injection_container.dart' as di;
+import '../../../../core/utils/dialog_utils.dart';
 import '../widgets/auth_container.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_text_field.dart';
@@ -10,6 +13,9 @@ import '../widgets/auth_button.dart';
 import '../widgets/auth_divider.dart';
 import '../widgets/social_auth_section.dart';
 import '../widgets/sign_up_link.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,7 +30,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
-  bool _isLoading = false;
   bool _rememberMe = false;
 
   @override
@@ -44,87 +49,107 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
 
-    return Scaffold(
-      body: AuthContainer(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 120),
+    return BlocProvider(
+      create: (context) => di.sl<AuthBloc>(),
+      child: Scaffold(
+        body: BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthAuthenticated) {
+              Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+            } else if (state is AuthError) {
+              DialogUtils.showErrorDialog(
+                context: context,
+                title: 'Login Failed',
+                message: state.message,
+              );
+            }
+          },
+          child: AuthContainer(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 120),
 
-                // Header Section
-                const AuthHeader(
-                  title: 'Sign In',
-                  subtitle: 'Sign in to continue your journey',
+                    // Header Section
+                    const AuthHeader(
+                      title: 'Sign In',
+                      subtitle: 'Sign in to continue your journey',
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // Email Field
+                    AuthTextField(
+                      controller: _emailController,
+                      label: 'Email',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: _validateEmail,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Password Field
+                    AuthTextField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      isPassword: true,
+                      isPasswordVisible: _isPasswordVisible,
+                      onTogglePassword: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                      validator: _validatePassword,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Remember Me & Forgot Password
+                    LoginOptions(
+                      rememberMe: _rememberMe,
+                      onRememberMeChanged: (value) {
+                        setState(() {
+                          _rememberMe = value ?? false;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Login Button
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, state) {
+                        return AuthButton(
+                          isLoading: state is AuthLoading,
+                          onPressed: () => _handleLogin(context),
+                          text: 'Sign In',
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Divider
+                    const AuthDivider(),
+
+                    const SizedBox(height: 24),
+
+                    // Social Login Buttons
+                    const SocialAuthSection(),
+
+                    const SizedBox(height: 32),
+
+                    // Sign Up Link
+                    const SignUpLink(),
+
+                    const SizedBox(height: 40),
+                  ],
                 ),
-
-                const SizedBox(height: 40),
-
-                // Email Field
-                AuthTextField(
-                  controller: _emailController,
-                  label: 'Email',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _validateEmail,
-                ),
-
-                const SizedBox(height: 16),
-
-                // Password Field
-                AuthTextField(
-                  controller: _passwordController,
-                  label: 'Password',
-                  isPassword: true,
-                  isPasswordVisible: _isPasswordVisible,
-                  onTogglePassword: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
-                  validator: _validatePassword,
-                ),
-
-                const SizedBox(height: 16),
-
-                // Remember Me & Forgot Password
-                LoginOptions(
-                  rememberMe: _rememberMe,
-                  onRememberMeChanged: (value) {
-                    setState(() {
-                      _rememberMe = value ?? false;
-                    });
-                  },
-                ),
-
-                const SizedBox(height: 32),
-
-                // Login Button
-                AuthButton(
-                  isLoading: _isLoading,
-                  onPressed: _handleLogin,
-                  text: 'Sign In',
-                ),
-
-                const SizedBox(height: 24),
-
-                // Divider
-                const AuthDivider(),
-
-                const SizedBox(height: 24),
-
-                // Social Login Buttons
-                const SocialAuthSection(),
-
-                const SizedBox(height: 32),
-
-                // Sign Up Link
-                const SignUpLink(),
-
-                const SizedBox(height: 40),
-              ],
+              ),
             ),
           ),
         ),
@@ -152,31 +177,15 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  void _handleLogin() async {
+  void _handleLogin(BuildContext context) {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-      }
-    } catch (e) {
-      // Handle error
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+    final authBloc = context.read<AuthBloc>();
+    authBloc.add(
+      LoginRequested(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      ),
+    );
   }
 }

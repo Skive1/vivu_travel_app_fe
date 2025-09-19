@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'features/onboarding/presentation/screens/animated_onboarding_screen.dart';
 import 'features/authentication/presentation/screens/login_screen.dart';
 import 'features/authentication/presentation/screens/register_screen.dart';
 import 'features/home/presentation/screens/home_screen.dart';
@@ -35,7 +34,7 @@ class AppRoutes {
         
       case onboarding:
         return MaterialPageRoute(
-          builder: (_) => const AnimatedOnboardingScreen(),
+          builder: (_) => const OnboardingScreen(),
         );
         
       case login:

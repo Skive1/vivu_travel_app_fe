@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SplashTitle extends StatelessWidget {
   const SplashTitle({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
+    return Text(
       'Vivu Travel',
       textAlign: TextAlign.center,
-      style: TextStyle(
+      style: GoogleFonts.poppins(
         color: Colors.white,
-        fontFamily: 'Geometr415 Blk BT',
-        fontSize: 34,
-        fontWeight: FontWeight.w400,
+        fontSize: 40,
+        fontWeight: FontWeight.bold,
         height: 1.235,
         letterSpacing: 0.5,
-        fontStyle: FontStyle.normal,
       ),
     );
   }

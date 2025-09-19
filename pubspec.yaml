@@ -30,13 +30,15 @@ dependencies:
 
   # Local Storage
   shared_preferences: ^2.3.2
-
+  flutter_secure_storage: ^9.2.2
+  
   # JSON Serialization
   json_annotation: ^4.9.0
   
   # UI & Icons
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.9
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -53,9 +55,9 @@ flutter:
   
   # Assets
   assets:
-    - .env
     - assets/images/
     - assets/icons/
+    - .env
 
   # Example fonts configuration
   # fonts:
