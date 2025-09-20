@@ -21,7 +21,14 @@ class AuthAuthenticated extends AuthState {
   List<Object> get props => [authEntity];
 }
 
-class AuthUnauthenticated extends AuthState {}
+class AuthUnauthenticated extends AuthState {
+  final String? message;
+
+  const AuthUnauthenticated([this.message]);
+
+  @override
+  List<Object?> get props => [message];
+}
 
 class AuthError extends AuthState {
   final String message;

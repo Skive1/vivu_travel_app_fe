@@ -13,19 +13,34 @@ class TokenStorage {
   static const String _userIdKey = 'user_id';
   static const String _userNameKey = 'user_name';
   static const String _userEmailKey = 'user_email';
+  static const String _loginTimeKey = 'login_time';
 
-  // Token methods
-  static Future<void> saveToken(String token) async {
-    await _storage.write(key: _tokenKey, value: token);
-    
-    // Extract and save user info from JWT
-    final userId = JwtDecoder.getUserId(token);
-    final userName = JwtDecoder.getUserName(token);
-    final userEmail = JwtDecoder.getUserEmail(token);
-    
-    if (userId != null) await _storage.write(key: _userIdKey, value: userId);
-    if (userName != null) await _storage.write(key: _userNameKey, value: userName);
-    if (userEmail != null) await _storage.write(key: _userEmailKey, value: userEmail);
+  // Enhanced token saving with validation
+  static Future<bool> saveToken(String token) async {
+    try {
+      // Validate token structure first
+      if (!JwtDecoder.isValidTokenStructure(token)) {
+        throw Exception('Invalid token structure');
+      }
+
+      await _storage.write(key: _tokenKey, value: token);
+      await _storage.write(key: _loginTimeKey, value: DateTime.now().toIso8601String());
+      
+      // Extract and save user info from JWT
+      final userId = JwtDecoder.getUserId(token);
+      final userName = JwtDecoder.getUserName(token);
+      final userEmail = JwtDecoder.getUserEmail(token);
+      
+      if (userId != null) await _storage.write(key: _userIdKey, value: userId);
+      if (userName != null) await _storage.write(key: _userNameKey, value: userName);
+      if (userEmail != null) await _storage.write(key: _userEmailKey, value: userEmail);
+
+      return true;
+    } catch (e) {
+      // If save fails, clear any partial data
+      await clearAll();
+      return false;
+    }
   }
 
   static Future<String?> getToken() async {
@@ -40,28 +55,27 @@ class TokenStorage {
     return await _storage.read(key: _refreshTokenKey);
   }
 
-  static Future<void> saveUserId(String userId) async {
-    await _storage.write(key: _userIdKey, value: userId);
-  }
-
   static Future<String?> getUserId() async {
     return await _storage.read(key: _userIdKey);
-  }
-
-  static Future<void> saveUserName(String userName) async {
-    await _storage.write(key: _userNameKey, value: userName);
   }
 
   static Future<String?> getUserName() async {
     return await _storage.read(key: _userNameKey);
   }
 
-  static Future<void> saveUserEmail(String userEmail) async {
-    await _storage.write(key: _userEmailKey, value: userEmail);
-  }
-
   static Future<String?> getUserEmail() async {
     return await _storage.read(key: _userEmailKey);
+  }
+
+  static Future<DateTime?> getLoginTime() async {
+    final timeString = await _storage.read(key: _loginTimeKey);
+    if (timeString == null) return null;
+    
+    try {
+      return DateTime.parse(timeString);
+    } catch (e) {
+      return null;
+    }
   }
 
   // Clear methods
@@ -77,7 +91,7 @@ class TokenStorage {
     await _storage.deleteAll();
   }
 
-  // Check methods
+  // Enhanced validation methods
   static Future<bool> hasToken() async {
     final token = await getToken();
     return token != null && token.isNotEmpty;
@@ -87,6 +101,33 @@ class TokenStorage {
     final token = await getToken();
     if (token == null || token.isEmpty) return false;
     
-    return !JwtDecoder.isExpired(token);
+    // Check structure validity
+    if (!JwtDecoder.isValidTokenStructure(token)) {
+      await clearAll(); // Clear invalid token
+      return false;
+    }
+    
+    // Check expiry
+    if (JwtDecoder.isExpired(token)) {
+      await clearAll(); // Clear expired token
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Get token expiry info
+  static Future<Duration?> getTokenTimeRemaining() async {
+    final token = await getToken();
+    if (token == null) return null;
+    
+    return JwtDecoder.getTimeUntilExpiry(token);
+  }
+
+  static Future<bool> isTokenNearExpiry({Duration threshold = const Duration(minutes: 10)}) async {
+    final timeRemaining = await getTokenTimeRemaining();
+    if (timeRemaining == null) return true;
+    
+    return timeRemaining <= threshold;
   }
 }

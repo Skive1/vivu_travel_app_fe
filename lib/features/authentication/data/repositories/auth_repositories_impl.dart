@@ -7,6 +7,8 @@ import '../../domain/entities/auth_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/login_request_model.dart';
+import '../../../../core/usecases/usecase.dart';
+import '../../domain/usecases/check_auth_status_usecase.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -28,8 +30,11 @@ class AuthRepositoryImpl implements AuthRepository {
         final response = await remoteDataSource.login(request);
         final authEntity = response.toEntity();
         
-        // Save token to secure storage
-        await TokenStorage.saveToken(authEntity.token);
+        // Save token with validation
+        final saveSuccess = await TokenStorage.saveToken(authEntity.token);
+        if (!saveSuccess) {
+          return const Left(CacheFailure('Failed to save authentication token'));
+        }
         
         return Right(authEntity);
       } catch (e) {
@@ -43,6 +48,15 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
+      // Call backend logout endpoint if needed
+      if (await networkInfo.isConnected) {
+        try {
+          // await remoteDataSource.logout(); // Uncomment khi có API
+        } catch (e) {
+          // Continue with local logout even if server call fails
+        }
+      }
+      
       await TokenStorage.clearAll();
       return const Right(null);
     } catch (e) {
@@ -57,36 +71,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, AuthEntity>> checkAuthStatus() async {
-    try {
-      final token = await TokenStorage.getToken();
-      
-      if (token == null || token.isEmpty) {
-        return const Left(AuthFailure('No token found'));
-      }
-
-      if (JwtDecoder.isExpired(token)) {
-        // Token expired, clear stored data
-        await TokenStorage.clearAll();
-        return const Left(AuthFailure('Token expired'));
-      }
-
-      // Token is valid, get user info from stored data or JWT
-      final userName = await TokenStorage.getUserName() ?? 
-                      JwtDecoder.getUserName(token) ?? 
-                      'Unknown User';
-      
-      final expiryDate = JwtDecoder.getExpiryDate(token) ?? 
-                        DateTime.now().add(const Duration(hours: 1));
-
-      final authEntity = AuthEntity(
-        token: token,
-        userName: userName,
-        expiresAt: expiryDate,
-      );
-
-      return Right(authEntity);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
-    }
+    // Delegate to UseCase logic via repository pattern
+    return await CheckAuthStatusUseCase(this).call(NoParams());
   }
 }

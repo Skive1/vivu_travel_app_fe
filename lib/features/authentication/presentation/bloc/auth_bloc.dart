@@ -50,7 +50,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) => emit(AuthError(failure.message)),
-      (_) => emit(AuthUnauthenticated()),
+      (_) => emit(const AuthUnauthenticated()),
     );
   }
 
@@ -64,11 +64,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) {
-        // Token invalid or expired, user needs to login again
-        emit(AuthUnauthenticated());
+        // Token hết hạn hoặc không có token
+        emit(const AuthUnauthenticated());
       },
       (authEntity) {
-        // Token valid, user is authenticated
+        // Token còn hạn
         emit(AuthAuthenticated(authEntity));
       },
     );

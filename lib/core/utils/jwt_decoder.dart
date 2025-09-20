@@ -1,6 +1,10 @@
 import 'dart:convert';
 
 class JwtDecoder {
+  // Standard JWT claim keys từ payload bạn cung cấp
+  static const String _nameIdentifierClaim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
+  static const String _emailClaim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
+
   static Map<String, dynamic>? decode(String token) {
     try {
       final parts = token.split('.');
@@ -25,30 +29,35 @@ class JwtDecoder {
     final exp = decoded['exp'] as int?;
     if (exp == null) return true;
 
-    final expiryDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
-    return DateTime.now().isAfter(expiryDate);
+    // Convert từ Unix timestamp sang DateTime UTC rồi chuyển sang UTC+7
+    final expiryDateUTC = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
+    final expiryDateLocal = expiryDateUTC.add(const Duration(hours: 7)); // UTC+7
+    final nowLocal = DateTime.now();
+    
+    return nowLocal.isAfter(expiryDateLocal);
   }
 
   static String? getUserId(String token) {
     final decoded = decode(token);
     if (decoded == null) return null;
 
-    // Based on your JWT structure
-    return decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] as String?;
+    return decoded[_nameIdentifierClaim] as String?;
   }
 
   static String? getUserEmail(String token) {
     final decoded = decode(token);
     if (decoded == null) return null;
 
-    return decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] as String?;
+    return decoded[_emailClaim] as String?;
   }
 
   static String? getUserName(String token) {
     final decoded = decode(token);
     if (decoded == null) return null;
 
-    return decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] as String?;
+    // Fallback to email nếu không có name claim
+    return decoded['name'] as String? ?? 
+           decoded[_emailClaim] as String?;
   }
 
   static DateTime? getExpiryDate(String token) {
@@ -58,6 +67,47 @@ class JwtDecoder {
     final exp = decoded['exp'] as int?;
     if (exp == null) return null;
 
-    return DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+    // Convert sang UTC+7
+    final expiryDateUTC = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
+    return expiryDateUTC.add(const Duration(hours: 7));
+  }
+
+  static Duration? getTimeUntilExpiry(String token) {
+    final expiryDate = getExpiryDate(token);
+    if (expiryDate == null) return null;
+
+    final now = DateTime.now();
+    if (now.isAfter(expiryDate)) return Duration.zero;
+
+    return expiryDate.difference(now);
+  }
+
+  // Validate token structure và required claims
+  static bool isValidTokenStructure(String token) {
+    final decoded = decode(token);
+    if (decoded == null) return false;
+
+    // Check required claims theo payload structure
+    final hasUserId = decoded[_nameIdentifierClaim] != null;
+    final hasEmail = decoded[_emailClaim] != null;
+    final hasExp = decoded['exp'] != null;
+    final hasIss = decoded['iss'] == 'TravelPlannerAPI';
+    final hasAud = decoded['aud'] == 'TravelPlannerClient';
+
+    return hasUserId && hasEmail && hasExp && hasIss && hasAud;
+  }
+
+  // Get all user claims from token
+  static Map<String, dynamic>? getUserClaims(String token) {
+    final decoded = decode(token);
+    if (decoded == null) return null;
+
+    return {
+      'userId': decoded[_nameIdentifierClaim],
+      'email': decoded[_emailClaim],
+      'exp': decoded['exp'],
+      'iss': decoded['iss'],
+      'aud': decoded['aud'],
+    };
   }
 }
