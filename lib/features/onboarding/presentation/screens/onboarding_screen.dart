@@ -83,25 +83,34 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       statusBarIconBrightness: Brightness.dark,
     ));
 
+    // Get screen dimensions
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Stack(
-          children: [
-            // PageView with onboarding pages
-            _buildPageView(),
-            
-            // Skip button
-            OnboardingSkipButton(onSkip: _skipOnboarding),
-            
-            // Bottom section with indicators and button
-            OnboardingBottomSection(
-              currentPage: _currentPage,
-              onNextPressed: _nextPage,
-              onGetStartedPressed: _navigateToLogin,
+      body: SizedBox(
+        width: screenSize.width,
+        height: screenSize.height,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // PageView with onboarding pages
+                _buildPageView(),
+                
+                // Skip button
+                OnboardingSkipButton(onSkip: _skipOnboarding),
+                
+                // Bottom section with indicators and button
+                OnboardingBottomSection(
+                  currentPage: _currentPage,
+                  onNextPressed: _nextPage,
+                  onGetStartedPressed: _navigateToLogin,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

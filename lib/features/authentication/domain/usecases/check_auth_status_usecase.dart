@@ -29,15 +29,25 @@ class CheckAuthStatusUseCase implements UseCase<AuthEntity, NoParams> {
 
       // Step 3: Check token expiration
       if (JwtDecoder.isExpired(token)) {
-        await TokenStorage.clearAll();
-        return const Left(AuthFailure('Authentication token has expired'));
+        // Try to refresh token before giving up
+        final refreshResult = await repository.refreshToken();
+        return refreshResult.fold(
+          (failure) {
+            // Refresh failed - clear all tokens and return failure
+            return Left(AuthFailure('Session expired. Please login again.'));
+          },
+          (newToken) {
+            // Refresh successful - recursively call this method with new token
+            return call(params);
+          },
+        );
       }
 
       // Step 4: Check if token is near expiry (optional warning)
       final isNearExpiry = await TokenStorage.isTokenNearExpiry();
       if (isNearExpiry) {
-        // Log warning - token will expire soon
-        // Could trigger refresh token flow here
+        // Token will expire soon - could trigger proactive refresh here
+        // For now, just continue with current token
       }
 
       // Step 5: Validate claims match backend expectations

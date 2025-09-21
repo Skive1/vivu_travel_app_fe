@@ -4,11 +4,13 @@ class LoginResponseModel {
   final String token;
   final String userName;
   final String expiresAt;
+  final String refreshToken;
 
   const LoginResponseModel({
     required this.token,
     required this.userName,
     required this.expiresAt,
+    required this.refreshToken,
   });
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
@@ -16,6 +18,7 @@ class LoginResponseModel {
       token: json['token'] ?? '',
       userName: json['userName'] ?? '',
       expiresAt: json['expiresAt'] ?? '',
+      refreshToken: json['refreshToken'] ?? '',
     );
   }
 

@@ -11,11 +11,10 @@ class DioFactory {
       headers: ApiConfig.defaultHeaders,
     ));
 
-    // Token Interceptor
+    // Token Interceptor with Refresh Logic
     dio.interceptors.add(
-      InterceptorsWrapper(
+      QueuedInterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Tự động thêm token vào header nếu có
           final token = await TokenStorage.getToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
@@ -23,26 +22,67 @@ class DioFactory {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          // Xử lý refresh token nếu 401
           if (error.response?.statusCode == 401) {
-            // TODO: Implement token refresh logic
-            await TokenStorage.clearToken();
+            final requestOptions = error.requestOptions;
+            
+            if (requestOptions.path.contains('/refresh_token')) {
+              await TokenStorage.clearAll();
+              return handler.reject(error);
+            }
+            
+            try {
+              final newToken = await _refreshToken(dio);
+              if (newToken != null) {
+                requestOptions.headers['Authorization'] = 'Bearer $newToken';
+                final retryResponse = await dio.fetch(requestOptions);
+                return handler.resolve(retryResponse);
+              }
+            } catch (refreshError) {
+              await TokenStorage.clearAll();
+            }
           }
+          
           return handler.next(error);
         },
       ),
     );
 
-    // Logging Interceptor
-    dio.interceptors.add(LogInterceptor(
-      request: true,
-      requestBody: true,
-      responseBody: true,
-      requestHeader: true,
-      responseHeader: false,
-      error: true,
-    ));
-
     return dio;
+  }
+
+  static Future<String?> _refreshToken(Dio dio) async {
+    try {
+      final refreshToken = await TokenStorage.getRefreshToken();
+      if (refreshToken == null) {
+        throw Exception('No refresh token available');
+      }
+
+      final refreshDio = Dio(BaseOptions(
+        baseUrl: ApiConfig.baseUrl,
+        connectTimeout: Duration(milliseconds: ApiConfig.connectTimeout),
+        receiveTimeout: Duration(milliseconds: ApiConfig.receiveTimeout),
+        headers: {
+          ...ApiConfig.defaultHeaders,
+          'Authorization': 'Bearer $refreshToken',
+        },
+      ));
+
+      final response = await refreshDio.get('/refresh_token');
+      
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final newAccessToken = data['accessToken'];
+        final newRefreshToken = data['refreshToken'];
+        
+        await TokenStorage.saveToken(newAccessToken);
+        await TokenStorage.saveRefreshToken(newRefreshToken);
+        
+        return newAccessToken;
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 }

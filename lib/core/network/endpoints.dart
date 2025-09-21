@@ -4,4 +4,5 @@ class Endpoints {
   static const String verifyRegisterOtp = '/auth/verify-register-otp';
   static const String resetPassword = '/auth/reset-password';
   static const String requestPasswordReset = '/auth/request-password-reset';
+  static const String refreshToken = '/refresh_token';
 }

@@ -4,12 +4,31 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../authentication/presentation/bloc/auth_bloc.dart';
-import '../../../authentication/presentation/bloc/auth_event.dart';
 import '../../../authentication/presentation/bloc/auth_state.dart';
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../../../routes.dart';
 
-class ProfileMenuSection extends StatelessWidget {
+class ProfileMenuSection extends StatefulWidget {
   const ProfileMenuSection({super.key});
+
+  @override
+  State<ProfileMenuSection> createState() => _ProfileMenuSectionState();
+}
+
+class _ProfileMenuSectionState extends State<ProfileMenuSection> {
+  late final AuthController _authController;
+
+  @override
+  void initState() {
+    super.initState();
+    _authController = AuthController();
+  }
+
+  @override
+  void dispose() {
+    _authController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +85,7 @@ class ProfileMenuSection extends StatelessWidget {
                     title: 'Logout',
                     isLast: true,
                     isLoading: state is AuthLoading,
-                    onTap: () => _handleLogout(context),
+                    onTap: () => _authController.handleLogout(context), // 👈 Sử dụng controller
                   );
                 },
               ),
@@ -75,23 +94,6 @@ class ProfileMenuSection extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  void _handleLogout(BuildContext context) async {
-    // Show confirmation dialog
-    final confirmed = await DialogUtils.showConfirmDialog(
-      context: context,
-      title: 'Confirm Logout',
-      message: 'Are you sure you want to logout?',
-      confirmText: 'Logout',
-      cancelText: 'Cancel',
-      confirmColor: AppColors.error,
-    );
-
-    if (confirmed == true && context.mounted) {
-      // Trigger logout
-      context.read<AuthBloc>().add(LogoutRequested());
-    }
   }
 }
 

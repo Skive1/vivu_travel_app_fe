@@ -13,10 +13,15 @@ class ProfileScreen extends StatelessWidget {
       statusBarIconBrightness: Brightness.dark,
     ));
 
+    // Get screen dimensions
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: const SizedBox.expand(
-        child: ProfileContainer(),
+      body: SizedBox(
+        width: screenSize.width,
+        height: screenSize.height,
+        child: const ProfileContainer(),
       ),
     );
   }

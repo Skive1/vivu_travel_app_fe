@@ -38,3 +38,25 @@ class AuthError extends AuthState {
   @override
   List<Object> get props => [message];
 }
+
+class RegisterSuccess extends AuthState {
+  final String message;
+  final String email;
+
+  const RegisterSuccess({
+    required this.message,
+    required this.email,
+  });
+
+  @override
+  List<Object> get props => [message, email];
+}
+
+class OtpVerificationSuccess extends AuthState {
+  final String message;
+
+  const OtpVerificationSuccess(this.message);
+
+  @override
+  List<Object> get props => [message];
+}

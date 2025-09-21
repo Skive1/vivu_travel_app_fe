@@ -11,4 +11,22 @@ abstract class AuthRepository {
   Future<Either<Failure, void>> logout();
   Future<bool> isLoggedIn();
   Future<Either<Failure, AuthEntity>> checkAuthStatus();
+  Future<Either<Failure, String>> refreshToken();
+  
+  // Register methods
+  Future<Either<Failure, String>> register({
+    required String email,
+    required String password,
+    required String dateOfBirth,
+    required String name,
+    required String address,
+    required String phoneNumber,
+    required String avatarUrl,
+    required String gender,
+  });
+  
+  Future<Either<Failure, String>> verifyRegisterOtp({
+    required String email,
+    required String otpCode,
+  });
 }

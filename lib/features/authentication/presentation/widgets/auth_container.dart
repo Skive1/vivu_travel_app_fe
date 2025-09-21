@@ -10,9 +10,12 @@ class AuthContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    
     return Container(
-      width: double.infinity,
-      height: double.infinity,
+      width: screenSize.width,
+      height: screenSize.height,
+      constraints: const BoxConstraints.expand(),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(30)),

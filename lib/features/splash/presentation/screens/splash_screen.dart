@@ -95,6 +95,9 @@ class _SplashScreenState extends State<SplashScreen>
       statusBarIconBrightness: Brightness.light,
     ));
 
+    // Get screen dimensions
+    final screenSize = MediaQuery.of(context).size;
+
     return BlocProvider<AuthBloc>(
       create: (context) => _authBloc,
       child: BlocListener<AuthBloc, AuthState>(
@@ -106,39 +109,45 @@ class _SplashScreenState extends State<SplashScreen>
           // Không cần xử lý AuthLoading vì đang ở splash screen
         },
         child: Scaffold(
-          body: SplashBackground(
-            child: Column(
-              children: [
-                // Logo centered in the middle of screen
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedLogo(
-                          controller: _logoController,
+          body: SizedBox(
+            width: screenSize.width,
+            height: screenSize.height,
+            child: SplashBackground(
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    // Logo centered in the middle of screen
+                    Expanded(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AnimatedLogo(
+                              controller: _logoController,
+                            ),
+                            SizedBox(height: screenSize.height * 0.025),
+                            AnimatedTitle(
+                              controller: _textController,
+                            ),
+                            SizedBox(height: screenSize.height * 0.05),
+                            // Loading indicator để show đang check auth
+                            BlocBuilder<AuthBloc, AuthState>(
+                              builder: (context, state) {
+                                if (state is AuthLoading) {
+                                  return const CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 20),
-                        AnimatedTitle(
-                          controller: _textController,
-                        ),
-                        const SizedBox(height: 40),
-                        // Loading indicator để show đang check auth
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, state) {
-                            if (state is AuthLoading) {
-                              return const CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

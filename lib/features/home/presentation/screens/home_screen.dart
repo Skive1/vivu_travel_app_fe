@@ -48,14 +48,19 @@ class _HomeScreenState extends State<HomeScreen>
       statusBarIconBrightness: Brightness.dark,
     ));
 
+    // Get screen dimensions
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-        body: FadeTransition(
+      body: SizedBox(
+        width: screenSize.width,
+        height: screenSize.height,
+        child: FadeTransition(
           opacity: _fadeAnimation,
-          child: const SizedBox.expand(
-            child: HomeContainer(),
-          ),
+          child: const HomeContainer(),
         ),
+      ),
     );
   }
 }

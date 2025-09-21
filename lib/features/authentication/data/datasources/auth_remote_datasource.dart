@@ -1,11 +1,20 @@
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/endpoints.dart';
+import '../../../../core/utils/token_storage.dart';
 import '../models/login_request_model.dart';
 import '../models/login_response_model.dart';
+import '../models/refresh_token_response_model.dart';
+import '../models/register_request_model.dart';
+import '../models/register_response_model.dart';
+import '../models/otp_request_model.dart';
+import '../models/otp_response_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request);
+  Future<RefreshTokenResponseModel> refreshToken();
+  Future<RegisterResponseModel> register(RegisterRequestModel request);
+  Future<OtpResponseModel> verifyRegisterOtp(OtpRequestModel request);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -22,6 +31,51 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
       
       return LoginResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  @override
+  Future<RefreshTokenResponseModel> refreshToken() async {
+    try {
+      // Get current refresh token
+      final currentRefreshToken = await TokenStorage.getRefreshToken();
+      if (currentRefreshToken == null) {
+        throw Exception('No refresh token available');
+      }
+
+      final response = await apiClient.get(Endpoints.refreshToken);
+      
+      return RefreshTokenResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  @override
+  Future<RegisterResponseModel> register(RegisterRequestModel request) async {
+    try {
+      final response = await apiClient.post(
+        Endpoints.register,
+        data: request.toJson(),
+      );
+      
+      return RegisterResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  @override
+  Future<OtpResponseModel> verifyRegisterOtp(OtpRequestModel request) async {
+    try {
+      final response = await apiClient.post(
+        Endpoints.verifyRegisterOtp,
+        data: request.toJson(),
+      );
+      
+      return OtpResponseModel.fromJson(response.data);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
