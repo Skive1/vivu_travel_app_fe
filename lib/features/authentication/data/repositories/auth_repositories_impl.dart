@@ -4,13 +4,18 @@ import '../../../../core/network/network_info.dart';
 import '../../../../core/utils/token_storage.dart';
 import '../../../../core/utils/jwt_decoder.dart';
 import '../../domain/entities/auth_entity.dart';
+import '../../domain/entities/reset_token_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/login_request_model.dart';
 import '../models/register_request_model.dart';
 import '../models/otp_request_model.dart';
+import '../models/request_password_reset_request_model.dart';
+import '../models/verify_reset_password_otp_request_model.dart';
+import '../models/reset_password_request_model.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../domain/usecases/check_auth_status_usecase.dart';
+import '../models/resend_register_otp_response_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -140,6 +145,81 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         final request = OtpRequestModel(email: email, otpCode: otpCode);
         final response = await remoteDataSource.verifyRegisterOtp(request);
+        return Right(response.message);
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> requestPasswordReset({
+    required String email,
+  }) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final request = RequestPasswordResetRequestModel(email: email);
+        final response = await remoteDataSource.requestPasswordReset(request);
+        return Right(response.message);
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ResetTokenEntity>> verifyResetPasswordOtp({
+    required String email,
+    required String otpCode,
+  }) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final request = VerifyResetPasswordOtpRequestModel(
+          email: email,
+          otpCode: otpCode,
+        );
+        final response = await remoteDataSource.verifyResetPasswordOtp(request);
+        return Right(response.toEntity(email));
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> resetPassword({
+    required String resetToken,
+    required String newPassword,
+  }) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final request = ResetPasswordRequestModel(
+          resetToken: resetToken,
+          newPassword: newPassword,
+        );
+        final response = await remoteDataSource.resetPassword(request);
+        return Right(response.message);
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> resendRegisterOtp({
+    required String email,
+  }) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final response = await remoteDataSource.resendRegisterOtp(email);
         return Right(response.message);
       } catch (e) {
         return Left(ServerFailure(e.toString()));

@@ -10,6 +10,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
 import '../widgets/otp_input_field.dart';
 import '../controllers/auth_controller.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
@@ -70,6 +71,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     (route) => false,
                   );
                 },
+              );
+            } else if (state is ResendRegisterOtpSuccess) {
+              // Show success message for resend
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.success,
+                ),
               );
             } else if (state is AuthError) {
               DialogUtils.showErrorDialog(
@@ -224,7 +233,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                   if (_authController.canResend)
                                     GestureDetector(
                                       onTap: () {
-                                        _authController.handleResendOtp(context);
+                                        _authController.handleResendOtp(context, widget.email);
                                         setState(() {});
                                       },
                                       child: const Text(

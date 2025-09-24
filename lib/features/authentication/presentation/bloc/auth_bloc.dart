@@ -6,6 +6,10 @@ import '../../domain/usecases/check_auth_status_usecase.dart';
 import '../../domain/usecases/refresh_token_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 import '../../domain/usecases/verify_register_otp_usecase.dart';
+import '../../domain/usecases/request_password_reset_usecase.dart';
+import '../../domain/usecases/verify_reset_password_otp_usecase.dart';
+import '../../domain/usecases/reset_password_usecase.dart';
+import '../../domain/usecases/resend_register_otp_usecase.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -17,6 +21,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final RefreshTokenUseCase refreshTokenUseCase;
   final RegisterUseCase registerUseCase;
   final VerifyRegisterOtpUseCase verifyRegisterOtpUseCase;
+  final ResendRegisterOtpUseCase resendRegisterOtpUseCase;
+  final RequestPasswordResetUseCase requestPasswordResetUseCase;
+  final VerifyResetPasswordOtpUseCase verifyResetPasswordOtpUseCase;
+  final ResetPasswordUseCase resetPasswordUseCase;
   final AuthRepository authRepository;
 
   AuthBloc({
@@ -26,6 +34,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.refreshTokenUseCase,
     required this.registerUseCase,
     required this.verifyRegisterOtpUseCase,
+    required this.resendRegisterOtpUseCase,
+    required this.requestPasswordResetUseCase,
+    required this.verifyResetPasswordOtpUseCase,
+    required this.resetPasswordUseCase,
     required this.authRepository,
   }) : super(AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
@@ -34,6 +46,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RefreshTokenRequested>(_onRefreshTokenRequested);
     on<RegisterRequested>(_onRegisterRequested);
     on<VerifyRegisterOtpRequested>(_onVerifyRegisterOtpRequested);
+    on<ResendRegisterOtpRequested>(_onResendRegisterOtpRequested);
+    on<RequestPasswordResetRequested>(_onRequestPasswordResetRequested);
+    on<VerifyResetPasswordOtpRequested>(_onVerifyResetPasswordOtpRequested);
+    on<ResetPasswordRequested>(_onResetPasswordRequested);
   }
 
   Future<void> _onLoginRequested(
@@ -145,6 +161,76 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (message) => emit(OtpVerificationSuccess(message)),
+    );
+  }
+
+  Future<void> _onResendRegisterOtpRequested(
+    ResendRegisterOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await resendRegisterOtpUseCase(
+      ResendRegisterOtpParams(email: event.email),
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (message) => emit(ResendRegisterOtpSuccess(message)),
+    );
+  }
+
+  Future<void> _onRequestPasswordResetRequested(
+    RequestPasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await requestPasswordResetUseCase(
+      RequestPasswordResetParams(email: event.email),
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (message) => emit(PasswordResetRequestSuccess(message: message, email: event.email)),
+    );
+  }
+
+  Future<void> _onVerifyResetPasswordOtpRequested(
+    VerifyResetPasswordOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await verifyResetPasswordOtpUseCase(
+      VerifyResetPasswordOtpParams(
+        email: event.email,
+        otpCode: event.otpCode,
+      ),
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (resetTokenEntity) => emit(ResetPasswordOtpVerificationSuccess(resetTokenEntity)),
+    );
+  }
+
+  Future<void> _onResetPasswordRequested(
+    ResetPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await resetPasswordUseCase(
+      ResetPasswordParams(
+        resetToken: event.resetToken,
+        newPassword: event.newPassword,
+      ),
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (message) => emit(PasswordResetSuccess(message)),
     );
   }
 }

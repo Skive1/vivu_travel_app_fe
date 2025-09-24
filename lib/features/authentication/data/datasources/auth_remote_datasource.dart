@@ -9,12 +9,25 @@ import '../models/register_request_model.dart';
 import '../models/register_response_model.dart';
 import '../models/otp_request_model.dart';
 import '../models/otp_response_model.dart';
+import '../models/resend_register_otp_response_model.dart';
+import '../models/request_password_reset_request_model.dart';
+import '../models/request_password_reset_response_model.dart';
+import '../models/verify_reset_password_otp_request_model.dart';
+import '../models/verify_reset_password_otp_response_model.dart';
+import '../models/reset_password_request_model.dart';
+import '../models/reset_password_response_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request);
   Future<RefreshTokenResponseModel> refreshToken();
   Future<RegisterResponseModel> register(RegisterRequestModel request);
   Future<OtpResponseModel> verifyRegisterOtp(OtpRequestModel request);
+  Future<ResendRegisterOtpResponseModel> resendRegisterOtp(String email);
+  
+  // Forgot Password methods
+  Future<RequestPasswordResetResponseModel> requestPasswordReset(RequestPasswordResetRequestModel request);
+  Future<VerifyResetPasswordOtpResponseModel> verifyResetPasswordOtp(VerifyResetPasswordOtpRequestModel request);
+  Future<ResetPasswordResponseModel> resetPassword(ResetPasswordRequestModel request);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -76,6 +89,61 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
       
       return OtpResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  @override
+  Future<ResendRegisterOtpResponseModel> resendRegisterOtp(String email) async {
+    try {
+      final response = await apiClient.get(
+        '${Endpoints.resendRegisterOtp}?email=$email',
+      );
+      
+      return ResendRegisterOtpResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  @override
+  Future<RequestPasswordResetResponseModel> requestPasswordReset(RequestPasswordResetRequestModel request) async {
+    try {
+      final response = await apiClient.post(
+        Endpoints.requestPasswordReset,
+        data: request.toJson(),
+      );
+      
+      return RequestPasswordResetResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  @override
+  Future<VerifyResetPasswordOtpResponseModel> verifyResetPasswordOtp(VerifyResetPasswordOtpRequestModel request) async {
+    try {
+      final response = await apiClient.post(
+        Endpoints.verifyResetPasswordOtp,
+        data: request.toJson(),
+      );
+      
+      return VerifyResetPasswordOtpResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  @override
+  Future<ResetPasswordResponseModel> resetPassword(ResetPasswordRequestModel request) async {
+    try {
+      final response = await apiClient.post(
+        Endpoints.resetPassword,
+        data: request.toJson(),
+      );
+      
+      return ResetPasswordResponseModel.fromJson(response.data);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }

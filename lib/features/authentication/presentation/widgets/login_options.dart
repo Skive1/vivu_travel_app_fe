@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../routes.dart';
 
 class LoginOptions extends StatelessWidget {
   final bool rememberMe;
@@ -32,7 +33,7 @@ class LoginOptions extends StatelessWidget {
         ),
         TextButton(
           onPressed: () {
-            // Handle forgot password
+            Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
           },
           child: const Text(
             'Forgot Password?',

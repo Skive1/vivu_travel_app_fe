@@ -19,8 +19,10 @@ import 'features/authentication/domain/usecases/refresh_token_usecase.dart';
 import 'features/authentication/presentation/bloc/auth_bloc.dart';
 import 'features/authentication/domain/usecases/register_usecase.dart';
 import 'features/authentication/domain/usecases/verify_register_otp_usecase.dart';
-
-  
+import 'features/authentication/domain/usecases/request_password_reset_usecase.dart';
+import 'features/authentication/domain/usecases/verify_reset_password_otp_usecase.dart';
+import 'features/authentication/domain/usecases/reset_password_usecase.dart';
+import 'features/authentication/domain/usecases/resend_register_otp_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -64,6 +66,11 @@ void _initAuth() {
   sl.registerLazySingleton(() => RefreshTokenUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
   sl.registerLazySingleton(() => VerifyRegisterOtpUseCase(sl()));
+  sl.registerLazySingleton(() => ResendRegisterOtpUseCase(sl()));
+  sl.registerLazySingleton(() => RequestPasswordResetUseCase(sl()));
+  sl.registerLazySingleton(() => VerifyResetPasswordOtpUseCase(sl()));
+  sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
+  
   // Bloc
   sl.registerFactory(
     () => AuthBloc(
@@ -73,6 +80,10 @@ void _initAuth() {
       refreshTokenUseCase: sl(),
       registerUseCase: sl(),
       verifyRegisterOtpUseCase: sl(),
+      resendRegisterOtpUseCase: sl(),
+      requestPasswordResetUseCase: sl(),
+      verifyResetPasswordOtpUseCase: sl(),
+      resetPasswordUseCase: sl(),
       authRepository: sl(),
     ),
   );

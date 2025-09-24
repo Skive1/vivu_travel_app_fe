@@ -136,4 +136,15 @@ class DialogUtils {
       Navigator.of(context).pop();
     }
   }
+
+  static Future<void> showCustomDialog({
+    required BuildContext context,
+    required Widget dialog,
+  }) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => dialog,
+    );
+  }
 }

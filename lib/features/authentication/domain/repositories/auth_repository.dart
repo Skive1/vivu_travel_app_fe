@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/auth_entity.dart';
+import '../entities/reset_token_entity.dart';
 
 abstract class AuthRepository {
   Future<Either<Failure, AuthEntity>> login({
@@ -28,5 +29,24 @@ abstract class AuthRepository {
   Future<Either<Failure, String>> verifyRegisterOtp({
     required String email,
     required String otpCode,
+  });
+
+  Future<Either<Failure, String>> resendRegisterOtp({
+    required String email,
+  });
+
+  // Forgot Password methods
+  Future<Either<Failure, String>> requestPasswordReset({
+    required String email,
+  });
+
+  Future<Either<Failure, ResetTokenEntity>> verifyResetPasswordOtp({
+    required String email,
+    required String otpCode,
+  });
+
+  Future<Either<Failure, String>> resetPassword({
+    required String resetToken,
+    required String newPassword,
   });
 }
