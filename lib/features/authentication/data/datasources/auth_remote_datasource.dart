@@ -16,6 +16,7 @@ import '../models/verify_reset_password_otp_request_model.dart';
 import '../models/verify_reset_password_otp_response_model.dart';
 import '../models/reset_password_request_model.dart';
 import '../models/reset_password_response_model.dart';
+import '../models/get_user_response_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request);
@@ -23,6 +24,7 @@ abstract class AuthRemoteDataSource {
   Future<RegisterResponseModel> register(RegisterRequestModel request);
   Future<OtpResponseModel> verifyRegisterOtp(OtpRequestModel request);
   Future<ResendRegisterOtpResponseModel> resendRegisterOtp(String email);
+  Future<GetUserResponseModel> getUserProfile();
   
   // Forgot Password methods
   Future<RequestPasswordResetResponseModel> requestPasswordReset(RequestPasswordResetRequestModel request);
@@ -61,6 +63,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final response = await apiClient.get(Endpoints.refreshToken);
       
       return RefreshTokenResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  @override
+  Future<GetUserResponseModel> getUserProfile() async {
+    try {
+      final response = await apiClient.get(Endpoints.me);
+      
+      return GetUserResponseModel.fromJson(response.data);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }

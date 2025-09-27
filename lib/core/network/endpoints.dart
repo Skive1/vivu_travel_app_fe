@@ -7,4 +7,5 @@ class Endpoints {
   static const String verifyResetPasswordOtp = '/api/auth/verify-reset-password-otp';
   static const String refreshToken = '/api/refresh_token';
   static const String resendRegisterOtp = '/api/auth/resend-register-otp';
+  static const String me = '/api/auth/me';
 }

@@ -1,73 +1,184 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../authentication/presentation/bloc/auth_bloc.dart';
+import '../../../authentication/presentation/bloc/auth_state.dart';
+import '../../../authentication/domain/entities/user_entity.dart';
 
 class UserAvatar extends StatelessWidget {
   const UserAvatar({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Navigate to profile
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        debugPrint('🎨 UserAvatar building with state: ${state.runtimeType}');
+        
+        if (state is AuthAuthenticated) {
+          debugPrint('🔐 AuthAuthenticated - hasUserProfile: ${state.hasUserProfile}');
+          
+          if (state.hasUserProfile) {
+            final user = state.userEntity!;
+            debugPrint('👤 User info: ${user.name} (${user.email})');
+            return _buildUserInfo(context, user);
+          } else {
+            debugPrint('⏳ User authenticated but no profile yet, showing placeholder');
+            return _buildPlaceholder();
+          }
+        }
+        
+        debugPrint('❌ Not authenticated or other state, showing placeholder');
+        // Show loading or placeholder when user profile is not available
+        return _buildPlaceholder();
       },
-      child: Row(
-        children: [
-          // Avatar with gradient background
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.secondary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(
-                color: Colors.white,
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Text(
-                'JD',
-                style: TextStyle(
-                  color: Colors.white,
+    );
+  }
+
+  Widget _buildUserInfo(BuildContext context, UserEntity user) {
+    return Row(
+      children: [
+        // User Avatar
+        _buildAvatar(user),
+        const SizedBox(width: 12),
+        
+        // User Info
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                user.displayName,
+                style: const TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1A1A1A),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                user.email,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w400,
                 ),
               ),
-            ),
+              const SizedBox(height: 2),
+              
+            ],
           ),
-          
-          const SizedBox(width: 12),
-          
-          // User greeting
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'John Doe',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAvatar(UserEntity user) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.2),
+          width: 2,
+        ),
       ),
+      child: user.hasValidAvatar 
+          ? _buildNetworkAvatar(user.avatar!, user.avatarInitials)
+          : _buildInitialsAvatar(user.avatarInitials),
+    );
+  }
+
+  Widget _buildNetworkAvatar(String avatarUrl, String initials) {
+    return ClipOval(
+      child: Image.network(
+        avatarUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildInitialsAvatar(initials);
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return _buildInitialsAvatar(initials);
+        },
+      ),
+    );
+  }
+
+  Widget _buildInitialsAvatar(String initials) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withOpacity(0.8),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          initials,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Row(
+      children: [
+        // Placeholder Avatar
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey[300],
+          ),
+          child: const Icon(
+            Icons.person,
+            color: Colors.grey,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 12),
+        
+        // Placeholder Text
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: 100,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

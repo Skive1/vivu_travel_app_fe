@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/auth_entity.dart';
+import '../../domain/entities/user_entity.dart';
 import '../../domain/entities/reset_token_entity.dart';
 
 abstract class AuthState extends Equatable {
@@ -15,11 +16,26 @@ class AuthLoading extends AuthState {}
 
 class AuthAuthenticated extends AuthState {
   final AuthEntity authEntity;
+  final UserEntity? userEntity;
 
-  const AuthAuthenticated(this.authEntity);
+  const AuthAuthenticated(this.authEntity, {this.userEntity});
+
+  // Helper method để check có thông tin user không
+  bool get hasUserProfile => userEntity != null;
+
+  // Copy with method để update user profile
+  AuthAuthenticated copyWith({
+    AuthEntity? authEntity,
+    UserEntity? userEntity,
+  }) {
+    return AuthAuthenticated(
+      authEntity ?? this.authEntity,
+      userEntity: userEntity ?? this.userEntity,
+    );
+  }
 
   @override
-  List<Object> get props => [authEntity];
+  List<Object?> get props => [authEntity, userEntity];
 }
 
 class AuthUnauthenticated extends AuthState {

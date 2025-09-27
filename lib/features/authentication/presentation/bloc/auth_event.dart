@@ -108,3 +108,5 @@ class LogoutRequested extends AuthEvent {}
 class AuthStatusChecked extends AuthEvent {}
 
 class RefreshTokenRequested extends AuthEvent {}
+
+class GetUserProfileRequested extends AuthEvent {}

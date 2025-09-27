@@ -4,6 +4,7 @@ import '../../../../core/network/network_info.dart';
 import '../../../../core/utils/token_storage.dart';
 import '../../../../core/utils/jwt_decoder.dart';
 import '../../domain/entities/auth_entity.dart';
+import '../../domain/entities/user_entity.dart';
 import '../../domain/entities/reset_token_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -47,6 +48,20 @@ class AuthRepositoryImpl implements AuthRepository {
         await TokenStorage.saveRefreshToken(response.refreshToken);
         
         return Right(authEntity);
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> getUserProfile() async {
+    if (await networkInfo.isConnected) {
+      try {
+        final response = await remoteDataSource.getUserProfile();
+        return Right(response.toEntity());
       } catch (e) {
         return Left(ServerFailure(e.toString()));
       }

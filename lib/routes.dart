@@ -50,37 +50,25 @@ class AppRoutes {
       case otpVerification:
         final email = settings.arguments as String;
         return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => di.sl<AuthBloc>(),
-            child: OtpVerificationScreen(email: email),
-          ),
+          builder: (_) => OtpVerificationScreen(email: email),
         );
 
       case forgotPassword:
         return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => di.sl<AuthBloc>(),
-            child: const ForgotPasswordScreen(),
-          ),
+          builder: (_) => const ForgotPasswordScreen(),
         );
 
       case otpVerificationResetPassword:
         final args = settings.arguments as Map<String, dynamic>;
         final email = args['email'] as String;
         return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => di.sl<AuthBloc>(),
-            child: OtpVerificationResetPasswordScreen(email: email),
-          ),
+          builder: (_) => OtpVerificationResetPasswordScreen(email: email),
         );
 
       case resetPassword:
         final resetToken = settings.arguments as String;
         return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => di.sl<AuthBloc>(),
-            child: ResetPasswordScreen(resetToken: resetToken),
-          ),
+          builder: (_) => ResetPasswordScreen(resetToken: resetToken),
         );
         
       case home:

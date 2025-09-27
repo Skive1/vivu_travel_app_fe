@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../routes.dart';
-import '../../../../injection_container.dart' as di;
 import '../widgets/splash_background.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/animated_title.dart';
@@ -24,13 +23,10 @@ class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _logoController;
   late AnimationController _textController;
-  late AuthBloc _authBloc;
 
   @override
   void initState() {
     super.initState();
-    
-    _authBloc = di.sl<AuthBloc>();
     
     _logoController = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -58,11 +54,15 @@ class _SplashScreenState extends State<SplashScreen>
     // Đợi animation chạy một chút rồi mới check auth
     await Future.delayed(const Duration(milliseconds: 1500));
     
-    // Check auth status
-    _authBloc.add(AuthStatusChecked());
+    // Check auth status using global AuthBloc
+    if (mounted) {
+      context.read<AuthBloc>().add(AuthStatusChecked());
+    }
   }
 
   void _navigateBasedOnAuthState(AuthState state) async {
+    if (!mounted) return;
+    
     if (state is AuthAuthenticated) {
       // Token còn hạn → đi đến Home
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
@@ -84,7 +84,6 @@ class _SplashScreenState extends State<SplashScreen>
   void dispose() {
     _logoController.dispose();
     _textController.dispose();
-    _authBloc.close();
     super.dispose();
   }
 
@@ -98,55 +97,52 @@ class _SplashScreenState extends State<SplashScreen>
     // Get screen dimensions
     final screenSize = MediaQuery.of(context).size;
 
-    return BlocProvider<AuthBloc>(
-      create: (context) => _authBloc,
-      child: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          // Khi auth state thay đổi, navigate tương ứng
-          if (state is AuthAuthenticated || state is AuthUnauthenticated) {
-            _navigateBasedOnAuthState(state);
-          }
-          // Không cần xử lý AuthLoading vì đang ở splash screen
-        },
-        child: Scaffold(
-          body: SizedBox(
-            width: screenSize.width,
-            height: screenSize.height,
-            child: SplashBackground(
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    // Logo centered in the middle of screen
-                    Expanded(
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            AnimatedLogo(
-                              controller: _logoController,
-                            ),
-                            SizedBox(height: screenSize.height * 0.025),
-                            AnimatedTitle(
-                              controller: _textController,
-                            ),
-                            SizedBox(height: screenSize.height * 0.05),
-                            // Loading indicator để show đang check auth
-                            BlocBuilder<AuthBloc, AuthState>(
-                              builder: (context, state) {
-                                if (state is AuthLoading) {
-                                  return const CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              },
-                            ),
-                          ],
-                        ),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        // Khi auth state thay đổi, navigate tương ứng
+        if (state is AuthAuthenticated || state is AuthUnauthenticated) {
+          _navigateBasedOnAuthState(state);
+        }
+        // Không cần xử lý AuthLoading vì đang ở splash screen
+      },
+      child: Scaffold(
+        body: SizedBox(
+          width: screenSize.width,
+          height: screenSize.height,
+          child: SplashBackground(
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Logo centered in the middle of screen
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedLogo(
+                            controller: _logoController,
+                          ),
+                          SizedBox(height: screenSize.height * 0.025),
+                          AnimatedTitle(
+                            controller: _textController,
+                          ),
+                          SizedBox(height: screenSize.height * 0.05),
+                          // Loading indicator để show đang check auth
+                          BlocBuilder<AuthBloc, AuthState>(
+                            builder: (context, state) {
+                              if (state is AuthLoading) {
+                                return const CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

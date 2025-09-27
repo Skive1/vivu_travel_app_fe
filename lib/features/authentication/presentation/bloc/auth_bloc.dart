@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../../../core/utils/user_storage.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/check_auth_status_usecase.dart';
@@ -10,6 +12,7 @@ import '../../domain/usecases/request_password_reset_usecase.dart';
 import '../../domain/usecases/verify_reset_password_otp_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
 import '../../domain/usecases/resend_register_otp_usecase.dart';
+import '../../domain/usecases/get_user_profile_usecase.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -25,6 +28,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final RequestPasswordResetUseCase requestPasswordResetUseCase;
   final VerifyResetPasswordOtpUseCase verifyResetPasswordOtpUseCase;
   final ResetPasswordUseCase resetPasswordUseCase;
+  final GetUserProfileUseCase getUserProfileUseCase;
   final AuthRepository authRepository;
 
   AuthBloc({
@@ -38,6 +42,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.requestPasswordResetUseCase,
     required this.verifyResetPasswordOtpUseCase,
     required this.resetPasswordUseCase,
+    required this.getUserProfileUseCase,
     required this.authRepository,
   }) : super(AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
@@ -50,6 +55,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RequestPasswordResetRequested>(_onRequestPasswordResetRequested);
     on<VerifyResetPasswordOtpRequested>(_onVerifyResetPasswordOtpRequested);
     on<ResetPasswordRequested>(_onResetPasswordRequested);
+    on<GetUserProfileRequested>(_onGetUserProfileRequested);
   }
 
   Future<void> _onLoginRequested(
@@ -62,9 +68,65 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       LoginParams(email: event.email, password: event.password),
     );
 
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (authEntity) => emit(AuthAuthenticated(authEntity)),
+    await result.fold(
+      (failure) async {
+        debugPrint('🔴 Login failed: ${failure.message}');
+        emit(AuthError(failure.message));
+      },
+      (authEntity) async {
+        debugPrint('🟢 Login successful, getting user profile...');
+        
+        // Load cached user profile first for faster UI
+        final cachedUser = await UserStorage.getUserProfile();
+        debugPrint('📦 Cached user: ${cachedUser?.name ?? "No cached user"}');
+        
+        // Emit authenticated state with cached profile (if available)
+        if (!emit.isDone) {
+          emit(AuthAuthenticated(authEntity, userEntity: cachedUser));
+          debugPrint('✅ Emitted AuthAuthenticated with cached user');
+        }
+        
+        // Then get fresh user profile from API
+        debugPrint('🔄 Requesting fresh user profile...');
+        add(GetUserProfileRequested());
+      },
+    );
+  }
+
+  Future<void> _onGetUserProfileRequested(
+    GetUserProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    debugPrint('🔍 Getting user profile...');
+    
+    // Only proceed if we're currently authenticated
+    final currentState = state;
+    if (currentState is! AuthAuthenticated) {
+      debugPrint('🔴 Not authenticated, cannot get user profile');
+      return;
+    }
+
+    final result = await getUserProfileUseCase(NoParams());
+
+    await result.fold(
+      (failure) async {
+        debugPrint('🔴 Failed to get user profile: ${failure.message}');
+        // If getting user profile fails, we still keep them authenticated
+        // but without user profile data
+      },
+      (userEntity) async {
+        debugPrint('🟢 User profile received: ${userEntity.name} (${userEntity.email})');
+        
+        // Save user profile to storage for future fast loading
+        final saved = await UserStorage.saveUserProfile(userEntity);
+        debugPrint('💾 User profile saved to storage: $saved');
+        
+        // Update authenticated state with fresh user profile
+        if (!emit.isDone) {
+          emit(currentState.copyWith(userEntity: userEntity));
+          debugPrint('✅ Emitted updated AuthAuthenticated with fresh user profile');
+        }
+      },
     );
   }
 
@@ -76,9 +138,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await logoutUseCase(NoParams());
 
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (_) => emit(const AuthUnauthenticated()),
+    await result.fold(
+      (failure) async => emit(AuthError(failure.message)),
+      (_) async {
+        // Clear user profile from storage
+        await UserStorage.clearUserProfile();
+        
+        // Check if emit is still available before calling
+        if (!emit.isDone) {
+          emit(const AuthUnauthenticated());
+        }
+      },
     );
   }
 
@@ -90,14 +160,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await checkAuthStatusUseCase(NoParams());
 
-    result.fold(
-      (failure) {
-        // Token hết hạn hoặc không có token
-        emit(const AuthUnauthenticated());
+    await result.fold(
+      (failure) async {
+        // Token hết hạn hoặc không có token - clear user profile
+        await UserStorage.clearUserProfile();
+        if (!emit.isDone) {
+          emit(const AuthUnauthenticated());
+        }
       },
-      (authEntity) {
-        // Token còn hạn
-        emit(AuthAuthenticated(authEntity));
+      (authEntity) async {
+        // Token còn hạn - load cached profile first
+        final cachedUser = await UserStorage.getUserProfile();
+        
+        // Emit authenticated state with cached profile
+        if (!emit.isDone) {
+          emit(AuthAuthenticated(authEntity, userEntity: cachedUser));
+        }
+        
+        // Then get fresh user profile from API
+        add(GetUserProfileRequested());
       },
     );
   }
@@ -108,13 +189,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final result = await refreshTokenUseCase(NoParams());
 
-    result.fold(
-      (failure) {
-        // Refresh failed - force logout
-        emit(const AuthUnauthenticated('Session expired. Please login again.'));
+    await result.fold(
+      (failure) async {
+        // Refresh failed - force logout and clear user profile
+        await UserStorage.clearUserProfile();
+        if (!emit.isDone) {
+          emit(const AuthUnauthenticated('Session expired. Please login again.'));
+        }
       },
-      (newToken) {
-        // Token refreshed successfully - check auth status to get updated entity
+      (newToken) async {
+        // Token refreshed successfully - check auth status and refresh user profile
         add(AuthStatusChecked());
       },
     );

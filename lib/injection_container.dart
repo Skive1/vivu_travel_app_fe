@@ -16,6 +16,7 @@ import 'features/authentication/domain/usecases/login_usecase.dart';
 import 'features/authentication/domain/usecases/logout_usecase.dart';
 import 'features/authentication/domain/usecases/check_auth_status_usecase.dart';
 import 'features/authentication/domain/usecases/refresh_token_usecase.dart';
+import 'features/authentication/domain/usecases/get_user_profile_usecase.dart';
 import 'features/authentication/presentation/bloc/auth_bloc.dart';
 import 'features/authentication/domain/usecases/register_usecase.dart';
 import 'features/authentication/domain/usecases/verify_register_otp_usecase.dart';
@@ -64,6 +65,7 @@ void _initAuth() {
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
   sl.registerLazySingleton(() => CheckAuthStatusUseCase(sl()));
   sl.registerLazySingleton(() => RefreshTokenUseCase(sl()));
+  sl.registerLazySingleton(() => GetUserProfileUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
   sl.registerLazySingleton(() => VerifyRegisterOtpUseCase(sl()));
   sl.registerLazySingleton(() => ResendRegisterOtpUseCase(sl()));
@@ -78,6 +80,7 @@ void _initAuth() {
       logoutUseCase: sl(),
       checkAuthStatusUseCase: sl(),
       refreshTokenUseCase: sl(),
+      getUserProfileUseCase: sl(),
       registerUseCase: sl(),
       verifyRegisterOtpUseCase: sl(),
       resendRegisterOtpUseCase: sl(),
