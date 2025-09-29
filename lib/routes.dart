@@ -10,6 +10,7 @@ import 'features/authentication/presentation/screens/otp_verification_reset_pass
 import 'features/authentication/presentation/screens/reset_password_screen.dart';
 import 'features/authentication/presentation/bloc/auth_bloc.dart';
 import 'features/home/presentation/screens/home_screen.dart';
+import 'features/schedule/presentation/screens/schedule_screen.dart';
 import 'features/user/presentation/screens/profile_screen.dart';
 import 'injection_container.dart' as di;
 
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String otpVerificationResetPassword = '/otp-verification-reset-password';
   static const String resetPassword = '/reset-password';
   static const String home = '/home';
+  static const String schedule = '/schedule';
   static const String profile = '/profile';
   
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -86,6 +88,11 @@ class AppRoutes {
       case home:
         return MaterialPageRoute(
           builder: (_) => const HomeScreen(),
+        );
+        
+      case schedule:
+        return MaterialPageRoute(
+          builder: (_) => const ScheduleScreen(),
         );
         
       case profile:
