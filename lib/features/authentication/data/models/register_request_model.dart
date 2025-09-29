@@ -5,7 +5,6 @@ class RegisterRequestModel {
   final String name;
   final String address;
   final String phoneNumber;
-  final String avatarUrl;
   final String gender;
 
   const RegisterRequestModel({
@@ -15,7 +14,6 @@ class RegisterRequestModel {
     required this.name,
     required this.address,
     required this.phoneNumber,
-    required this.avatarUrl,
     required this.gender,
   });
 
@@ -27,7 +25,6 @@ class RegisterRequestModel {
       'name': name,
       'address': address,
       'phoneNumber': phoneNumber,
-      'avatarUrl': avatarUrl,
       'gender': gender,
     };
   }

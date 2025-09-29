@@ -5,10 +5,10 @@ import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-import '../controllers/auth_controller.dart';
+import '../controllers/password_reset_controller.dart';
 
 class ResetPasswordForm extends StatefulWidget {
-  final AuthController controller;
+  final PasswordResetController controller;
   final String resetToken;
 
   const ResetPasswordForm({
@@ -36,7 +36,7 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
             label: 'New Password',
             placeholder: 'Enter new password',
             obscureText: !widget.controller.isNewPasswordVisible,
-            validator: widget.controller.validatePassword,
+            validator: widget.controller.validateNewPassword,
             suffixIcon: IconButton(
               icon: Icon(
                 widget.controller.isNewPasswordVisible

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../../core/utils/validator.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-import '../controllers/auth_controller.dart';
+import '../controllers/password_reset_controller.dart';
 
 class ForgotPasswordForm extends StatelessWidget {
-  final AuthController controller;
+  final PasswordResetController controller;
 
   const ForgotPasswordForm({
     super.key,

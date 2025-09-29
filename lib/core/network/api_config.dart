@@ -1,12 +1,16 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../constants/app_config.dart';
 
-class ApiConfig {
-  static String get baseUrl => dotenv.env['BASE_URL'] ?? '';
-  static const int connectTimeout = 15000; 
-  static const int receiveTimeout = 15000; 
+class NetworkConfig {
+  static String get baseUrl {
+    final envUrl = dotenv.env['BASE_URL'];
 
-  static const Map<String, String> defaultHeaders = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
+    return envUrl ?? ApiConfig.baseUrl;
+  }
+  
+  static int get connectTimeout => AppConfig.apiConnectTimeout;
+  static int get receiveTimeout => AppConfig.apiReceiveTimeout;
+  static int get sendTimeout => AppConfig.apiSendTimeout;
+
+  static Map<String, String> get defaultHeaders => ApiConfig.defaultHeaders;
 }

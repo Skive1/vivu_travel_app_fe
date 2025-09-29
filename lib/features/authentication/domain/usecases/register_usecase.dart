@@ -10,7 +10,6 @@ class RegisterParams {
   final String name;
   final String address;
   final String phoneNumber;
-  final String avatarUrl;
   final String gender;
 
   const RegisterParams({
@@ -20,7 +19,6 @@ class RegisterParams {
     required this.name,
     required this.address,
     required this.phoneNumber,
-    required this.avatarUrl,
     required this.gender,
   });
 }
@@ -39,7 +37,6 @@ class RegisterUseCase implements UseCase<String, RegisterParams> {
       name: params.name,
       address: params.address,
       phoneNumber: params.phoneNumber,
-      avatarUrl: params.avatarUrl,
       gender: params.gender,
     );
   }

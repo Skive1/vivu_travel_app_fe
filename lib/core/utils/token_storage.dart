@@ -23,17 +23,24 @@ class TokenStorage {
         throw Exception('Invalid token structure');
       }
 
-      await _storage.write(key: _tokenKey, value: token);
-      await _storage.write(key: _loginTimeKey, value: DateTime.now().toIso8601String());
-      
-      // Extract and save user info from JWT
+      // Extract user info from JWT first
       final userId = JwtDecoder.getUserId(token);
       final userName = JwtDecoder.getUserName(token);
       final userEmail = JwtDecoder.getUserEmail(token);
       
-      if (userId != null) await _storage.write(key: _userIdKey, value: userId);
-      if (userName != null) await _storage.write(key: _userNameKey, value: userName);
-      if (userEmail != null) await _storage.write(key: _userEmailKey, value: userEmail);
+      // Batch ALL storage operations for maximum performance
+      final allWrites = <Future<void>>[
+        _storage.write(key: _tokenKey, value: token),
+        _storage.write(key: _loginTimeKey, value: DateTime.now().toIso8601String()),
+      ];
+      
+      // Add conditional writes
+      if (userId != null) allWrites.add(_storage.write(key: _userIdKey, value: userId));
+      if (userName != null) allWrites.add(_storage.write(key: _userNameKey, value: userName));
+      if (userEmail != null) allWrites.add(_storage.write(key: _userEmailKey, value: userEmail));
+      
+      // Execute all writes in parallel
+      await Future.wait(allWrites);
 
       return true;
     } catch (e) {
@@ -49,6 +56,42 @@ class TokenStorage {
 
   static Future<void> saveRefreshToken(String refreshToken) async {
     await _storage.write(key: _refreshTokenKey, value: refreshToken);
+  }
+  
+  // Batch save both tokens for login optimization
+  static Future<bool> saveBothTokens(String accessToken, String refreshToken) async {
+    try {
+      // Validate token structure first
+      if (!JwtDecoder.isValidTokenStructure(accessToken)) {
+        throw Exception('Invalid token structure');
+      }
+
+      // Extract user info from JWT
+      final userId = JwtDecoder.getUserId(accessToken);
+      final userName = JwtDecoder.getUserName(accessToken);
+      final userEmail = JwtDecoder.getUserEmail(accessToken);
+      
+      // Batch ALL storage operations for maximum performance
+      final allWrites = <Future<void>>[
+        _storage.write(key: _tokenKey, value: accessToken),
+        _storage.write(key: _refreshTokenKey, value: refreshToken),
+        _storage.write(key: _loginTimeKey, value: DateTime.now().toIso8601String()),
+      ];
+      
+      // Add conditional writes
+      if (userId != null) allWrites.add(_storage.write(key: _userIdKey, value: userId));
+      if (userName != null) allWrites.add(_storage.write(key: _userNameKey, value: userName));
+      if (userEmail != null) allWrites.add(_storage.write(key: _userEmailKey, value: userEmail));
+      
+      // Execute all writes in parallel
+      await Future.wait(allWrites);
+      
+      return true;
+    } catch (e) {
+      // If save fails, clear any partial data
+      await clearAll();
+      return false;
+    }
   }
 
   static Future<String?> getRefreshToken() async {

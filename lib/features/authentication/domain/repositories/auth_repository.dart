@@ -24,7 +24,6 @@ abstract class AuthRepository {
     required String name,
     required String address,
     required String phoneNumber,
-    required String avatarUrl,
     required String gender,
   });
   

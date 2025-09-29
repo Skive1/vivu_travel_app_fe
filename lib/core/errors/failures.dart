@@ -24,3 +24,11 @@ class CacheFailure extends Failure {
 class AuthFailure extends Failure {
   const AuthFailure(super.message);
 }
+
+class ValidationFailure extends Failure {
+  const ValidationFailure(super.message);
+}
+
+class TimeoutFailure extends Failure {
+  const TimeoutFailure(super.message);
+}

@@ -10,6 +10,8 @@ class UserStorage {
   );
 
   static const String _userKey = 'user_profile';
+  static const String _userCacheTimeKey = 'user_cache_time';
+  static const Duration _cacheExpiry = Duration(hours: 24); // Cache for 24 hours
 
   // Save user profile
   static Future<bool> saveUserProfile(UserEntity user) async {
@@ -28,10 +30,11 @@ class UserStorage {
         'gender': user.gender,
       };
       
-      await _storage.write(
-        key: _userKey,
-        value: jsonEncode(userJson),
-      );
+      // Save user data and cache timestamp
+      await Future.wait([
+        _storage.write(key: _userKey, value: jsonEncode(userJson)),
+        _storage.write(key: _userCacheTimeKey, value: DateTime.now().toIso8601String()),
+      ]);
       
       return true;
     } catch (e) {
@@ -42,6 +45,17 @@ class UserStorage {
   // Get user profile
   static Future<UserEntity?> getUserProfile() async {
     try {
+      // Check if cache is expired
+      final cacheTimeString = await _storage.read(key: _userCacheTimeKey);
+      if (cacheTimeString != null) {
+        final cacheTime = DateTime.parse(cacheTimeString);
+        if (DateTime.now().difference(cacheTime) > _cacheExpiry) {
+          // Cache expired, clear it
+          await clearUserProfile();
+          return null;
+        }
+      }
+
       final userJsonString = await _storage.read(key: _userKey);
       if (userJsonString == null) return null;
       
@@ -70,7 +84,10 @@ class UserStorage {
   // Clear user profile
   static Future<void> clearUserProfile() async {
     try {
-      await _storage.delete(key: _userKey);
+      await Future.wait([
+        _storage.delete(key: _userKey),
+        _storage.delete(key: _userCacheTimeKey),
+      ]);
     } catch (e) {
     }
   }

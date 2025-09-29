@@ -1,98 +1,136 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/user_storage.dart';
+import '../../../authentication/domain/entities/user_entity.dart';
 
 class ProfileAvatar extends StatelessWidget {
   const ProfileAvatar({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<UserEntity?>(
+      future: UserStorage.getUserProfile(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const _LoadingAvatar();
+        }
+        
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const _DefaultAvatar();
+        }
+        
+        final user = snapshot.data!;
+        return _UserAvatar(user: user);
+      },
+    );
+  }
+}
+
+class _UserAvatar extends StatelessWidget {
+  final UserEntity user;
+  
+  const _UserAvatar({required this.user});
+  
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: 100,
       height: 100,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Color(0xFFFAD5E1), // Pink background
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 3,
+        ),
       ),
-      child: Stack(
-        children: [
-          // Main character
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 80,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-              ),
-              child: CustomPaint(
-                painter: AvatarPainter(),
-              ),
-            ),
+      child: user.hasValidAvatar 
+          ? _buildNetworkAvatar(user.avatar!, user.avatarInitials)
+          : _buildInitialsAvatar(user.avatarInitials),
+    );
+  }
+  
+  Widget _buildNetworkAvatar(String avatarUrl, String initials) {
+    return ClipOval(
+      child: Image.network(
+        avatarUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildInitialsAvatar(initials);
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return _buildInitialsAvatar(initials);
+        },
+      ),
+    );
+  }
+
+  Widget _buildInitialsAvatar(String initials) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withValues(alpha: 0.8),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          initials,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 32,
+            fontWeight: FontWeight.w600,
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class AvatarPainter extends CustomPainter {
+class _LoadingAvatar extends StatelessWidget {
+  const _LoadingAvatar();
+  
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    
-    // Face
-    paint.color = const Color(0xFFFFDBD7);
-    canvas.drawCircle(
-      Offset(size.width * 0.5, size.height * 0.4),
-      size.width * 0.25,
-      paint,
-    );
-    
-    // Hair
-    paint.color = const Color(0xFF2D1B2E);
-    final hairPath = Path();
-    hairPath.addOval(Rect.fromCenter(
-      center: Offset(size.width * 0.5, size.height * 0.25),
-      width: size.width * 0.45,
-      height: size.height * 0.35,
-    ));
-    canvas.drawPath(hairPath, paint);
-    
-    // Shirt - Orange/Red
-    paint.color = const Color(0xFFFF6B35);
-    final shirtRect = Rect.fromLTWH(
-      size.width * 0.3,
-      size.height * 0.55,
-      size.width * 0.4,
-      size.height * 0.35,
-    );
-    canvas.drawRect(shirtRect, paint);
-    
-    // Shirt collar - Blue
-    paint.color = const Color(0xFF4A90E2);
-    final collarPath = Path();
-    collarPath.moveTo(size.width * 0.35, size.height * 0.55);
-    collarPath.lineTo(size.width * 0.5, size.height * 0.65);
-    collarPath.lineTo(size.width * 0.65, size.height * 0.55);
-    collarPath.lineTo(size.width * 0.6, size.height * 0.5);
-    collarPath.lineTo(size.width * 0.4, size.height * 0.5);
-    collarPath.close();
-    canvas.drawPath(collarPath, paint);
-    
-    // Eyes
-    paint.color = Colors.black;
-    canvas.drawCircle(
-      Offset(size.width * 0.42, size.height * 0.38),
-      2,
-      paint,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.58, size.height * 0.38),
-      2,
-      paint,
+  Widget build(BuildContext context) {
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.grey[300],
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+        ),
+      ),
     );
   }
+}
 
+class _DefaultAvatar extends StatelessWidget {
+  const _DefaultAvatar();
+  
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) {
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.grey[300],
+      ),
+      child: const Icon(
+        Icons.person,
+        color: Colors.grey,
+        size: 40,
+      ),
+    );
+  }
 }

@@ -7,7 +7,7 @@ import '../widgets/auth_screen_layout.dart';
 import '../widgets/reset_password_form.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-import '../controllers/auth_controller.dart';
+import '../controllers/password_reset_controller.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String resetToken;
@@ -22,12 +22,12 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  late final AuthController _authController;
+  late final PasswordResetController _authController;
 
   @override
   void initState() {
     super.initState();
-    _authController = AuthController();
+    _authController = PasswordResetController();
   }
 
   @override

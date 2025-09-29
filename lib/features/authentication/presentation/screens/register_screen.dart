@@ -15,7 +15,7 @@ import '../widgets/login_link.dart';
 import '../widgets/terms_checkbox.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-import '../controllers/auth_controller.dart';
+import '../controllers/register_controller.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -25,17 +25,17 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  late final AuthController _authController;
+  late final RegisterController _registerController;
 
   @override
   void initState() {
     super.initState();
-    _authController = AuthController();
+    _registerController = RegisterController();
   }
 
   @override
   void dispose() {
-    _authController.dispose();
+    _registerController.dispose();
     super.dispose();
   }
 
@@ -64,7 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               if (state is RegisterSuccess) {
                 Navigator.of(context).pushNamed(
                   AppRoutes.otpVerification,
-                  arguments: _authController.registerEmailController.text.trim(),
+                  arguments: _registerController.emailController.text.trim(),
                 );
               } else if (state is AuthError) {
                 DialogUtils.showErrorDialog(
@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         child: IntrinsicHeight(
                           child: Form(
-                            key: _authController.registerFormKey,
+                            key: _registerController.formKey,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -109,40 +109,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                 // Name Field
                                 AuthTextField(
-                                  controller: _authController.nameController,
+                                  controller: _registerController.nameController,
                                   label: 'Full Name',
                                   keyboardType: TextInputType.name,
-                                  validator: _authController.validateName,
+                                  validator: _registerController.validateName,
                                 ),
 
                                 const SizedBox(height: 16),
 
                                 // Email Field
                                 AuthTextField(
-                                  controller: _authController.registerEmailController,
+                                  controller: _registerController.emailController,
                                   label: 'Email',
                                   keyboardType: TextInputType.emailAddress,
-                                  validator: _authController.validateEmail,
+                                  validator: _registerController.validateEmail,
                                 ),
 
                                 const SizedBox(height: 16),
 
                                 // Phone Field
                                 AuthTextField(
-                                  controller: _authController.phoneController,
+                                  controller: _registerController.phoneController,
                                   label: 'Phone Number',
                                   keyboardType: TextInputType.phone,
-                                  validator: _authController.validatePhone,
+                                  validator: _registerController.validatePhone,
                                 ),
 
                                 const SizedBox(height: 16),
 
                                 // Address Field
                                 AuthTextField(
-                                  controller: _authController.addressController,
+                                  controller: _registerController.addressController,
                                   label: 'Address',
                                   keyboardType: TextInputType.streetAddress,
-                                  validator: _authController.validateAddress,
+                                  validator: _registerController.validateAddress,
                                 ),
 
                                 const SizedBox(height: 16),
@@ -152,7 +152,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   builder: (context, setState) {
                                     return GestureDetector(
                                       onTap: () async {
-                                        await _authController.selectDate(context);
+                                        await _registerController.selectDate(context);
                                         setState(() {}); // Rebuild to show selected date
                                       },
                                       child: Container(
@@ -168,10 +168,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              _authController.formattedDate,
+                                              _registerController.formattedDate,
                                               style: TextStyle(
                                                 fontSize: 16,
-                                                color: _authController.selectedDate == null 
+                                                color: _registerController.selectedDate == null 
                                                     ? Colors.grey[600] 
                                                     : const Color(0xFF1A1A1A),
                                               ),
@@ -220,10 +220,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                                 child: RadioListTile<String>(
                                                   title: const Text('Nam'),
                                                   value: 'Nam',
-                                                  groupValue: _authController.selectedGender,
+                                                  groupValue: _registerController.selectedGender,
                                                   onChanged: (String? value) {
                                                     setState(() {
-                                                      _authController.selectGender(value!);
+                                                      _registerController.selectGender(value!);
                                                     });
                                                   },
                                                   activeColor: const Color(0xFF24BAEC),
@@ -235,10 +235,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                                 child: RadioListTile<String>(
                                                   title: const Text('Nữ'),
                                                   value: 'Nữ',
-                                                  groupValue: _authController.selectedGender,
+                                                  groupValue: _registerController.selectedGender,
                                                   onChanged: (String? value) {
                                                     setState(() {
-                                                      _authController.selectGender(value!);
+                                                      _registerController.selectGender(value!);
                                                     });
                                                   },
                                                   activeColor: const Color(0xFF24BAEC),
@@ -260,16 +260,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 StatefulBuilder(
                                   builder: (context, setState) {
                                     return AuthTextField(
-                                      controller: _authController.registerPasswordController,
+                                      controller: _registerController.passwordController,
                                       label: 'Password',
                                       isPassword: true,
-                                      isPasswordVisible: _authController.isRegisterPasswordVisible,
+                                      isPasswordVisible: _registerController.isPasswordVisible,
                                       onTogglePassword: () {
                                         setState(() {
-                                          _authController.toggleRegisterPasswordVisibility();
+                                          _registerController.togglePasswordVisibility();
                                         });
                                       },
-                                      validator: _authController.validatePassword,
+                                      validator: _registerController.validatePassword,
                                     );
                                   },
                                 ),
@@ -280,16 +280,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 StatefulBuilder(
                                   builder: (context, setState) {
                                     return AuthTextField(
-                                      controller: _authController.confirmPasswordController,
+                                      controller: _registerController.confirmPasswordController,
                                       label: 'Confirm Password',
                                       isPassword: true,
-                                      isPasswordVisible: _authController.isConfirmPasswordVisible,
+                                      isPasswordVisible: _registerController.isConfirmPasswordVisible,
                                       onTogglePassword: () {
                                         setState(() {
-                                          _authController.toggleConfirmPasswordVisibility();
+                                              _registerController.toggleConfirmPasswordVisibility();
                                         });
                                       },
-                                      validator: _authController.validateConfirmPassword,
+                                      validator: _registerController.validateConfirmPassword,
                                     );
                                   },
                                 ),
@@ -300,10 +300,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 StatefulBuilder(
                                   builder: (context, setState) {
                                     return TermsCheckbox(
-                                      isChecked: _authController.agreeTerms,
+                                      isChecked: _registerController.agreeTerms,
                                       onChanged: (value) {
                                         setState(() {
-                                          _authController.toggleAgreeTerms(value);
+                                          _registerController.toggleAgreeTerms(value);
                                         });
                                       },
                                     );
@@ -320,7 +320,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       child: AuthButton(
                                         text: 'Create Account',
                                         isLoading: state is AuthLoading,
-                                        onPressed: () => _authController.handleRegister(context),
+                                        onPressed: () => _registerController.handleRegister(context),
                                       ),
                                     );
                                   },

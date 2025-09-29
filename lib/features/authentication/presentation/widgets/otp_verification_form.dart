@@ -6,10 +6,10 @@ import '../widgets/otp_input_fields.dart';
 import '../widgets/otp_resend_section.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-import '../controllers/auth_controller.dart';
+import '../controllers/otp_controller.dart';
 
 class OtpVerificationForm extends StatelessWidget {
-  final AuthController controller;
+  final OtpController controller;
   final String email;
   final VoidCallback onVerify;
   final VoidCallback onResend;

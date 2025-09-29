@@ -14,6 +14,7 @@ import '../../domain/usecases/reset_password_usecase.dart';
 import '../../domain/usecases/resend_register_otp_usecase.dart';
 import '../../domain/usecases/get_user_profile_usecase.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/user_entity.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -71,24 +72,38 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await result.fold(
       (failure) async {
         debugPrint('🔴 Login failed: ${failure.message}');
-        emit(AuthError(failure.message));
+        if (!emit.isDone) {
+          emit(AuthError(failure.message));
+        }
       },
       (authEntity) async {
         debugPrint('🟢 Login successful, getting user profile...');
         
-        // Load cached user profile first for faster UI
-        final cachedUser = await UserStorage.getUserProfile();
-        debugPrint('📦 Cached user: ${cachedUser?.name ?? "No cached user"}');
+        // Start both operations in parallel for faster login
+        final futures = <Future>[
+          UserStorage.getUserProfile(),
+        ];
         
-        // Emit authenticated state with cached profile (if available)
-        if (!emit.isDone) {
-          emit(AuthAuthenticated(authEntity, userEntity: cachedUser));
-          debugPrint('✅ Emitted AuthAuthenticated with cached user');
+        // Add fresh profile loading if bloc is not closed
+        if (!isClosed) {
+          futures.add(_loadFreshUserProfile());
         }
         
-        // Then get fresh user profile from API
-        debugPrint('🔄 Requesting fresh user profile...');
-        add(GetUserProfileRequested());
+        final results = await Future.wait(futures);
+        final cachedUser = results[0] as UserEntity?;
+        final freshUser = results.length > 1 ? results[1] as UserEntity? : null;
+        
+        debugPrint('📦 Cached user: ${cachedUser?.name ?? "No cached user"}');
+        if (freshUser != null) {
+          debugPrint('🟢 Fresh user loaded: ${freshUser.name}');
+        }
+        
+        // Emit authenticated state with best available user data
+        if (!emit.isDone) {
+          final bestUser = freshUser ?? cachedUser;
+          emit(AuthAuthenticated(authEntity, userEntity: bestUser));
+          debugPrint('✅ Emitted AuthAuthenticated with ${freshUser != null ? "fresh" : "cached"} user');
+        }
       },
     );
   }
@@ -139,7 +154,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await logoutUseCase(NoParams());
 
     await result.fold(
-      (failure) async => emit(AuthError(failure.message)),
+      (failure) async {
+        if (!emit.isDone) {
+          emit(AuthError(failure.message));
+        }
+      },
       (_) async {
         // Clear user profile from storage
         await UserStorage.clearUserProfile();
@@ -178,7 +197,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
         
         // Then get fresh user profile from API
-        add(GetUserProfileRequested());
+        if (!isClosed) {
+          add(GetUserProfileRequested());
+        }
       },
     );
   }
@@ -199,7 +220,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (newToken) async {
         // Token refreshed successfully - check auth status and refresh user profile
-        add(AuthStatusChecked());
+        if (!isClosed) {
+          add(AuthStatusChecked());
+        }
       },
     );
   }
@@ -218,14 +241,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         name: event.name,
         address: event.address,
         phoneNumber: event.phoneNumber,
-        avatarUrl: event.avatarUrl,
         gender: event.gender,
       ),
     );
 
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (message) => emit(RegisterSuccess(message: message, email: event.email)),
+        result.fold(
+      (failure) {
+        if (!emit.isDone) {
+          emit(AuthError(failure.message));
+        }
+      },
+      (message) {
+        if (!emit.isDone) {
+          emit(RegisterSuccess(message: message, email: event.email));
+        }
+      },
     );
   }
 
@@ -243,8 +273,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (message) => emit(OtpVerificationSuccess(message)),
+      (failure) {
+        if (!emit.isDone) {
+          emit(AuthError(failure.message));
+        }
+      },
+      (message) {
+        if (!emit.isDone) {
+          emit(OtpVerificationSuccess(message));
+        }
+      },
     );
   }
 
@@ -259,8 +297,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (message) => emit(ResendRegisterOtpSuccess(message)),
+      (failure) {
+        if (!emit.isDone) {
+          emit(AuthError(failure.message));
+        }
+      },
+      (message) {
+        if (!emit.isDone) {
+          emit(ResendRegisterOtpSuccess(message));
+        }
+      },
     );
   }
 
@@ -275,8 +321,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (message) => emit(PasswordResetRequestSuccess(message: message, email: event.email)),
+      (failure) {
+        if (!emit.isDone) {
+          emit(AuthError(failure.message));
+        }
+      },
+      (message) {
+        if (!emit.isDone) {
+          emit(PasswordResetRequestSuccess(message: message, email: event.email));
+        }
+      },
     );
   }
 
@@ -294,8 +348,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (resetTokenEntity) => emit(ResetPasswordOtpVerificationSuccess(resetTokenEntity)),
+      (failure) {
+        if (!emit.isDone) {
+          emit(AuthError(failure.message));
+        }
+      },
+      (resetTokenEntity) {
+        if (!emit.isDone) {
+          emit(ResetPasswordOtpVerificationSuccess(resetTokenEntity));
+        }
+      },
     );
   }
 
@@ -313,8 +375,42 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (message) => emit(PasswordResetSuccess(message)),
+      (failure) {
+        if (!emit.isDone) {
+          emit(AuthError(failure.message));
+        }
+      },
+      (message) {
+        if (!emit.isDone) {
+          emit(PasswordResetSuccess(message));
+        }
+      },
     );
+  }
+
+  // Helper method to load fresh user profile in parallel
+  Future<UserEntity?> _loadFreshUserProfile() async {
+    if (isClosed) return null;
+    
+    try {
+      debugPrint('🔄 Loading fresh user profile in background...');
+      final result = await getUserProfileUseCase(NoParams());
+      
+      return result.fold(
+        (failure) {
+          debugPrint('🔴 Background user profile failed: ${failure.message}');
+          return null;
+        },
+        (userEntity) {
+          debugPrint('🟢 Background user profile success: ${userEntity.name}');
+          // Save to cache for next time (fire and forget)
+          UserStorage.saveUserProfile(userEntity);
+          return userEntity;
+        },
+      );
+    } catch (e) {
+      debugPrint('❌ Error loading fresh user profile: $e');
+      return null;
+    }
   }
 }

@@ -8,7 +8,7 @@ import '../widgets/auth_button.dart';
 import '../widgets/auth_text_field.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-import '../controllers/auth_controller.dart';
+import '../controllers/password_reset_controller.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -18,17 +18,17 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  late final AuthController _authController;
+  late final PasswordResetController _passwordResetController;
 
   @override
   void initState() {
     super.initState();
-    _authController = AuthController();
+    _passwordResetController = PasswordResetController();
   }
 
   @override
   void dispose() {
-    _authController.dispose();
+    _passwordResetController.dispose();
     super.dispose();
   }
 
@@ -51,7 +51,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is PasswordResetRequestSuccess) {
-              _authController.showCheckEmailDialog(context, state.email);
+              _passwordResetController.showCheckEmailDialog(context, state.email);
             } else if (state is AuthError) {
               DialogUtils.showErrorDialog(
                 context: context,
@@ -132,14 +132,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           
                           // Form
                           Form(
-                            key: _authController.forgotPasswordFormKey,
+                            key: _passwordResetController.forgotPasswordFormKey,
                             child: Column(
                               children: [
                                 AuthTextField(
-                                  controller: _authController.forgotPasswordEmailController,
+                                  controller: _passwordResetController.forgotPasswordEmailController,
                                   placeholder: 'www.uihut@gmail.com',
                                   keyboardType: TextInputType.emailAddress,
-                                  validator: _authController.validateEmail,
+                                  validator: _passwordResetController.validateEmail,
                                 ),
                               ],
                             ),
@@ -155,7 +155,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 child: AuthButton(
                                   text: 'Reset Password',
                                   isLoading: state is AuthLoading,
-                                  onPressed: () => _authController.handleForgotPassword(context),
+                                  onPressed: () => _passwordResetController.handleForgotPassword(context),
                                 ),
                               );
                             },

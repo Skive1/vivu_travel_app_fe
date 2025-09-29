@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../controllers/auth_controller.dart';
+import '../controllers/otp_controller.dart';
 import 'otp_input_field.dart';
 
 class OtpInputFields extends StatefulWidget {
-  final AuthController controller;
+  final OtpController controller;
   final VoidCallback? onOtpComplete;
 
   const OtpInputFields({

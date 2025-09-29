@@ -2,6 +2,9 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/endpoints.dart';
 import '../../../../core/utils/token_storage.dart';
+import '../../../../core/errors/exceptions.dart';
+import '../../../../core/errors/failures.dart' hide ValidationFailure, TimeoutFailure;
+import '../../../../core/errors/error_mapper.dart';
 import '../models/login_request_model.dart';
 import '../models/login_response_model.dart';
 import '../models/refresh_token_response_model.dart';
@@ -163,19 +166,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   Exception _handleDioError(DioException error) {
-    switch (error.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.sendTimeout:
-        return Exception('Connection timeout');
-      case DioExceptionType.badResponse:
-        final statusCode = error.response?.statusCode;
-        final message = error.response?.data?['message'] ?? 'Server error';
-        return Exception('Server error ($statusCode): $message');
-      case DioExceptionType.cancel:
-        return Exception('Request cancelled');
+    // Map DioException to appropriate custom Exception
+    final failure = ErrorMapper.mapDioErrorToFailure(error);
+    
+    // Convert Failure back to Exception for DataSource layer
+    switch (failure.runtimeType) {
+      case ServerFailure:
+        final serverFailure = failure as ServerFailure;
+        return ServerException(serverFailure.message);
+      case NetworkFailure:
+        final networkFailure = failure as NetworkFailure;
+        return NetworkException(networkFailure.message);
+      case AuthFailure:
+        final authFailure = failure as AuthFailure;
+        return AuthException(authFailure.message);
+      case ValidationFailure:
+        final validationFailure = failure as ValidationFailure;
+        return ValidationException(validationFailure.message);
+      case TimeoutFailure:
+        final timeoutFailure = failure as TimeoutFailure;
+        return TimeoutException(timeoutFailure.message);
       default:
-        return Exception('Network error: ${error.message}');
+        return ServerException(failure.message);
     }
   }
 }

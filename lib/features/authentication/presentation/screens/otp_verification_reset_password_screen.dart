@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-import '../controllers/auth_controller.dart';
+import '../controllers/otp_controller.dart';
 import '../widgets/auth_screen_layout.dart';
 import '../widgets/otp_verification_form.dart';
 
@@ -22,26 +22,26 @@ class OtpVerificationResetPasswordScreen extends StatefulWidget {
 }
 
 class _OtpVerificationResetPasswordScreenState extends State<OtpVerificationResetPasswordScreen> {
-  late final AuthController _authController;
+  late final OtpController _otpController;
 
   @override
   void initState() {
     super.initState();
-    _authController = AuthController();
+    _otpController = OtpController();
   }
 
   @override
   void dispose() {
-    _authController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
   void _handleVerifyOtp() {
-    _authController.handleVerifyResetPasswordOtp(context, widget.email);
+    _otpController.handleVerifyResetPasswordOtp(context, widget.email);
   }
 
   void _handleResendOtp() {
-    _authController.handleResendResetPasswordOtp(context);
+    _otpController.handleResendResetPasswordOtp(context);
   }
 
   @override
@@ -56,7 +56,7 @@ class _OtpVerificationResetPasswordScreenState extends State<OtpVerificationRese
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is ResetPasswordOtpVerificationSuccess) {
-          _authController.navigateToResetPassword(
+          _otpController.navigateToResetPassword(
             context, 
             state.resetTokenEntity.resetToken,
           );
@@ -72,7 +72,7 @@ class _OtpVerificationResetPasswordScreenState extends State<OtpVerificationRese
         title: 'OTP Verification',
         subtitle: '',
         child: OtpVerificationForm(
-          controller: _authController,
+          controller: _otpController,
           email: widget.email,
           onVerify: _handleVerifyOtp,
           onResend: _handleResendOtp,

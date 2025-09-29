@@ -1,5 +1,7 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/error_mapper.dart';
 import '../../../../core/network/network_info.dart';
 import '../../../../core/utils/token_storage.dart';
 import '../../../../core/utils/jwt_decoder.dart';
@@ -14,9 +16,7 @@ import '../models/otp_request_model.dart';
 import '../models/request_password_reset_request_model.dart';
 import '../models/verify_reset_password_otp_request_model.dart';
 import '../models/reset_password_request_model.dart';
-import '../../../../core/usecases/usecase.dart';
-import '../../domain/usecases/check_auth_status_usecase.dart';
-import '../models/resend_register_otp_response_model.dart';
+import 'package:flutter/material.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -27,46 +27,55 @@ class AuthRepositoryImpl implements AuthRepository {
     required this.networkInfo,
   });
 
+  /// Helper method to handle exceptions consistently
+  Failure _handleException(dynamic error) {
+    if (error is DioException) {
+      return ErrorMapper.mapDioErrorToFailure(error);
+    } else if (error is Exception) {
+      return ErrorMapper.mapExceptionToFailure(error);
+    } else {
+      return ErrorMapper.mapGenericErrorToFailure(error);
+    }
+  }
+
   @override
   Future<Either<Failure, AuthEntity>> login({
     required String email,
     required String password,
   }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final request = LoginRequestModel(email: email, password: password);
-        final response = await remoteDataSource.login(request);
-        final authEntity = response.toEntity();
-        
-        // Save token with validation
-        final saveSuccess = await TokenStorage.saveToken(authEntity.token);
-        if (!saveSuccess) {
-          return const Left(CacheFailure('Failed to save authentication token'));
-        }
-        
-        // Save refresh token
-        await TokenStorage.saveRefreshToken(response.refreshToken);
-        
-        return Right(authEntity);
-      } catch (e) {
-        return Left(ServerFailure(e.toString()));
+    try {
+      final request = LoginRequestModel(email: email, password: password);
+      final response = await remoteDataSource.login(request);
+      final authEntity = response.toEntity();
+
+      // Save both tokens in a single optimized batch operation
+      final saveSuccess = await TokenStorage.saveBothTokens(
+        authEntity.token,
+        response.refreshToken,
+      );
+
+      if (!saveSuccess) {
+        return const Left(CacheFailure('Failed to save authentication tokens'));
       }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+
+      return Right(authEntity);
+    } catch (e) {
+      return Left(_handleException(e));
     }
   }
 
   @override
   Future<Either<Failure, UserEntity>> getUserProfile() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final response = await remoteDataSource.getUserProfile();
-        return Right(response.toEntity());
-      } catch (e) {
-        return Left(ServerFailure(e.toString()));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+    try {
+      debugPrint('🔍 Getting user profile - checking token...');
+      final token = await TokenStorage.getToken();
+      debugPrint('🎫 Token available: ${token != null}');
+
+      final response = await remoteDataSource.getUserProfile();
+      return Right(response.toEntity());
+    } catch (e) {
+      debugPrint('❌ getUserProfile error: $e');
+      return Left(_handleException(e));
     }
   }
 
@@ -77,7 +86,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await TokenStorage.clearAll();
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Failed to clear authentication data: ${e.toString()}'));
+      return Left(_handleException(e));
     }
   }
 
@@ -88,8 +97,77 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, AuthEntity>> checkAuthStatus() async {
-    // Delegate to UseCase logic via repository pattern
-    return await CheckAuthStatusUseCase(this).call(NoParams());
+    try {
+      // Step 1: Check if token exists
+      final hasToken = await TokenStorage.hasToken();
+      if (!hasToken) {
+        return const Left(AuthFailure('No authentication token found'));
+      }
+
+      // Step 2: Get token and validate structure
+      final token = await TokenStorage.getToken();
+      if (token == null || !JwtDecoder.isValidTokenStructure(token)) {
+        await TokenStorage.clearAll();
+        return const Left(AuthFailure('Invalid token structure'));
+      }
+
+      // Step 3: Check token expiration
+      if (JwtDecoder.isExpired(token)) {
+        // Try to refresh token before giving up
+        final refreshResult = await refreshToken();
+        return refreshResult.fold(
+          (failure) {
+            // Refresh failed - clear all tokens and return failure
+            return Left(AuthFailure('Session expired. Please login again.'));
+          },
+          (newToken) {
+            // Refresh successful - get new token and create AuthEntity
+            return _createAuthEntityFromToken(newToken);
+          },
+        );
+      }
+
+      // Step 4: Create AuthEntity from validated token
+      return _createAuthEntityFromToken(token);
+      
+    } catch (e) {
+      // Clear corrupted data and return failure
+      await TokenStorage.clearAll();
+      return Left(CacheFailure('Authentication validation failed: ${e.toString()}'));
+    }
+  }
+
+  /// Helper method to create AuthEntity from token
+  Future<Either<Failure, AuthEntity>> _createAuthEntityFromToken(String token) async {
+    try {
+      // Validate claims match backend expectations
+      final userClaims = JwtDecoder.getUserClaims(token);
+      if (userClaims == null || 
+          userClaims['userId'] == null || 
+          userClaims['email'] == null) {
+        await TokenStorage.clearAll();
+        return const Left(AuthFailure('Invalid token claims'));
+      }
+
+      // Create AuthEntity from validated token
+      final userName = await TokenStorage.getUserName() ?? 
+                      JwtDecoder.getUserName(token) ?? 
+                      'Unknown User';
+      
+      final expiryDate = JwtDecoder.getExpiryDate(token) ?? 
+                        DateTime.now().add(const Duration(hours: 1));
+
+      final authEntity = AuthEntity(
+        token: token,
+        userName: userName,
+        expiresAt: expiryDate,
+      );
+
+      return Right(authEntity);
+    } catch (e) {
+      await TokenStorage.clearAll();
+      return Left(CacheFailure('Failed to create auth entity: ${e.toString()}'));
+    }
   }
 
   @override
@@ -97,20 +175,20 @@ class AuthRepositoryImpl implements AuthRepository {
     if (await networkInfo.isConnected) {
       try {
         final response = await remoteDataSource.refreshToken();
-        
+
         // Save new tokens
         final saveSuccess = await TokenStorage.saveToken(response.accessToken);
         if (!saveSuccess) {
           return const Left(CacheFailure('Failed to save new access token'));
         }
-        
+
         await TokenStorage.saveRefreshToken(response.refreshToken);
-        
+
         return Right(response.accessToken);
       } catch (e) {
         // If refresh fails, clear all tokens
         await TokenStorage.clearAll();
-        return Left(ServerFailure(e.toString()));
+        return Left(_handleException(e));
       }
     } else {
       return const Left(NetworkFailure('No internet connection'));
@@ -125,7 +203,6 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String address,
     required String phoneNumber,
-    required String avatarUrl,
     required String gender,
   }) async {
     if (await networkInfo.isConnected) {
@@ -137,14 +214,13 @@ class AuthRepositoryImpl implements AuthRepository {
           name: name,
           address: address,
           phoneNumber: phoneNumber,
-          avatarUrl: avatarUrl,
           gender: gender,
         );
-        
+
         final response = await remoteDataSource.register(request);
         return Right(response.message);
       } catch (e) {
-        return Left(ServerFailure(e.toString()));
+        return Left(_handleException(e));
       }
     } else {
       return const Left(NetworkFailure('No internet connection'));
@@ -162,7 +238,7 @@ class AuthRepositoryImpl implements AuthRepository {
         final response = await remoteDataSource.verifyRegisterOtp(request);
         return Right(response.message);
       } catch (e) {
-        return Left(ServerFailure(e.toString()));
+        return Left(_handleException(e));
       }
     } else {
       return const Left(NetworkFailure('No internet connection'));
@@ -179,7 +255,7 @@ class AuthRepositoryImpl implements AuthRepository {
         final response = await remoteDataSource.requestPasswordReset(request);
         return Right(response.message);
       } catch (e) {
-        return Left(ServerFailure(e.toString()));
+        return Left(_handleException(e));
       }
     } else {
       return const Left(NetworkFailure('No internet connection'));
@@ -200,7 +276,7 @@ class AuthRepositoryImpl implements AuthRepository {
         final response = await remoteDataSource.verifyResetPasswordOtp(request);
         return Right(response.toEntity(email));
       } catch (e) {
-        return Left(ServerFailure(e.toString()));
+        return Left(_handleException(e));
       }
     } else {
       return const Left(NetworkFailure('No internet connection'));
@@ -221,7 +297,7 @@ class AuthRepositoryImpl implements AuthRepository {
         final response = await remoteDataSource.resetPassword(request);
         return Right(response.message);
       } catch (e) {
-        return Left(ServerFailure(e.toString()));
+        return Left(_handleException(e));
       }
     } else {
       return const Left(NetworkFailure('No internet connection'));
@@ -237,7 +313,7 @@ class AuthRepositoryImpl implements AuthRepository {
         final response = await remoteDataSource.resendRegisterOtp(email);
         return Right(response.message);
       } catch (e) {
-        return Left(ServerFailure(e.toString()));
+        return Left(_handleException(e));
       }
     } else {
       return const Left(NetworkFailure('No internet connection'));

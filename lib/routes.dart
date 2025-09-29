@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'features/authentication/presentation/screens/login_screen.dart';
@@ -8,10 +7,8 @@ import 'features/authentication/presentation/screens/otp_verification_screen.dar
 import 'features/authentication/presentation/screens/forgot_password_screen.dart';
 import 'features/authentication/presentation/screens/otp_verification_reset_password_screen.dart';
 import 'features/authentication/presentation/screens/reset_password_screen.dart';
-import 'features/authentication/presentation/bloc/auth_bloc.dart';
 import 'features/home/presentation/screens/home_screen.dart';
 import 'features/user/presentation/screens/profile_screen.dart';
-import 'injection_container.dart' as di;
 
 class AppRoutes {
   static const String splash = '/';

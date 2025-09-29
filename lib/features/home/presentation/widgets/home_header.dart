@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-import '../../../../core/constants/app_colors.dart';
 import 'user_avatar.dart';
 import 'notification_bell.dart';
 

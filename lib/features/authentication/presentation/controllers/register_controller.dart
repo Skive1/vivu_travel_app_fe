@@ -1,0 +1,255 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/constants/validation_constants.dart';
+import '../../../../core/utils/dialog_utils.dart';
+import '../../../../routes.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+
+/// Controller for registration functionality
+/// Handles registration form state and validation
+class RegisterController {
+  // Form controllers
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+
+  // Form state
+  bool isPasswordVisible = false;
+  bool isConfirmPasswordVisible = false;
+  bool agreeTerms = false;
+  String selectedGender = 'Nam';
+  DateTime? selectedDate;
+
+  /// Toggle password visibility
+  void togglePasswordVisibility() {
+    isPasswordVisible = !isPasswordVisible;
+  }
+
+  /// Toggle confirm password visibility
+  void toggleConfirmPasswordVisibility() {
+    isConfirmPasswordVisible = !isConfirmPasswordVisible;
+  }
+
+  /// Toggle terms agreement
+  void toggleAgreeTerms(bool? value) {
+    agreeTerms = value ?? false;
+  }
+
+  /// Select gender
+  void selectGender(String gender) {
+    selectedGender = gender;
+  }
+
+  /// Select date of birth
+  Future<void> selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate ?? DateTime(2000),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xFF24BAEC),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: const Color(0xFF1A1A1A),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != selectedDate) {
+      selectedDate = picked;
+    }
+  }
+
+  /// Get formatted date string
+  String get formattedDate {
+    if (selectedDate == null) return 'Select Date of Birth';
+    return '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}';
+  }
+
+  /// Validate name field
+  String? validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return ValidationMessages.nameRequired;
+    }
+    
+    if (value.length < ValidationConstants.minNameLength) {
+      return ValidationMessages.nameTooShort;
+    }
+    
+    if (value.length > InputConstraints.maxNameLength) {
+      return ValidationMessages.nameTooLong;
+    }
+    
+    if (!RegExp(ValidationConstants.namePattern).hasMatch(value)) {
+      return ValidationMessages.nameInvalid;
+    }
+    
+    return null;
+  }
+
+  /// Validate email field
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return ValidationMessages.emailRequired;
+    }
+    
+    if (value.length > InputConstraints.maxEmailLength) {
+      return ValidationMessages.emailTooLong;
+    }
+    
+    if (!RegExp(ValidationConstants.emailPattern).hasMatch(value)) {
+      return ValidationMessages.emailInvalid;
+    }
+    
+    return null;
+  }
+
+  /// Validate password field
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return ValidationMessages.passwordRequired;
+    }
+    
+    if (value.length < ValidationConstants.minPasswordLength) {
+      return ValidationMessages.passwordTooShort;
+    }
+    
+    if (value.length > InputConstraints.maxPasswordLength) {
+      return ValidationMessages.passwordTooLong;
+    }
+    
+    if (!RegExp(ValidationConstants.passwordPattern).hasMatch(value)) {
+      return ValidationMessages.passwordWeak;
+    }
+    
+    return null;
+  }
+
+  /// Validate confirm password field
+  String? validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return ValidationMessages.passwordRequired;
+    }
+    
+    if (value != passwordController.text) {
+      return ValidationMessages.passwordMismatch;
+    }
+    
+    return null;
+  }
+
+  /// Validate phone field
+  String? validatePhone(String? value) {
+    if (value == null || value.isEmpty) {
+      return ValidationMessages.phoneRequired;
+    }
+    
+    if (value.length < ValidationConstants.minPhoneLength) {
+      return ValidationMessages.phoneTooShort;
+    }
+    
+    if (value.length > InputConstraints.maxPhoneLength) {
+      return ValidationMessages.phoneTooLong;
+    }
+    
+    if (!RegExp(ValidationConstants.phonePattern).hasMatch(value)) {
+      return ValidationMessages.phoneInvalid;
+    }
+    
+    return null;
+  }
+
+  /// Validate address field
+  String? validateAddress(String? value) {
+    if (value == null || value.isEmpty) {
+      return ValidationMessages.addressRequired;
+    }
+    
+    if (value.length > InputConstraints.maxAddressLength) {
+      return ValidationMessages.addressTooLong;
+    }
+    
+    if (!RegExp(ValidationConstants.addressPattern).hasMatch(value)) {
+      return ValidationMessages.addressInvalid;
+    }
+    
+    return null;
+  }
+
+  /// Handle registration form submission
+  void handleRegister(BuildContext context) {
+    if (!formKey.currentState!.validate()) return;
+
+    if (selectedDate == null) {
+      DialogUtils.showErrorDialog(
+        context: context,
+        title: 'Date Required',
+        message: 'Please select your date of birth',
+      );
+      return;
+    }
+
+    if (!agreeTerms) {
+      DialogUtils.showErrorDialog(
+        context: context,
+        title: 'Terms Required',
+        message: 'Please agree to the terms and conditions',
+      );
+      return;
+    }
+
+    final authBloc = context.read<AuthBloc>();
+    authBloc.add(
+      RegisterRequested(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+        dateOfBirth: selectedDate!.toIso8601String(),
+        name: nameController.text.trim(),
+        address: addressController.text.trim(),
+        phoneNumber: phoneController.text.trim(),
+        gender: selectedGender,
+      ),
+    );
+  }
+
+  /// Navigate to login screen
+  void navigateToLogin(BuildContext context) {
+    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+  }
+
+  /// Clear form data
+  void clearForm() {
+    nameController.clear();
+    emailController.clear();
+    passwordController.clear();
+    confirmPasswordController.clear();
+    phoneController.clear();
+    addressController.clear();
+    isPasswordVisible = false;
+    isConfirmPasswordVisible = false;
+    agreeTerms = false;
+    selectedGender = 'Nam';
+    selectedDate = null;
+  }
+
+  /// Dispose resources
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    phoneController.dispose();
+    addressController.dispose();
+  }
+}

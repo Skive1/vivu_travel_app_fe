@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../routes.dart';
-import '../../../../injection_container.dart' as di;
 import '../../../../core/utils/dialog_utils.dart';
 import '../widgets/auth_container.dart';
 import '../widgets/auth_header.dart';
@@ -15,7 +13,7 @@ import '../widgets/social_auth_section.dart';
 import '../widgets/sign_up_link.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
-import '../controllers/auth_controller.dart';
+import '../controllers/login_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,17 +23,17 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  late final AuthController _authController;
+  late final LoginController _loginController;
 
   @override
   void initState() {
     super.initState();
-    _authController = AuthController();
+    _loginController = LoginController();
   }
 
   @override
   void dispose() {
-    _authController.dispose();
+    _loginController.dispose();
     super.dispose();
   }
 
@@ -51,12 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Get screen dimensions and safe area
     final screenSize = MediaQuery.of(context).size;
-    final safePadding = MediaQuery.of(context).padding;
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
-    return BlocProvider(
-      create: (context) => di.sl<AuthBloc>(),
-      child: Scaffold(
+    return Scaffold(
         // Ensure full screen coverage
         body: SizedBox(
           width: screenSize.width,
@@ -90,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: IntrinsicHeight(
                           child: Form(
-                            key: _authController.formKey,
+                            key: _loginController.formKey,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -107,10 +102,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                 // Email Field
                                 AuthTextField(
-                                  controller: _authController.emailController,
+                                  controller: _loginController.emailController,
                                   label: 'Email',
                                   keyboardType: TextInputType.emailAddress,
-                                  validator: _authController.validateEmail,
+                                  validator: _loginController.validateEmail,
                                 ),
 
                                 const SizedBox(height: 16),
@@ -119,16 +114,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                 StatefulBuilder(
                                   builder: (context, setState) {
                                     return AuthTextField(
-                                      controller: _authController.passwordController,
+                                      controller: _loginController.passwordController,
                                       label: 'Password',
                                       isPassword: true,
-                                      isPasswordVisible: _authController.isPasswordVisible,
+                                      isPasswordVisible: _loginController.isPasswordVisible,
                                       onTogglePassword: () {
                                         setState(() {
-                                          _authController.togglePasswordVisibility();
+                                          _loginController.togglePasswordVisibility();
                                         });
                                       },
-                                      validator: _authController.validatePassword,
+                                
                                     );
                                   },
                                 ),
@@ -139,10 +134,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 StatefulBuilder(
                                   builder: (context, setState) {
                                     return LoginOptions(
-                                      rememberMe: _authController.rememberMe,
+                                      rememberMe: _loginController.rememberMe,
                                       onRememberMeChanged: (value) {
                                         setState(() {
-                                          _authController.toggleRememberMe(value);
+                                          _loginController.toggleRememberMe(value);
                                         });
                                       },
                                     );
@@ -158,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       width: double.infinity,
                                       child: AuthButton(
                                         isLoading: state is AuthLoading,
-                                        onPressed: () => _authController.handleLogin(context),
+                                        onPressed: () => _loginController.handleLogin(context),
                                         text: 'Sign In',
                                       ),
                                     );
@@ -194,7 +189,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

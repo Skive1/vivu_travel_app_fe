@@ -27,7 +27,6 @@ class RegisterRequested extends AuthEvent {
   final String name;
   final String address;
   final String phoneNumber;
-  final String avatarUrl;
   final String gender;
 
   const RegisterRequested({
@@ -37,12 +36,11 @@ class RegisterRequested extends AuthEvent {
     required this.name,
     required this.address,
     required this.phoneNumber,
-    required this.avatarUrl,
     required this.gender,
   });
 
   @override
-  List<Object> get props => [email, password, dateOfBirth, name, address, phoneNumber, avatarUrl, gender];
+  List<Object> get props => [email, password, dateOfBirth, name, address, phoneNumber, gender];
 }
 
 class VerifyRegisterOtpRequested extends AuthEvent {

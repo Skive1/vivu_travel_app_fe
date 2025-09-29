@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../authentication/presentation/bloc/auth_bloc.dart';
+import '../../../authentication/presentation/bloc/auth_state.dart';
+import '../../../authentication/presentation/bloc/auth_event.dart';
 import 'profile_avatar.dart';
 import 'profile_user_info.dart';
 import 'profile_stats_section.dart';
@@ -28,17 +32,26 @@ class ProfileContainer extends StatelessWidget {
           ),
         ],
       ),
-      child: ProfileContent(topPadding: safePadding.top),
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          return ProfileContent(
+            topPadding: safePadding.top,
+            authState: state,
+          );
+        },
+      ),
     );
   }
 }
 
 class ProfileContent extends StatelessWidget {
   final double topPadding;
+  final AuthState authState;
   
   const ProfileContent({
     super.key,
     required this.topPadding,
+    required this.authState,
   });
 
   @override
@@ -87,9 +100,12 @@ class ProfileContent extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  // Refresh user profile
+                  context.read<AuthBloc>().add(GetUserProfileRequested());
+                },
                 icon: const Icon(
-                  Icons.edit_outlined,
+                  Icons.refresh_outlined,
                   color: AppColors.primary,
                   size: 20,
                 ),
@@ -100,37 +116,58 @@ class ProfileContent extends StatelessWidget {
         
         // Content body
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                // Profile Header Section
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 30, 24, 30),
-                  child: const Column(
-                    children: [
-                      // Avatar
-                      ProfileAvatar(),
-                      SizedBox(height: 16),
-                      // User Info
-                      ProfileUserInfo(),
-                    ],
+          child: RefreshIndicator(
+            onRefresh: () async {
+              context.read<AuthBloc>().add(GetUserProfileRequested());
+              // Wait a bit for the request to complete
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            color: AppColors.primary,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  // Profile Header Section
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(24, 30, 24, 30),
+                    child: Column(
+                      children: [
+                        // Avatar
+                        const ProfileAvatar(),
+                        const SizedBox(height: 16),
+                        // User Info
+                        const ProfileUserInfo(),
+                        // Show loading indicator if refreshing
+                        if (authState is AuthLoading) ...[
+                          const SizedBox(height: 16),
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Statistics Cards
-                const ProfileStatsSection(),
-                
-                const SizedBox(height: 30),
-                
-                // Menu Items
-                const ProfileMenuSection(),
-                
-                // Bottom safe area spacer
-                SizedBox(height: bottomPadding + 30),
-              ],
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Statistics Cards
+                  const ProfileStatsSection(),
+                  
+                  const SizedBox(height: 30),
+                  
+                  // Menu Items
+                  const ProfileMenuSection(),
+                  
+                  // Bottom safe area spacer
+                  SizedBox(height: bottomPadding + 30),
+                ],
+              ),
             ),
           ),
         ),

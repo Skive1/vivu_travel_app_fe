@@ -1,20 +1,36 @@
 import 'package:dio/dio.dart';
+import 'endpoints.dart';
 import 'api_config.dart';
 import '../utils/token_storage.dart';
+import 'network_info.dart';
+import '../../injection_container.dart' as di;
 
 class DioFactory {
   static Dio create() {
     final dio = Dio(BaseOptions(
-      baseUrl: ApiConfig.baseUrl,
-      connectTimeout: Duration(milliseconds: ApiConfig.connectTimeout),
-      receiveTimeout: Duration(milliseconds: ApiConfig.receiveTimeout),
-      headers: ApiConfig.defaultHeaders,
+      baseUrl: NetworkConfig.baseUrl,
+      connectTimeout: Duration(milliseconds: NetworkConfig.connectTimeout),
+      receiveTimeout: Duration(milliseconds: NetworkConfig.receiveTimeout),
+      headers: NetworkConfig.defaultHeaders,
     ));
 
-    // Token Interceptor with Refresh Logic
+    // Network Check & Token Interceptor with Refresh Logic
     dio.interceptors.add(
       QueuedInterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Check network connectivity first
+          final networkInfo = di.sl<NetworkInfo>();
+          if (!await networkInfo.isConnected) {
+            return handler.reject(
+              DioException(
+                requestOptions: options,
+                type: DioExceptionType.connectionError,
+                message: 'No internet connection',
+              ),
+            );
+          }
+
+          // Add auth token if available
           final token = await TokenStorage.getToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
@@ -25,7 +41,7 @@ class DioFactory {
           if (error.response?.statusCode == 401) {
             final requestOptions = error.requestOptions;
             
-            if (requestOptions.path.contains('/refresh_token')) {
+            if (requestOptions.path.contains(Endpoints.refreshToken)) {
               await TokenStorage.clearAll();
               return handler.reject(error);
             }
@@ -57,25 +73,25 @@ class DioFactory {
         throw Exception('No refresh token available');
       }
 
-      final refreshDio = Dio(BaseOptions(
-        baseUrl: ApiConfig.baseUrl,
-        connectTimeout: Duration(milliseconds: ApiConfig.connectTimeout),
-        receiveTimeout: Duration(milliseconds: ApiConfig.receiveTimeout),
-        headers: {
-          ...ApiConfig.defaultHeaders,
-          'Authorization': 'Bearer $refreshToken',
-        },
-      ));
+      // Reuse existing dio instance with refresh token
+      final originalHeaders = Map<String, dynamic>.from(dio.options.headers);
+      dio.options.headers['Authorization'] = 'Bearer $refreshToken';
 
-      final response = await refreshDio.get('/refresh_token');
+      final response = await dio.get(Endpoints.refreshToken);
+      
+      // Restore original headers
+      dio.options.headers = originalHeaders;
       
       if (response.statusCode == 200) {
         final data = response.data;
         final newAccessToken = data['accessToken'];
         final newRefreshToken = data['refreshToken'];
         
-        await TokenStorage.saveToken(newAccessToken);
-        await TokenStorage.saveRefreshToken(newRefreshToken);
+        // Batch save tokens for better performance
+        await Future.wait([
+          TokenStorage.saveToken(newAccessToken),
+          TokenStorage.saveRefreshToken(newRefreshToken),
+        ]);
         
         return newAccessToken;
       }
