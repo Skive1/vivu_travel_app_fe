@@ -56,8 +56,12 @@ class _HomeContentState extends State<HomeContent> {
         _showSnackBar('Khám phá - Coming soon!');
         break;
       case 2:
-        // Plan
-        _showSnackBar('Kế hoạch - Coming soon!');
+        // Schedule - Navigate to ScheduleScreen
+        Navigator.pushNamed(context, AppRoutes.schedule);
+        // Reset currentIndex after navigation
+        setState(() {
+          _currentIndex = 0;
+        });
         break;
       case 3:
         // Messages
