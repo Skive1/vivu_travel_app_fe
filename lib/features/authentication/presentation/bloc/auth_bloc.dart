@@ -13,6 +13,7 @@ import '../../domain/usecases/verify_reset_password_otp_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
 import '../../domain/usecases/resend_register_otp_usecase.dart';
 import '../../domain/usecases/get_user_profile_usecase.dart';
+import '../../domain/usecases/change_password_usecase.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
 import 'auth_event.dart';
@@ -30,6 +31,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final VerifyResetPasswordOtpUseCase verifyResetPasswordOtpUseCase;
   final ResetPasswordUseCase resetPasswordUseCase;
   final GetUserProfileUseCase getUserProfileUseCase;
+  final ChangePasswordUseCase changePasswordUseCase;
   final AuthRepository authRepository;
 
   AuthBloc({
@@ -44,6 +46,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.verifyResetPasswordOtpUseCase,
     required this.resetPasswordUseCase,
     required this.getUserProfileUseCase,
+    required this.changePasswordUseCase,
     required this.authRepository,
   }) : super(AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
@@ -57,6 +60,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<VerifyResetPasswordOtpRequested>(_onVerifyResetPasswordOtpRequested);
     on<ResetPasswordRequested>(_onResetPasswordRequested);
     on<GetUserProfileRequested>(_onGetUserProfileRequested);
+    on<ChangePasswordRequested>(_onChangePasswordRequested);
   }
 
   Future<void> _onLoginRequested(
@@ -73,7 +77,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (failure) async {
         debugPrint('🔴 Login failed: ${failure.message}');
         if (!emit.isDone) {
-          emit(AuthError(failure.message));
+          emit(AuthError(failure.message, title: 'Login Failed'));
         }
       },
       (authEntity) async {
@@ -107,6 +111,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
     );
   }
+
 
   Future<void> _onGetUserProfileRequested(
     GetUserProfileRequested event,
@@ -156,7 +161,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await result.fold(
       (failure) async {
         if (!emit.isDone) {
-          emit(AuthError(failure.message));
+          emit(AuthError(failure.message, title: 'Logout Failed'));
         }
       },
       (_) async {
@@ -248,7 +253,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         result.fold(
       (failure) {
         if (!emit.isDone) {
-          emit(AuthError(failure.message));
+          emit(AuthError(failure.message, title: 'Register Failed'));
         }
       },
       (message) {
@@ -275,7 +280,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         if (!emit.isDone) {
-          emit(AuthError(failure.message));
+          emit(AuthError(failure.message, title: 'OTP Verification Failed'));
         }
       },
       (message) {
@@ -299,7 +304,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         if (!emit.isDone) {
-          emit(AuthError(failure.message));
+          emit(AuthError(failure.message, title: 'Resend OTP Failed'));
         }
       },
       (message) {
@@ -323,7 +328,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         if (!emit.isDone) {
-          emit(AuthError(failure.message));
+          emit(AuthError(failure.message, title: 'Password Reset Request Failed'));
         }
       },
       (message) {
@@ -350,7 +355,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         if (!emit.isDone) {
-          emit(AuthError(failure.message));
+          emit(AuthError(failure.message, title: 'OTP Verification Failed'));
         }
       },
       (resetTokenEntity) {
@@ -377,12 +382,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         if (!emit.isDone) {
-          emit(AuthError(failure.message));
+          emit(AuthError(failure.message, title: 'Reset Password Failed'));
         }
       },
       (message) {
         if (!emit.isDone) {
           emit(PasswordResetSuccess(message));
+        }
+      },
+    );
+  }
+
+  Future<void> _onChangePasswordRequested(
+    ChangePasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await changePasswordUseCase(
+      ChangePasswordParams(
+        oldPassword: event.oldPassword,
+        newPassword: event.newPassword,
+      ),
+    );
+
+    result.fold(
+      (failure) {
+        if (!emit.isDone) {
+          emit(AuthError(failure.message, title: 'Change Password Failed'));
+        }
+      },
+      (changePasswordEntity) {
+        if (!emit.isDone) {
+          emit(ChangePasswordSuccess(changePasswordEntity.message));
         }
       },
     );

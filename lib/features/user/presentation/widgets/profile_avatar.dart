@@ -4,23 +4,24 @@ import '../../../../core/utils/user_storage.dart';
 import '../../../authentication/domain/entities/user_entity.dart';
 
 class ProfileAvatar extends StatelessWidget {
-  const ProfileAvatar({super.key});
+  final UserEntity? user;
+  const ProfileAvatar({super.key, this.user});
 
   @override
   Widget build(BuildContext context) {
+    if (user != null) {
+      return _UserAvatar(user: user!);
+    }
     return FutureBuilder<UserEntity?>(
       future: UserStorage.getUserProfile(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const _LoadingAvatar();
         }
-        
         if (snapshot.hasError || !snapshot.hasData) {
           return const _DefaultAvatar();
         }
-        
-        final user = snapshot.data!;
-        return _UserAvatar(user: user);
+        return _UserAvatar(user: snapshot.data!);
       },
     );
   }

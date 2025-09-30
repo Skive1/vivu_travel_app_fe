@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
               } else if (state is AuthError) {
                 DialogUtils.showErrorDialog(
                   context: context,
-                  title: 'Login Failed',
+                  title: state.title ?? 'Login Failed',
                   message: state.message,
                 );
               }

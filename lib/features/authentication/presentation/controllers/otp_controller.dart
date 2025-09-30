@@ -116,12 +116,12 @@ class OtpController {
   /// Handle OTP verification for password reset
   void handleVerifyResetPasswordOtp(BuildContext context, String email) {
     final otpCode = getOtpCode();
-    
-    if (otpCode.length != 6) {
+    final validationError = validateOtp(otpCode);
+    if (validationError != null) {
       DialogUtils.showErrorDialog(
         context: context,
         title: 'Invalid OTP',
-        message: 'Please enter complete 6-digit OTP code',
+        message: validationError,
       );
       return;
     }
@@ -185,6 +185,15 @@ class OtpController {
   /// Focus first OTP field
   void focusFirstField() {
     otpFocusNodes[0].requestFocus();
+  }
+
+  /// Clear OTP and focus first field
+  void clearOtpAndFocusFirstField() {
+    clearOtp();
+    // Use a small delay to ensure the clear operation completes before focusing
+    Future.delayed(const Duration(milliseconds: 100), () {
+      focusFirstField();
+    });
   }
 
   /// Dispose resources

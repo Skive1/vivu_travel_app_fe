@@ -4,23 +4,24 @@ import '../../../../core/utils/user_storage.dart';
 import '../../../authentication/domain/entities/user_entity.dart';
 
 class ProfileUserInfo extends StatelessWidget {
-  const ProfileUserInfo({super.key});
+  final UserEntity? user;
+  const ProfileUserInfo({super.key, this.user});
 
   @override
   Widget build(BuildContext context) {
+    if (user != null) {
+      return _UserInfoContent(user: user!);
+    }
     return FutureBuilder<UserEntity?>(
       future: UserStorage.getUserProfile(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const _LoadingUserInfo();
         }
-        
         if (snapshot.hasError || !snapshot.hasData) {
           return const _ErrorUserInfo();
         }
-        
-        final user = snapshot.data!;
-        return _UserInfoContent(user: user);
+        return _UserInfoContent(user: snapshot.data!);
       },
     );
   }

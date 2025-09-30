@@ -8,4 +8,6 @@ class Endpoints {
   static const String refreshToken = '/api/auth/refresh-token';
   static const String resendRegisterOtp = '/api/auth/resend-register-otp';
   static const String me = '/api/auth/me';
+  static const String changePassword = '/api/auth/change-password';
+  static const String updateProfile = '/api/user/update';
 }

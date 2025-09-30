@@ -20,6 +20,8 @@ import '../models/verify_reset_password_otp_response_model.dart';
 import '../models/reset_password_request_model.dart';
 import '../models/reset_password_response_model.dart';
 import '../models/get_user_response_model.dart';
+import '../models/change_password_request_model.dart';
+import '../models/change_password_response_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request);
@@ -33,6 +35,8 @@ abstract class AuthRemoteDataSource {
   Future<RequestPasswordResetResponseModel> requestPasswordReset(RequestPasswordResetRequestModel request);
   Future<VerifyResetPasswordOtpResponseModel> verifyResetPasswordOtp(VerifyResetPasswordOtpRequestModel request);
   Future<ResetPasswordResponseModel> resetPassword(ResetPasswordRequestModel request);
+  // Change Password method
+  Future<ChangePasswordResponseModel> changePassword(ChangePasswordRequestModel request);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -160,6 +164,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
       
       return ResetPasswordResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
+  @override
+  Future<ChangePasswordResponseModel> changePassword(ChangePasswordRequestModel request) async {
+    try {
+      final response = await apiClient.post(
+        Endpoints.changePassword,
+        data: request.toJson(),
+      );
+      
+      return ChangePasswordResponseModel.fromJson(response.data);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }

@@ -8,6 +8,7 @@ import '../../../../core/utils/jwt_decoder.dart';
 import '../../domain/entities/auth_entity.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/entities/reset_token_entity.dart';
+import '../../domain/entities/change_password_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/login_request_model.dart';
@@ -16,6 +17,7 @@ import '../models/otp_request_model.dart';
 import '../models/request_password_reset_request_model.dart';
 import '../models/verify_reset_password_otp_request_model.dart';
 import '../models/reset_password_request_model.dart';
+import '../models/change_password_request_model.dart';
 import 'package:flutter/material.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -312,6 +314,27 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         final response = await remoteDataSource.resendRegisterOtp(email);
         return Right(response.message);
+      } catch (e) {
+        return Left(_handleException(e));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ChangePasswordEntity>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final request = ChangePasswordRequestModel(
+          oldPassword: oldPassword,
+          newPassword: newPassword,
+        );
+        final response = await remoteDataSource.changePassword(request);
+        return Right(response.toEntity());
       } catch (e) {
         return Left(_handleException(e));
       }

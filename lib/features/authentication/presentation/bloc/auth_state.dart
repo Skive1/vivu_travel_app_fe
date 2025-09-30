@@ -49,11 +49,12 @@ class AuthUnauthenticated extends AuthState {
 
 class AuthError extends AuthState {
   final String message;
+  final String? title;
 
-  const AuthError(this.message);
+  const AuthError(this.message, {this.title});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, title];
 }
 
 class RegisterSuccess extends AuthState {
@@ -114,6 +115,15 @@ class ResendRegisterOtpSuccess extends AuthState {
   final String message;
 
   const ResendRegisterOtpSuccess(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
+class ChangePasswordSuccess extends AuthState {
+  final String message;
+
+  const ChangePasswordSuccess(this.message);
 
   @override
   List<Object> get props => [message];

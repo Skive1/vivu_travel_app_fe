@@ -47,9 +47,17 @@ class DioFactory {
             }
             
             try {
+              // Prevent infinite retry loop
+              final hasRetried = requestOptions.extra['retried'] == true;
+              if (hasRetried) {
+                await TokenStorage.clearAll();
+                return handler.reject(error);
+              }
+
               final newToken = await _refreshToken(dio);
               if (newToken != null) {
                 requestOptions.headers['Authorization'] = 'Bearer $newToken';
+                requestOptions.extra['retried'] = true;
                 final retryResponse = await dio.fetch(requestOptions);
                 return handler.resolve(retryResponse);
               }
@@ -73,14 +81,14 @@ class DioFactory {
         throw Exception('No refresh token available');
       }
 
-      // Reuse existing dio instance with refresh token
-      final originalHeaders = Map<String, dynamic>.from(dio.options.headers);
-      dio.options.headers['Authorization'] = 'Bearer $refreshToken';
-
-      final response = await dio.get(Endpoints.refreshToken);
-      
-      // Restore original headers
-      dio.options.headers = originalHeaders;
+      // Call refresh endpoint with refreshToken as query param
+      final response = await dio.get(
+        '${Endpoints.refreshToken}?refreshToken=$refreshToken',
+        options: Options(headers: {
+          // Ensure we don't send stale access token while refreshing
+          'Authorization': null,
+        }),
+      );
       
       if (response.statusCode == 200) {
         final data = response.data;

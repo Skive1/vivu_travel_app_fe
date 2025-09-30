@@ -81,6 +81,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 ),
               );
             } else if (state is AuthError) {
+              // Clear OTP input when verification fails
+              _otpController.clearOtpAndFocusFirstField();
+              
               DialogUtils.showErrorDialog(
                 context: context,
                 title: 'Verification Failed',

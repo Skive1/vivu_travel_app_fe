@@ -54,6 +54,10 @@ class _OtpVerificationResetPasswordScreenState extends State<OtpVerificationRese
     );
 
     return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) {
+        // Only react to states relevant to OTP reset verification to avoid duplicate dialogs
+        return current is ResetPasswordOtpVerificationSuccess || current is AuthError;
+      },
       listener: (context, state) {
         if (state is ResetPasswordOtpVerificationSuccess) {
           _otpController.navigateToResetPassword(
@@ -61,9 +65,12 @@ class _OtpVerificationResetPasswordScreenState extends State<OtpVerificationRese
             state.resetTokenEntity.resetToken,
           );
         } else if (state is AuthError) {
+          // Clear OTP input when verification fails
+          _otpController.clearOtpAndFocusFirstField();
+          
           DialogUtils.showErrorDialog(
             context: context,
-            title: 'Verification Failed',
+            title: state.title ?? 'Verification Failed',
             message: state.message,
           );
         }

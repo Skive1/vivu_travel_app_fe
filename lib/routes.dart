@@ -7,9 +7,15 @@ import 'features/authentication/presentation/screens/otp_verification_screen.dar
 import 'features/authentication/presentation/screens/forgot_password_screen.dart';
 import 'features/authentication/presentation/screens/otp_verification_reset_password_screen.dart';
 import 'features/authentication/presentation/screens/reset_password_screen.dart';
+import 'features/authentication/presentation/screens/change_password_screen.dart';
 import 'features/home/presentation/screens/home_screen.dart';
 import 'features/schedule/presentation/screens/schedule_screen.dart';
 import 'features/user/presentation/screens/profile_screen.dart';
+import 'features/user/presentation/screens/profile_detail_screen.dart';
+import 'features/user/presentation/screens/edit_profile_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'injection_container.dart';
+import 'features/user/presentation/bloc/user_bloc.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -20,9 +26,12 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String otpVerificationResetPassword = '/otp-verification-reset-password';
   static const String resetPassword = '/reset-password';
+  static const String changePassword = '/change-password';
   static const String home = '/home';
   static const String schedule = '/schedule';
   static const String profile = '/profile';
+  static const String profileDetail = '/profile-detail';
+  static const String editProfile = '/edit-profile';
   
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -69,6 +78,11 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => ResetPasswordScreen(resetToken: resetToken),
         );
+
+      case changePassword:
+        return MaterialPageRoute(
+          builder: (_) => const ChangePasswordScreen(),
+        );
         
       case home:
         return MaterialPageRoute(
@@ -83,6 +97,20 @@ class AppRoutes {
       case profile:
         return MaterialPageRoute(
           builder: (_) => const ProfileScreen(),
+        );
+      case profileDetail:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => sl<UserBloc>(),
+            child: const ProfileDetailScreen(),
+          ),
+        );
+      case editProfile:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => sl<UserBloc>(),
+            child: const EditProfileScreen(),
+          ),
         );
         
       default:

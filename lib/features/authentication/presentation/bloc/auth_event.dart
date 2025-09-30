@@ -108,3 +108,16 @@ class AuthStatusChecked extends AuthEvent {}
 class RefreshTokenRequested extends AuthEvent {}
 
 class GetUserProfileRequested extends AuthEvent {}
+
+class ChangePasswordRequested extends AuthEvent {
+  final String oldPassword;
+  final String newPassword;
+
+  const ChangePasswordRequested({
+    required this.oldPassword,
+    required this.newPassword,
+  });
+
+  @override
+  List<Object> get props => [oldPassword, newPassword];
+}

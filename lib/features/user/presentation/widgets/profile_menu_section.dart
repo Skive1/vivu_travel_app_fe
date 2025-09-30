@@ -58,9 +58,12 @@ class _ProfileMenuSectionState extends State<ProfileMenuSection> {
           ),
           child: Column(
             children: [
-              const MenuRow(
+              MenuRow(
                 icon: Icons.person_outline,
                 title: 'Profile',
+                onTap: () {
+                  Navigator.of(context).pushNamed(AppRoutes.profileDetail);
+                },
               ),
               const MenuRow(
                 icon: Icons.bookmark_outline,
@@ -70,9 +73,12 @@ class _ProfileMenuSectionState extends State<ProfileMenuSection> {
                 icon: Icons.travel_explore_outlined,
                 title: 'Previous Trips',
               ),
-              const MenuRow(
+              MenuRow(
                 icon: Icons.settings_outlined,
                 title: 'Settings',
+                onTap: () {
+                  Navigator.of(context).pushNamed(AppRoutes.changePassword);
+                },
               ),
               const MenuRow(
                 icon: Icons.info_outline,

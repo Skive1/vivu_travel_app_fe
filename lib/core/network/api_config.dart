@@ -3,9 +3,9 @@ import '../constants/app_config.dart';
 
 class NetworkConfig {
   static String get baseUrl {
-    final envUrl = dotenv.env['BASE_URL'];
+    final envUrl = dotenv.env['BASE_URL']!;
 
-    return envUrl ?? ApiConfig.baseUrl;
+    return envUrl;
   }
   
   static int get connectTimeout => AppConfig.apiConnectTimeout;

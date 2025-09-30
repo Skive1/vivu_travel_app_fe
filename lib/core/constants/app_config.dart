@@ -75,7 +75,6 @@ class AppConfig {
 
 /// API Endpoint configuration
 class ApiConfig {
-  static const String baseUrl = 'http://143.198.203.34:5120';
 
   static const Map<String, String> defaultHeaders = {
     'Content-Type': 'application/json',

@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../authentication/presentation/bloc/auth_bloc.dart';
 import '../../../authentication/presentation/bloc/auth_event.dart';
+import '../../../authentication/presentation/bloc/auth_state.dart';
+import '../../../../core/utils/dialog_utils.dart';
 import '../widgets/profile_container.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -35,10 +37,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SizedBox(
-        width: screenSize.width,
-        height: screenSize.height,
-        child: const ProfileContainer(),
+      body: BlocListener<AuthBloc, AuthState>(
+        listenWhen: (prev, curr) => curr is AuthError,
+        listener: (context, state) {
+          if (state is AuthError) {
+            DialogUtils.showErrorDialog(context: context, title: state.title ?? 'Error', message: state.message);
+          }
+        },
+        child: SizedBox(
+          width: screenSize.width,
+          height: screenSize.height,
+          child: const ProfileContainer(),
+        ),
       ),
     );
   }

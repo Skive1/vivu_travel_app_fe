@@ -17,6 +17,12 @@ import 'features/authentication/domain/usecases/logout_usecase.dart';
 import 'features/authentication/domain/usecases/check_auth_status_usecase.dart';
 import 'features/authentication/domain/usecases/refresh_token_usecase.dart';
 import 'features/authentication/domain/usecases/get_user_profile_usecase.dart';
+// User feature
+import 'features/user/data/datasources/user_remote_datasource.dart';
+import 'features/user/data/repositories/user_repository_impl.dart';
+import 'features/user/domain/repositories/user_repository.dart';
+import 'features/user/domain/usecases/update_profile_usecase.dart';
+import 'features/user/presentation/bloc/user_bloc.dart';
 import 'features/authentication/presentation/bloc/auth_bloc.dart';
 import 'features/authentication/domain/usecases/register_usecase.dart';
 import 'features/authentication/domain/usecases/verify_register_otp_usecase.dart';
@@ -24,6 +30,7 @@ import 'features/authentication/domain/usecases/request_password_reset_usecase.d
 import 'features/authentication/domain/usecases/verify_reset_password_otp_usecase.dart';
 import 'features/authentication/domain/usecases/reset_password_usecase.dart';
 import 'features/authentication/domain/usecases/resend_register_otp_usecase.dart';
+import 'features/authentication/domain/usecases/change_password_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -44,6 +51,9 @@ Future<void> init() async {
 
   // Features - Home  
   _initHome();
+
+  // Features - User
+  _initUser();
 }
 
 void _initAuth() {
@@ -72,6 +82,7 @@ void _initAuth() {
   sl.registerLazySingleton(() => RequestPasswordResetUseCase(sl()));
   sl.registerLazySingleton(() => VerifyResetPasswordOtpUseCase(sl()));
   sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
+  sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
   
   // Bloc
   sl.registerFactory(
@@ -80,13 +91,14 @@ void _initAuth() {
       logoutUseCase: sl(),
       checkAuthStatusUseCase: sl(),
       refreshTokenUseCase: sl(),
-      getUserProfileUseCase: sl(),
       registerUseCase: sl(),
       verifyRegisterOtpUseCase: sl(),
       resendRegisterOtpUseCase: sl(),
       requestPasswordResetUseCase: sl(),
       verifyResetPasswordOtpUseCase: sl(),
       resetPasswordUseCase: sl(),
+      getUserProfileUseCase: sl(),
+      changePasswordUseCase: sl(),
       authRepository: sl(),
     ),
   );
@@ -94,4 +106,25 @@ void _initAuth() {
 
 void _initHome() {
   // TODO: Register home dependencies
+}
+
+void _initUser() {
+  // Data sources
+  sl.registerLazySingleton<UserRemoteDataSource>(
+    () => UserRemoteDataSourceImpl(sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<UserRepository>(
+    () => UserRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => UpdateProfileUseCase(sl()));
+
+  // Bloc
+  sl.registerFactory(() => UserBloc(updateProfileUseCase: sl()));
 }

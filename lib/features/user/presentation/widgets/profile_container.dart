@@ -134,10 +134,14 @@ class ProfileContent extends StatelessWidget {
                     child: Column(
                       children: [
                         // Avatar
-                        const ProfileAvatar(),
+                        ProfileAvatar(
+                          user: authState is AuthAuthenticated ? (authState as AuthAuthenticated).userEntity : null,
+                        ),
                         const SizedBox(height: 16),
                         // User Info
-                        const ProfileUserInfo(),
+                        ProfileUserInfo(
+                          user: authState is AuthAuthenticated ? (authState as AuthAuthenticated).userEntity : null,
+                        ),
                         // Show loading indicator if refreshing
                         if (authState is AuthLoading) ...[
                           const SizedBox(height: 16),

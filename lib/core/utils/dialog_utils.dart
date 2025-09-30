@@ -3,6 +3,7 @@ import '../widgets/error_dialog.dart';
 import '../widgets/success_dialog.dart';
 
 class DialogUtils {
+  static bool _isErrorDialogShowing = false;
   static Future<void> showErrorDialog({
     required BuildContext context,
     String? title,
@@ -10,6 +11,10 @@ class DialogUtils {
     String? buttonText,
     VoidCallback? onPressed,
   }) {
+    if (_isErrorDialogShowing) {
+      return Future.value();
+    }
+    _isErrorDialogShowing = true;
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -21,7 +26,9 @@ class DialogUtils {
           onPressed: onPressed,
         );
       },
-    );
+    ).whenComplete(() {
+      _isErrorDialogShowing = false;
+    });
   }
 
   static Future<void> showSuccessDialog({
