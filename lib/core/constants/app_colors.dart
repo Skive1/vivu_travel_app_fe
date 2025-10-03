@@ -34,6 +34,7 @@ class AppColors {
   static const Color inputBackground = Color(0xFFFFFFFF);
   static const Color inputBorder = Color(0xFFE0E0E0);
   static const Color inputFocused = Color(0xFF24BAEC);
+  static const Color border = Color(0xFFE0E0E0);
 
   // Status colors
   static const Color success = Color(0xFF4CAF50);

@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../home/presentation/widgets/home_header.dart';
+import '../../../../core/utils/user_storage.dart';
 import '../../../home/presentation/widgets/home_bottom_nav.dart';
+import '../bloc/ScheduleEvent.dart';
 import 'schedule_calendar.dart';
 import 'schedule_list.dart';
-import 'schedule_fab.dart';
+import '../bloc/ScheduleBloc.dart';
 
 class ScheduleContent extends StatefulWidget {
-  const ScheduleContent({super.key});
+  final String? scheduleId;
+
+  const ScheduleContent({super.key, this.scheduleId});
 
   @override
   State<ScheduleContent> createState() => _ScheduleContentState();
@@ -17,6 +21,16 @@ class ScheduleContent extends StatefulWidget {
 class _ScheduleContentState extends State<ScheduleContent> {
   int _currentIndex = 2; // Schedule tab is index 2
   DateTime _selectedDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.scheduleId != null) {
+      context.read<ScheduleBloc>().add(
+        GetActivitiesByScheduleEvent(scheduleId: widget.scheduleId!),
+      );
+    }
+  }
 
   void _onBottomNavTap(int index) {
     setState(() {
@@ -38,7 +52,8 @@ class _ScheduleContentState extends State<ScheduleContent> {
         );
         break;
       case 2:
-        // Already on schedule screen
+        // Navigate to schedule list screen
+        _navigateToScheduleList();
         break;
       case 3:
         // Navigate to chat screen
@@ -55,13 +70,41 @@ class _ScheduleContentState extends State<ScheduleContent> {
     }
   }
 
+  void _navigateToScheduleList() async {
+    try {
+      final user = await UserStorage.getUserProfile();
+      if (user != null && user.id.isNotEmpty) {
+        Navigator.pushNamed(
+          context, 
+          '/schedule-list',
+          arguments: user.id,
+        );
+        // Reset currentIndex after navigation
+        setState(() {
+          _currentIndex = 0;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng đăng nhập để xem lịch trình'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không thể lấy thông tin người dùng'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Header with user info and notification bell
-        const HomeHeader(),
-        
         // Main content area
         Expanded(
           child: Container(
@@ -79,7 +122,10 @@ class _ScheduleContentState extends State<ScheduleContent> {
                 
                 // Schedule list section
                 Expanded(
-                  child: ScheduleList(selectedDate: _selectedDate),
+                  child: ScheduleList(
+                    selectedDate: _selectedDate,
+                    scheduleId: widget.scheduleId,
+                  ),
                 ),
               ],
             ),

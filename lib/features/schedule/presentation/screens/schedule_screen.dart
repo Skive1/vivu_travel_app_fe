@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/user_storage.dart';
+import '../../../../injection_container.dart';
+import '../bloc/ScheduleBloc.dart';
 import '../widgets/schedule_container.dart';
 
 class ScheduleScreen extends StatefulWidget {
-  const ScheduleScreen({super.key});
+  final String? scheduleId;
+
+  const ScheduleScreen({super.key, this.scheduleId});
 
   @override
   State<ScheduleScreen> createState() => _ScheduleScreenState();
@@ -15,6 +21,33 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+
+  void _navigateToScheduleList() async {
+    try {
+      final user = await UserStorage.getUserProfile();
+      if (user != null && user.id.isNotEmpty) {
+        Navigator.pushReplacementNamed(
+          context, 
+          '/schedule-list',
+          arguments: user.id,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng đăng nhập để xem lịch trình'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không thể lấy thông tin người dùng'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -51,14 +84,33 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     // Get screen dimensions
     final screenSize = MediaQuery.of(context).size;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SizedBox(
-        width: screenSize.width,
-        height: screenSize.height,
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: const ScheduleContainer(),
+    return BlocProvider(
+      create: (context) => sl<ScheduleBloc>(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text(
+            'Lịch trình chi tiết',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
+            onPressed: _navigateToScheduleList,
+          ),
+        ),
+        body: SizedBox(
+          width: screenSize.width,
+          height: screenSize.height,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: ScheduleContainer(scheduleId: widget.scheduleId),
+          ),
         ),
       ),
     );

@@ -374,7 +374,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 value: value,
                 groupValue: _gender,
                 onChanged: readOnly ? null : (v) => setState(() => _gender = v ?? _gender),
-                fillColor: MaterialStateProperty.all(AppColors.accentOrange),
+                fillColor: WidgetStateProperty.all(AppColors.accentOrange),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               Text(value),

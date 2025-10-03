@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../routes.dart';
+import '../../../../core/utils/user_storage.dart';
 import 'home_header.dart';
 import 'home_body.dart';
 import 'home_bottom_nav.dart';
@@ -56,12 +57,8 @@ class _HomeContentState extends State<HomeContent> {
         _showSnackBar('Khám phá - Coming soon!');
         break;
       case 2:
-        // Schedule - Navigate to ScheduleScreen
-        Navigator.pushNamed(context, AppRoutes.schedule);
-        // Reset currentIndex after navigation
-        setState(() {
-          _currentIndex = 0;
-        });
+        // Schedule - Navigate to ScheduleListScreen
+        _navigateToScheduleList();
         break;
       case 3:
         // Messages
@@ -75,6 +72,27 @@ class _HomeContentState extends State<HomeContent> {
           _currentIndex = 0;
         });
         break;
+    }
+  }
+
+  void _navigateToScheduleList() async {
+    try {
+      final user = await UserStorage.getUserProfile();
+      if (user != null && user.id.isNotEmpty) {
+        Navigator.pushNamed(
+          context, 
+          AppRoutes.scheduleList,
+          arguments: user.id,
+        );
+        // Reset currentIndex after navigation
+        setState(() {
+          _currentIndex = 0;
+        });
+      } else {
+        _showSnackBar('Vui lòng đăng nhập để xem lịch trình');
+      }
+    } catch (e) {
+      _showSnackBar('Không thể lấy thông tin người dùng');
     }
   }
 

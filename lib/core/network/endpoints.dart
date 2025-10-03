@@ -10,4 +10,9 @@ class Endpoints {
   static const String me = '/api/auth/me';
   static const String changePassword = '/api/auth/change-password';
   static const String updateProfile = '/api/user/update';
+  
+  // Schedule endpoints
+  static const String getSchedulesByParticipant = '/api/schedule/participant/schedules';
+  static const String getActivitiesBySchedule = '/api/schedule/activities/getAll';
+  static const String shareSchedule = '/api/schedule/share';
 }

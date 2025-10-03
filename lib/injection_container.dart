@@ -32,6 +32,15 @@ import 'features/authentication/domain/usecases/reset_password_usecase.dart';
 import 'features/authentication/domain/usecases/resend_register_otp_usecase.dart';
 import 'features/authentication/domain/usecases/change_password_usecase.dart';
 
+// Schedule feature
+import 'features/schedule/data/datasources/schedule_remote_datasource.dart';
+import 'features/schedule/data/repositories/schedule_repositories_impl.dart';
+import 'features/schedule/domain/repositories/schedule_repository.dart';
+import 'features/schedule/domain/usecases/get_schedules_by_participant.dart';
+import 'features/schedule/domain/usecases/get_activities_by_schedule.dart';
+import 'features/schedule/domain/usecases/share_schedule.dart';
+import 'features/schedule/presentation/bloc/ScheduleBloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -54,6 +63,9 @@ Future<void> init() async {
 
   // Features - User
   _initUser();
+
+  // Features - Schedule
+  _initSchedule();
 }
 
 void _initAuth() {
@@ -127,4 +139,33 @@ void _initUser() {
 
   // Bloc
   sl.registerFactory(() => UserBloc(updateProfileUseCase: sl()));
+}
+
+void _initSchedule() {
+  // Data sources
+  sl.registerLazySingleton<ScheduleRemoteDataSource>(
+    () => ScheduleRemoteDataSourceImpl(apiClient: sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<ScheduleRepository>(
+    () => ScheduleRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetSchedulesByParticipant(sl()));
+  sl.registerLazySingleton(() => GetActivitiesBySchedule(sl()));
+  sl.registerLazySingleton(() => ShareSchedule(sl()));
+
+  // Bloc
+  sl.registerFactory(
+    () => ScheduleBloc(
+      getSchedulesByParticipant: sl(),
+      getActivitiesBySchedule: sl(),
+      shareSchedule: sl(),
+    ),
+  );
 }
