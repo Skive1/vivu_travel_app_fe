@@ -21,6 +21,35 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
   @override
   bool get wantKeepAlive => true;
 
+  // Cache formatted dates to avoid repeated formatting
+  String? _cachedStartDate;
+  String? _cachedEndDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _cacheFormattedDates();
+  }
+
+  @override
+  void didUpdateWidget(ScheduleListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Check if any schedule data has changed
+    if (oldWidget.schedule.startDate != widget.schedule.startDate ||
+        oldWidget.schedule.endDate != widget.schedule.endDate ||
+        oldWidget.schedule.title != widget.schedule.title ||
+        oldWidget.schedule.status != widget.schedule.status ||
+        oldWidget.schedule.sharedCode != widget.schedule.sharedCode) {
+      print('🔄 ScheduleListItem: Schedule data changed, updating cache');
+      _cacheFormattedDates();
+    }
+  }
+
+  void _cacheFormattedDates() {
+    _cachedStartDate = _formatDate(widget.schedule.startDate);
+    _cachedEndDate = _formatDate(widget.schedule.endDate);
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
@@ -107,7 +136,7 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '${_formatDate(widget.schedule.startDate)} - ${_formatDate(widget.schedule.endDate)}',
+                    '$_cachedStartDate - $_cachedEndDate',
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
@@ -169,37 +198,7 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
               ],
             ),
             
-            // Notes (if available)
-            if (widget.schedule.notes.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.note_outlined,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.schedule.notes,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            // Notes intentionally hidden on list item for a cleaner layout
             
             const SizedBox(height: 12),
             

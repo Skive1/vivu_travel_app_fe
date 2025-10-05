@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../bloc/ScheduleBloc.dart';
-import '../bloc/ScheduleEvent.dart';
-import '../bloc/ScheduleState.dart';
+import '../bloc/schedule_bloc.dart';
+import '../bloc/schedule_event.dart';
+import '../bloc/schedule_state.dart';
 import '../../domain/entities/activity_entity.dart';
 import 'activity_timeline_item.dart';
-import 'activity_timeline_item_skeleton.dart';
+import 'optimized_skeleton.dart';
+import 'add_activity_form.dart';
 
 class ScheduleList extends StatelessWidget {
   final DateTime selectedDate;
@@ -24,15 +25,7 @@ class ScheduleList extends StatelessWidget {
     return BlocBuilder<ScheduleBloc, ScheduleState>(
       builder: (context, state) {
         if (state is ActivitiesLoading) {
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: 3, // Show 3 skeleton items
-            itemBuilder: (context, index) {
-              return ActivityTimelineItemSkeleton(
-                isLast: index == 2,
-              );
-            },
-          );
+          return const ActivityListSkeleton(itemCount: 3);
         } else if (state is ActivitiesError) {
           return Center(
             child: Column(
@@ -111,6 +104,37 @@ class ScheduleList extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 20),
+                  if (scheduleId != null)
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            ),
+                            child: BlocProvider.value(
+                              value: context.read<ScheduleBloc>(),
+                              child: AddActivityForm(
+                                scheduleId: scheduleId!,
+                                initialDate: selectedDate,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Thêm hoạt động'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                    ),
                 ],
               ),
             );
@@ -127,18 +151,66 @@ class ScheduleList extends StatelessWidget {
                 );
               }
             },
-            child: ListView.builder(
+            child: Padding(
               padding: const EdgeInsets.all(16),
-              itemCount: activities.length,
-              itemBuilder: (context, index) {
-                final activity = activities[index];
-                final isLast = index == activities.length - 1;
-                
-                return ActivityTimelineItem(
-                  activity: activity,
-                  isLast: isLast,
-                );
-              },
+              child: Stack(
+                children: [
+                ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  itemCount: activities.length + (scheduleId != null ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    final isAppendButton = scheduleId != null && index == activities.length;
+                    if (isAppendButton) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (_) => Container(
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                    ),
+                                    child: BlocProvider.value(
+                                      value: context.read<ScheduleBloc>(),
+                                      child: AddActivityForm(
+                                        scheduleId: scheduleId!,
+                                        initialDate: selectedDate,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: const CircleBorder(),
+                                padding: const EdgeInsets.all(0),
+                              ),
+                              child: const Icon(Icons.add, size: 24),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final activity = activities[index];
+                    final isLast = index == activities.length - 1;
+                    return ActivityTimelineItem(
+                      activity: activity,
+                      isLast: isLast,
+                    );
+                  },
+                ),
+                ],
+              ),
             ),
           );
         }
@@ -172,6 +244,37 @@ class ScheduleList extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 16),
+                if (scheduleId != null)
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          child: BlocProvider.value(
+                            value: context.read<ScheduleBloc>(),
+                            child: AddActivityForm(
+                              scheduleId: scheduleId!,
+                              initialDate: selectedDate,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Thêm hoạt động'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
               ],
             ),
           );

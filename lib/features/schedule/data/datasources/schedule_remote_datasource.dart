@@ -4,11 +4,20 @@ import '../../../../core/network/endpoints.dart';
 import '../models/schedule_model.dart';
 import '../models/activity_model.dart';
 import '../models/share_schedule_response.dart';
+import '../models/create_schedule_request.dart';
+import '../models/update_schedule_request.dart';
+import '../models/create_activity_request.dart';
+import '../models/update_activity_request.dart';
 
 abstract class ScheduleRemoteDataSource {
   Future<List<ScheduleModel>> getSchedulesByParticipant(String participantId);
   Future<List<ActivityModel>> getActivitiesBySchedule(String scheduleId);
+  Future<ActivityModel> addActivity(CreateActivityRequest request);
+  Future<ActivityModel> updateActivity(int activityId, UpdateActivityRequest request);
+  Future<void> deleteActivity(int activityId);
   Future<ShareScheduleResponse> shareSchedule(String scheduleId);
+  Future<ScheduleModel> createSchedule(CreateScheduleRequest request);
+  Future<ScheduleModel> updateSchedule(String scheduleId, UpdateScheduleRequest request);
 }
 
 class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
@@ -57,6 +66,43 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
   }
 
   @override
+  Future<ActivityModel> addActivity(CreateActivityRequest request) async {
+    try {
+      final response = await _apiClient.post(
+        Endpoints.addActivity,
+        data: request.toJson(),
+      );
+      return ActivityModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw Exception('Failed to add activity: ${e.message}');
+    }
+  }
+
+  @override
+  Future<ActivityModel> updateActivity(int activityId, UpdateActivityRequest request) async {
+    try {
+      final response = await _apiClient.put(
+        '${Endpoints.activities}/$activityId',
+        data: request.toJson(),
+      );
+      return ActivityModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw Exception('Failed to update activity: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> deleteActivity(int activityId) async {
+    try {
+      await _apiClient.delete(
+        '${Endpoints.activities}/$activityId',
+      );
+    } on DioException catch (e) {
+      throw Exception('Failed to delete activity: ${e.message}');
+    }
+  }
+
+  @override
   Future<ShareScheduleResponse> shareSchedule(String scheduleId) async {
     try {
       final response = await _apiClient.post(
@@ -66,6 +112,56 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
       return ShareScheduleResponse.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw Exception('Failed to share schedule: ${e.message}');
+    }
+  }
+
+  @override
+  Future<ScheduleModel> createSchedule(CreateScheduleRequest request) async {
+    print('🌍 ScheduleRemoteDataSource: createSchedule called');
+    print('🌍 Endpoint: ${Endpoints.createSchedule}');
+    print('🌍 Request data: ${request.toJson()}');
+    
+    try {
+      final response = await _apiClient.post(
+        Endpoints.createSchedule,
+        data: request.toJson(),
+      );
+      
+      print('✅ ScheduleRemoteDataSource: API call successful');
+      print('✅ Response status: ${response.statusCode}');
+      print('✅ Response data: ${response.data}');
+      
+      return ScheduleModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      print('❌ ScheduleRemoteDataSource: DioException - ${e.message}');
+      print('❌ Response data: ${e.response?.data}');
+      print('❌ Status code: ${e.response?.statusCode}');
+      throw Exception('Failed to create schedule: ${e.message}');
+    }
+  }
+
+  @override
+  Future<ScheduleModel> updateSchedule(String scheduleId, UpdateScheduleRequest request) async {
+    print('🌍 ScheduleRemoteDataSource: updateSchedule called');
+    print('🌍 Endpoint: ${Endpoints.updateSchedule}/$scheduleId');
+    print('🌍 Request data: ${request.toJson()}');
+    
+    try {
+      final response = await _apiClient.put(
+        '${Endpoints.updateSchedule}/$scheduleId',
+        data: request.toJson(),
+      );
+      
+      print('✅ ScheduleRemoteDataSource: Update API call successful');
+      print('✅ Response status: ${response.statusCode}');
+      print('✅ Response data: ${response.data}');
+      
+      return ScheduleModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      print('❌ ScheduleRemoteDataSource: Update DioException - ${e.message}');
+      print('❌ Response data: ${e.response?.data}');
+      print('❌ Status code: ${e.response?.statusCode}');
+      throw Exception('Failed to update schedule: ${e.message}');
     }
   }
 }

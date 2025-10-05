@@ -10,6 +10,7 @@ class DialogUtils {
     required String message,
     String? buttonText,
     VoidCallback? onPressed,
+    bool useRootNavigator = true,
   }) {
     if (_isErrorDialogShowing) {
       return Future.value();
@@ -17,6 +18,7 @@ class DialogUtils {
     _isErrorDialogShowing = true;
     return showDialog<void>(
       context: context,
+      useRootNavigator: useRootNavigator,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return ErrorDialog(
@@ -37,9 +39,11 @@ class DialogUtils {
     required String message,
     String? buttonText,
     VoidCallback? onPressed,
+    bool useRootNavigator = true,
   }) {
     return showDialog<void>(
       context: context,
+      useRootNavigator: useRootNavigator,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return SuccessDialog(

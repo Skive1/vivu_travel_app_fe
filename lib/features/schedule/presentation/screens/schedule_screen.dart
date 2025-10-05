@@ -5,8 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/user_storage.dart';
 import '../../../../injection_container.dart';
-import '../bloc/ScheduleBloc.dart';
+import '../bloc/schedule_bloc.dart';
 import '../widgets/schedule_container.dart';
+import '../../../../core/widgets/loading_overlay.dart';
+import '../bloc/schedule_state.dart';
 
 class ScheduleScreen extends StatefulWidget {
   final String? scheduleId;
@@ -104,13 +106,27 @@ class _ScheduleScreenState extends State<ScheduleScreen>
             onPressed: _navigateToScheduleList,
           ),
         ),
-        body: SizedBox(
-          width: screenSize.width,
-          height: screenSize.height,
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: ScheduleContainer(scheduleId: widget.scheduleId),
-          ),
+        body: BlocBuilder<ScheduleBloc, ScheduleState>(
+          builder: (context, state) {
+            final isLoading = state is CreateActivityLoading ||
+                state is UpdateActivityLoading ||
+                state is DeleteActivityLoading ||
+                state is CreateScheduleLoading ||
+                state is UpdateScheduleLoading;
+            return Stack(
+              children: [
+                SizedBox(
+                  width: screenSize.width,
+                  height: screenSize.height,
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: ScheduleContainer(scheduleId: widget.scheduleId),
+                  ),
+                ),
+                LoadingOverlay(isLoading: isLoading),
+              ],
+            );
+          },
         ),
       ),
     );

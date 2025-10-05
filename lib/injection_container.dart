@@ -36,10 +36,15 @@ import 'features/authentication/domain/usecases/change_password_usecase.dart';
 import 'features/schedule/data/datasources/schedule_remote_datasource.dart';
 import 'features/schedule/data/repositories/schedule_repositories_impl.dart';
 import 'features/schedule/domain/repositories/schedule_repository.dart';
-import 'features/schedule/domain/usecases/get_schedules_by_participant.dart';
-import 'features/schedule/domain/usecases/get_activities_by_schedule.dart';
-import 'features/schedule/domain/usecases/share_schedule.dart';
-import 'features/schedule/presentation/bloc/ScheduleBloc.dart';
+import 'features/schedule/domain/usecases/get_schedules_by_participant_usecase.dart';
+import 'features/schedule/domain/usecases/get_activities_by_schedule_usecase.dart';
+import 'features/schedule/domain/usecases/share_schedule_usecase.dart';
+import 'features/schedule/domain/usecases/create_schedule.dart';
+import 'features/schedule/domain/usecases/update_schedule_usecase.dart';
+import 'features/schedule/domain/usecases/create_activity_usecase.dart';
+import 'features/schedule/domain/usecases/update_activity_usecase.dart';
+import 'features/schedule/domain/usecases/delete_activity_usecase.dart';
+import 'features/schedule/presentation/bloc/schedule_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -117,7 +122,6 @@ void _initAuth() {
 }
 
 void _initHome() {
-  // TODO: Register home dependencies
 }
 
 void _initUser() {
@@ -159,6 +163,11 @@ void _initSchedule() {
   sl.registerLazySingleton(() => GetSchedulesByParticipant(sl()));
   sl.registerLazySingleton(() => GetActivitiesBySchedule(sl()));
   sl.registerLazySingleton(() => ShareSchedule(sl()));
+  sl.registerLazySingleton(() => CreateSchedule(sl()));
+  sl.registerLazySingleton(() => UpdateSchedule(sl()));
+  sl.registerLazySingleton(() => CreateActivity(sl()));
+  sl.registerLazySingleton(() => UpdateActivity(sl()));
+  sl.registerLazySingleton(() => DeleteActivity(sl()));
 
   // Bloc
   sl.registerFactory(
@@ -166,6 +175,11 @@ void _initSchedule() {
       getSchedulesByParticipant: sl(),
       getActivitiesBySchedule: sl(),
       shareSchedule: sl(),
+      createSchedule: sl(),
+      updateSchedule: sl(),
+      createActivity: sl(),
+      updateActivity: sl(),
+      deleteActivity: sl(),
     ),
   );
 }

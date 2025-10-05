@@ -15,4 +15,8 @@ class Endpoints {
   static const String getSchedulesByParticipant = '/api/schedule/participant/schedules';
   static const String getActivitiesBySchedule = '/api/schedule/activities/getAll';
   static const String shareSchedule = '/api/schedule/share';
+  static const String createSchedule = '/api/schedule/create';
+  static const String updateSchedule = '/api/schedule/schedule';
+  static const String addActivity = '/api/schedule/activity/add';
+  static const String activities = '/api/schedule/schedule/activities';
 }

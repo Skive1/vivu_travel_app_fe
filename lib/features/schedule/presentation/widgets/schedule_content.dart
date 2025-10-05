@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/user_storage.dart';
 import '../../../home/presentation/widgets/home_bottom_nav.dart';
-import '../bloc/ScheduleEvent.dart';
+import '../bloc/schedule_event.dart';
 import 'schedule_calendar.dart';
 import 'schedule_list.dart';
-import '../bloc/ScheduleBloc.dart';
+import '../bloc/schedule_bloc.dart';
 
 class ScheduleContent extends StatefulWidget {
   final String? scheduleId;

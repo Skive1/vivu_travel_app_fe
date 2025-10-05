@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../home/presentation/widgets/home_bottom_nav.dart';
-import '../bloc/ScheduleBloc.dart';
-import '../bloc/ScheduleEvent.dart';
-import '../bloc/ScheduleState.dart';
+import '../bloc/schedule_bloc.dart';
+import '../bloc/schedule_event.dart';
+import '../bloc/schedule_state.dart';
 import '../widgets/schedule_list_item.dart';
-import '../widgets/schedule_list_item_skeleton.dart';
+import '../widgets/create_schedule_drawer.dart';
+import '../widgets/optimized_skeleton.dart';
 import 'schedule_detail_screen.dart';
 
 class ScheduleListScreen extends StatefulWidget {
@@ -21,15 +22,34 @@ class ScheduleListScreen extends StatefulWidget {
   State<ScheduleListScreen> createState() => _ScheduleListScreenState();
 }
 
-class _ScheduleListScreenState extends State<ScheduleListScreen> {
+class _ScheduleListScreenState extends State<ScheduleListScreen> with AutomaticKeepAliveClientMixin {
   int _currentIndex = 2; // Schedule tab is index 2
+  String _searchQuery = '';
+  String _statusFilter = 'all'; // all | active | completed | pending | cancelled
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
+    _loadSchedules();
+  }
+
+  void _loadSchedules() {
+    print('🔄 ScheduleListScreen: Loading schedules for participant ${widget.participantId}');
     context.read<ScheduleBloc>().add(
       GetSchedulesByParticipantEvent(participantId: widget.participantId),
     );
+  }
+
+  void _forceRefreshSchedules() {
+    print('🔄 ScheduleListScreen: Force refreshing schedules');
+    // Clear cache trước khi refresh
+    context.read<ScheduleBloc>().add(
+      RefreshSchedulesEvent(participantId: widget.participantId),
+    );
+    print('✅ ScheduleListScreen: Refresh event dispatched');
   }
 
   void _onBottomNavTap(int index) {
@@ -69,8 +89,31 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
     }
   }
 
+  void _showCreateScheduleDrawer(BuildContext context) {
+    final scheduleBloc = context.read<ScheduleBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BlocProvider.value(
+        value: scheduleBloc,
+        child: CreateScheduleDrawer(
+          participantId: widget.participantId,
+          scheduleBloc: scheduleBloc,
+          onScheduleCreated: () {
+            print('🔄 ScheduleListScreen: Refreshing after schedule creation');
+            // Clear cache và force refresh schedule list
+            scheduleBloc.add(const ClearCacheEvent());
+            _forceRefreshSchedules();
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -88,21 +131,77 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: AppColors.primary),
+            onPressed: () => _showCreateScheduleDrawer(context),
+          ),
+        ],
       ),
       body: Column(
         children: [
+          // Search and filters
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  onChanged: (value) => setState(() => _searchQuery = value.trim()),
+                  decoration: InputDecoration(
+                    hintText: 'Tìm kiếm theo tiêu đề, điểm đến...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip('Tất cả', 'all'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Đang diễn ra', 'active'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Chờ bắt đầu', 'pending'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Hoàn thành', 'completed'),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Đã hủy', 'cancelled'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
           // Main content
           Expanded(
-            child: BlocBuilder<ScheduleBloc, ScheduleState>(
+            child: BlocListener<ScheduleBloc, ScheduleState>(
+              listener: (context, state) {
+                if (state is CreateScheduleSuccess) {
+                  print('✅ ScheduleListScreen: Schedule created successfully, refreshing list');
+                  // Force refresh để hiển thị lịch trình mới
+                  _forceRefreshSchedules();
+                } else if (state is UpdateScheduleSuccess) {
+                  print('✅ ScheduleListScreen: Schedule updated successfully, refreshing list');
+                  // Force refresh để hiển thị thay đổi
+                  _forceRefreshSchedules();
+                }
+              },
+              child: BlocBuilder<ScheduleBloc, ScheduleState>(
         builder: (context, state) {
           if (state is ScheduleLoading) {
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: 5, // Show 5 skeleton items
-              itemBuilder: (context, index) {
-                return const ScheduleListItemSkeleton();
-              },
-            );
+            return const ScheduleListSkeleton(itemCount: 5);
           } else if (state is ScheduleError) {
             return Center(
               child: Column(
@@ -134,9 +233,8 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      context.read<ScheduleBloc>().add(
-                        RefreshSchedulesEvent(participantId: widget.participantId),
-                      );
+                      print('🔄 ScheduleListScreen: Retry button pressed');
+                      _forceRefreshSchedules();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -149,7 +247,19 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
               ),
             );
           } else if (state is ScheduleLoaded) {
-            if (state.schedules.isEmpty) {
+            // Apply client-side filtering
+            final filteredSchedules = state.schedules.where((s) {
+              final byQuery = _searchQuery.isEmpty
+                  ? true
+                  : (s.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                      s.destination.toLowerCase().contains(_searchQuery.toLowerCase()));
+              final byStatus = _statusFilter == 'all'
+                  ? true
+                  : s.status.toLowerCase() == _statusFilter;
+              return byQuery && byStatus;
+            }).toList();
+
+            if (filteredSchedules.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -176,6 +286,17 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                         color: AppColors.textSecondary,
                       ),
                     ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => _showCreateScheduleDrawer(context),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Tạo lịch trình mới'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -183,25 +304,28 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
 
             return RefreshIndicator(
               onRefresh: () async {
-                context.read<ScheduleBloc>().add(
-                  RefreshSchedulesEvent(participantId: widget.participantId),
-                );
+                print('🔄 ScheduleListScreen: Pull to refresh triggered');
+                _forceRefreshSchedules();
               },
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: state.schedules.length,
+                itemCount: filteredSchedules.length,
                 itemBuilder: (context, index) {
-                  final schedule = state.schedules[index];
+                  final schedule = filteredSchedules[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: ScheduleListItem(
                       schedule: schedule,
                       onTap: () {
+                        final scheduleBloc = context.read<ScheduleBloc>();
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ScheduleDetailScreen(
-                              schedule: schedule,
+                            builder: (context) => BlocProvider.value(
+                              value: scheduleBloc,
+                              child: ScheduleDetailScreen(
+                                schedule: schedule,
+                              ),
                             ),
                           ),
                         );
@@ -215,6 +339,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
 
           return const SizedBox.shrink();
         },
+              ),
             ),
           ),
           
@@ -225,6 +350,24 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value) {
+    final bool isSelected = _statusFilter == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => setState(() => _statusFilter = value),
+      selectedColor: AppColors.primary.withOpacity(0.12),
+      labelStyle: TextStyle(
+        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+        fontWeight: FontWeight.w500,
+      ),
+      shape: StadiumBorder(
+        side: BorderSide(color: isSelected ? AppColors.primary : AppColors.border),
+      ),
+      backgroundColor: Colors.white,
     );
   }
 }

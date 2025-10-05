@@ -169,7 +169,7 @@ class ScheduleDetailInfo extends StatelessWidget {
   String _getStatusText(String status) {
     switch (status.toLowerCase()) {
       case 'active':
-        return 'Đang hoạt động';
+        return 'Đang diễn ra';
       case 'completed':
         return 'Hoàn thành';
       case 'cancelled':

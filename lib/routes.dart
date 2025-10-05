@@ -18,7 +18,7 @@ import 'features/user/presentation/screens/edit_profile_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'injection_container.dart';
 import 'features/user/presentation/bloc/user_bloc.dart';
-import 'features/schedule/presentation/bloc/ScheduleBloc.dart';
+import 'features/schedule/presentation/bloc/schedule_bloc.dart';
 import 'features/schedule/domain/entities/schedule_entity.dart';
 
 class AppRoutes {
@@ -113,7 +113,10 @@ class AppRoutes {
       case scheduleDetail:
         final schedule = settings.arguments as ScheduleEntity;
         return MaterialPageRoute(
-          builder: (_) => ScheduleDetailScreen(schedule: schedule),
+          builder: (_) => BlocProvider(
+            create: (context) => sl<ScheduleBloc>(),
+            child: ScheduleDetailScreen(schedule: schedule),
+          ),
         );
         
       case profile:
