@@ -13,6 +13,10 @@ class UserStorage {
   static const String _userCacheTimeKey = 'user_cache_time';
   static const Duration _cacheExpiry = Duration(hours: 24); // Cache for 24 hours
 
+  // In-memory cache to avoid repeated secure storage reads and JSON parsing
+  static UserEntity? _cachedUser;
+  static DateTime? _cachedAt;
+
   // Save user profile
   static Future<bool> saveUserProfile(UserEntity user) async {
     try {
@@ -35,6 +39,9 @@ class UserStorage {
         _storage.write(key: _userKey, value: jsonEncode(userJson)),
         _storage.write(key: _userCacheTimeKey, value: DateTime.now().toIso8601String()),
       ]);
+      // Update in-memory cache
+      _cachedUser = user;
+      _cachedAt = DateTime.now();
       
       return true;
     } catch (e) {
@@ -45,7 +52,14 @@ class UserStorage {
   // Get user profile
   static Future<UserEntity?> getUserProfile() async {
     try {
-      // Check if cache is expired
+      // Serve from memory cache if valid
+      if (_cachedUser != null && _cachedAt != null) {
+        if (DateTime.now().difference(_cachedAt!) <= _cacheExpiry) {
+          return _cachedUser;
+        }
+      }
+
+      // Check if persistent cache is expired
       final cacheTimeString = await _storage.read(key: _userCacheTimeKey);
       if (cacheTimeString != null) {
         final cacheTime = DateTime.parse(cacheTimeString);
@@ -61,7 +75,7 @@ class UserStorage {
       
       final userJson = jsonDecode(userJsonString) as Map<String, dynamic>;
       
-      return UserEntity(
+      final user = UserEntity(
         id: userJson['id'] ?? '',
         email: userJson['email'] ?? '',
         name: userJson['name'] ?? '',
@@ -76,6 +90,9 @@ class UserStorage {
         phoneNumber: userJson['phoneNumber'] ?? '',
         gender: userJson['gender'] ?? '',
       );
+      _cachedUser = user;
+      _cachedAt = DateTime.now();
+      return user;
     } catch (e) {
       return null;
     }
@@ -88,6 +105,8 @@ class UserStorage {
         _storage.delete(key: _userKey),
         _storage.delete(key: _userCacheTimeKey),
       ]);
+      _cachedUser = null;
+      _cachedAt = null;
     } catch (e) {
     }
   }

@@ -15,7 +15,6 @@ import '../../domain/usecases/resend_register_otp_usecase.dart';
 import '../../domain/usecases/get_user_profile_usecase.dart';
 import '../../domain/usecases/change_password_usecase.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../domain/entities/user_entity.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -81,32 +80,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
       },
       (authEntity) async {
-        debugPrint('🟢 Login successful, getting user profile...');
-        
-        // Start both operations in parallel for faster login
-        final futures = <Future>[
-          UserStorage.getUserProfile(),
-        ];
-        
-        // Add fresh profile loading if bloc is not closed
-        if (!isClosed) {
-          futures.add(_loadFreshUserProfile());
-        }
-        
-        final results = await Future.wait(futures);
-        final cachedUser = results[0] as UserEntity?;
-        final freshUser = results.length > 1 ? results[1] as UserEntity? : null;
-        
-        debugPrint('📦 Cached user: ${cachedUser?.name ?? "No cached user"}');
-        if (freshUser != null) {
-          debugPrint('🟢 Fresh user loaded: ${freshUser.name}');
-        }
-        
-        // Emit authenticated state with best available user data
+        debugPrint('🟢 Login successful');
+
+        // 1) Load cached profile quickly and emit immediately for fast UI paint
+        final cachedUser = await UserStorage.getUserProfile();
         if (!emit.isDone) {
-          final bestUser = freshUser ?? cachedUser;
-          emit(AuthAuthenticated(authEntity, userEntity: bestUser));
-          debugPrint('✅ Emitted AuthAuthenticated with ${freshUser != null ? "fresh" : "cached"} user');
+          emit(AuthAuthenticated(authEntity, userEntity: cachedUser));
+          debugPrint('✅ Emitted AuthAuthenticated with ${cachedUser != null ? "cached" : "no"} user');
+        }
+
+        // 2) Then trigger fresh user profile load in background to update UI
+        if (!isClosed) {
+          add(GetUserProfileRequested());
         }
       },
     );
@@ -180,8 +165,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthStatusChecked event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
-
     final result = await checkAuthStatusUseCase(NoParams());
 
     await result.fold(
@@ -420,29 +403,5 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
-  // Helper method to load fresh user profile in parallel
-  Future<UserEntity?> _loadFreshUserProfile() async {
-    if (isClosed) return null;
-    
-    try {
-      debugPrint('🔄 Loading fresh user profile in background...');
-      final result = await getUserProfileUseCase(NoParams());
-      
-      return result.fold(
-        (failure) {
-          debugPrint('🔴 Background user profile failed: ${failure.message}');
-          return null;
-        },
-        (userEntity) {
-          debugPrint('🟢 Background user profile success: ${userEntity.name}');
-          // Save to cache for next time (fire and forget)
-          UserStorage.saveUserProfile(userEntity);
-          return userEntity;
-        },
-      );
-    } catch (e) {
-      debugPrint('❌ Error loading fresh user profile: $e');
-      return null;
-    }
-  }
+  // (No longer used) Background loader removed in favor of event-based refresh
 }

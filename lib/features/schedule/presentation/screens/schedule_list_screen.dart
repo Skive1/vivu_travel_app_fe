@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../home/presentation/widgets/home_bottom_nav.dart';
@@ -26,6 +27,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> with AutomaticK
   int _currentIndex = 2; // Schedule tab is index 2
   String _searchQuery = '';
   String _statusFilter = 'all'; // all | active | completed | pending | cancelled
+  Timer? _searchDebounce;
 
   @override
   bool get wantKeepAlive => true;
@@ -89,6 +91,15 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> with AutomaticK
     }
   }
 
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) {
+        setState(() => _searchQuery = value.trim());
+      }
+    });
+  }
+
   void _showCreateScheduleDrawer(BuildContext context) {
     final scheduleBloc = context.read<ScheduleBloc>();
     showModalBottomSheet(
@@ -147,7 +158,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> with AutomaticK
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextField(
-                  onChanged: (value) => setState(() => _searchQuery = value.trim()),
+                  onChanged: _onSearchChanged,
                   decoration: InputDecoration(
                     hintText: 'Tìm kiếm theo tiêu đề, điểm đến...',
                     prefixIcon: const Icon(Icons.search),

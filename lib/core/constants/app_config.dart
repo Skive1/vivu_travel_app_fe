@@ -2,7 +2,7 @@
 class AppConfig {
   // API Configuration
   static const int apiConnectTimeout = 5000; // 5 seconds
-  static const int apiReceiveTimeout = 8000; // 8 seconds
+  static const int apiReceiveTimeout = 12000; // 12 seconds (mobile-friendly)
   static const int apiSendTimeout = 5000; // 5 seconds
   
   // Retry Configuration

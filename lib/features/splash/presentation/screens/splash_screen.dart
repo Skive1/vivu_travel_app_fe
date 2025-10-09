@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../injection_container.dart' as di;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../routes.dart';
@@ -69,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen>
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } else {
       // Token hết hạn hoặc không có token → check first time user
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = di.sl<SharedPreferences>();
       final isFirstTime = prefs.getBool('first_time') ?? true;
       
       if (isFirstTime) {

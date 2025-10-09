@@ -140,8 +140,7 @@ class ScheduleList extends StatelessWidget {
             );
           }
 
-          // Sort activities by orderIndex
-          activities.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+          // NOTE: Sorting should be done upstream (Bloc) to avoid per-build sorting costs.
 
           return RefreshIndicator(
             onRefresh: () async {
@@ -153,12 +152,10 @@ class ScheduleList extends StatelessWidget {
             },
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Stack(
-                children: [
-                ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  itemCount: activities.length + (scheduleId != null ? 1 : 0),
-                  itemBuilder: (context, index) {
+              child: ListView.builder(
+                padding: const EdgeInsets.only(bottom: 16),
+                itemCount: activities.length + (scheduleId != null ? 1 : 0),
+                itemBuilder: (context, index) {
                     final isAppendButton = scheduleId != null && index == activities.length;
                     if (isAppendButton) {
                       return Center(
@@ -204,12 +201,11 @@ class ScheduleList extends StatelessWidget {
                     final activity = activities[index];
                     final isLast = index == activities.length - 1;
                     return ActivityTimelineItem(
+                      key: ValueKey<int>(activity.id),
                       activity: activity,
                       isLast: isLast,
                     );
                   },
-                ),
-                ],
               ),
             ),
           );

@@ -2,8 +2,6 @@ import 'package:dio/dio.dart';
 import 'endpoints.dart';
 import 'api_config.dart';
 import '../utils/token_storage.dart';
-import 'network_info.dart';
-import '../../injection_container.dart' as di;
 
 class DioFactory {
   static Dio create() {
@@ -14,22 +12,10 @@ class DioFactory {
       headers: NetworkConfig.defaultHeaders,
     ));
 
-    // Network Check & Token Interceptor with Refresh Logic
+    // Token Interceptor with Refresh Logic (avoid per-request connectivity pre-check)
     dio.interceptors.add(
       QueuedInterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Check network connectivity first
-          final networkInfo = di.sl<NetworkInfo>();
-          if (!await networkInfo.isConnected) {
-            return handler.reject(
-              DioException(
-                requestOptions: options,
-                type: DioExceptionType.connectionError,
-                message: 'No internet connection',
-              ),
-            );
-          }
-
           // Add auth token if available
           final token = await TokenStorage.getToken();
           if (token != null && token.isNotEmpty) {

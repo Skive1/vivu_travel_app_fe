@@ -8,6 +8,10 @@ class TokenStorage {
     ),
   );
 
+  // In-memory caches to avoid repeated secure storage reads on hot paths
+  static String? _cachedToken;
+  static String? _cachedRefreshToken;
+
   static const String _tokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userIdKey = 'user_id';
@@ -42,6 +46,9 @@ class TokenStorage {
       // Execute all writes in parallel
       await Future.wait(allWrites);
 
+      // Update in-memory cache
+      _cachedToken = token;
+
       return true;
     } catch (e) {
       // If save fails, clear any partial data
@@ -51,11 +58,15 @@ class TokenStorage {
   }
 
   static Future<String?> getToken() async {
-    return await _storage.read(key: _tokenKey);
+    if (_cachedToken != null) return _cachedToken;
+    final t = await _storage.read(key: _tokenKey);
+    _cachedToken = t;
+    return t;
   }
 
   static Future<void> saveRefreshToken(String refreshToken) async {
     await _storage.write(key: _refreshTokenKey, value: refreshToken);
+    _cachedRefreshToken = refreshToken;
   }
   
   // Batch save both tokens for login optimization
@@ -86,6 +97,10 @@ class TokenStorage {
       // Execute all writes in parallel
       await Future.wait(allWrites);
       
+      // Update in-memory caches
+      _cachedToken = accessToken;
+      _cachedRefreshToken = refreshToken;
+
       return true;
     } catch (e) {
       // If save fails, clear any partial data
@@ -95,7 +110,10 @@ class TokenStorage {
   }
 
   static Future<String?> getRefreshToken() async {
-    return await _storage.read(key: _refreshTokenKey);
+    if (_cachedRefreshToken != null) return _cachedRefreshToken;
+    final t = await _storage.read(key: _refreshTokenKey);
+    _cachedRefreshToken = t;
+    return t;
   }
 
   static Future<String?> getUserId() async {
@@ -132,6 +150,8 @@ class TokenStorage {
 
   static Future<void> clearAll() async {
     await _storage.deleteAll();
+    _cachedToken = null;
+    _cachedRefreshToken = null;
   }
 
   // Enhanced validation methods
