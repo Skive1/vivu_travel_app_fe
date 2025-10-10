@@ -69,14 +69,11 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, UserEntity>> getUserProfile() async {
     try {
-      debugPrint('🔍 Getting user profile - checking token...');
       final token = await TokenStorage.getToken();
-      debugPrint('🎫 Token available: ${token != null}');
 
       final response = await remoteDataSource.getUserProfile();
       return Right(response.toEntity());
     } catch (e) {
-      debugPrint('❌ getUserProfile error: $e');
       return Left(_handleException(e));
     }
   }

@@ -59,7 +59,6 @@ class _CreateScheduleDrawerState extends State<CreateScheduleDrawer> {
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) async {
         if (state is CreateScheduleSuccess) {
-          print('✅ CreateScheduleDrawer: Schedule created successfully');
           Navigator.pop(context);
           await DialogUtils.showSuccessDialog(
             context: context,
@@ -68,7 +67,6 @@ class _CreateScheduleDrawerState extends State<CreateScheduleDrawer> {
             useRootNavigator: true,
           );
           widget.onScheduleCreated?.call();
-          print('🔄 CreateScheduleDrawer: Callback called for refresh');
         } else if (state is CreateScheduleError) {
           await DialogUtils.showErrorDialog(
             context: context,
@@ -219,15 +217,11 @@ class _CreateScheduleDrawerState extends State<CreateScheduleDrawer> {
         isShared: _isShared,
       );
 
-      print('🚀 Creating schedule with data: ${request.toJson()}');
       
       widget.scheduleBloc.add(
         CreateScheduleEvent(request: request),
       );
     } else {
-      print('❌ Form validation failed');
     }
   }
-
-  // unused placeholders removed
 }

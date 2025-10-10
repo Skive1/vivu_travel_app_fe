@@ -69,7 +69,6 @@ class _EditScheduleDrawerState extends State<EditScheduleDrawer> {
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) async {
         if (state is UpdateScheduleSuccess) {
-          print('✅ EditScheduleDrawer: Schedule updated successfully');
           final overlayCtx = Navigator.of(context, rootNavigator: true).overlay?.context ?? context;
           if (mounted) Navigator.pop(context);
           await DialogUtils.showSuccessDialog(
@@ -79,7 +78,6 @@ class _EditScheduleDrawerState extends State<EditScheduleDrawer> {
             useRootNavigator: true,
           );
           widget.onScheduleUpdated?.call();
-          print('🔄 EditScheduleDrawer: Callback called for refresh');
         } else if (state is UpdateScheduleError) {
           final overlayCtx = Navigator.of(context, rootNavigator: true).overlay?.context ?? context;
           await DialogUtils.showErrorDialog(
@@ -236,7 +234,6 @@ class _EditScheduleDrawerState extends State<EditScheduleDrawer> {
         isShared: _isShared,
       );
 
-      print('🚀 Updating schedule with data: ${request.toJson()}');
       
       widget.scheduleBloc.add(
         UpdateScheduleEvent(
@@ -245,7 +242,6 @@ class _EditScheduleDrawerState extends State<EditScheduleDrawer> {
         ),
       );
     } else {
-      print('❌ Form validation failed');
     }
   }
 

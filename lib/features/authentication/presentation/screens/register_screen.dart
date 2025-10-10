@@ -142,7 +142,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   controller: _registerController.addressController,
                                   label: 'Address',
                                   keyboardType: TextInputType.streetAddress,
-                                  validator: _registerController.validateAddress,
                                 ),
 
                                 const SizedBox(height: 16),

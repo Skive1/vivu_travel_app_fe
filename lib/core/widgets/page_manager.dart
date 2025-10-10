@@ -186,53 +186,56 @@ class _SchedulePageWrapperState extends State<SchedulePageWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    // Ưu tiên lấy participantId từ AuthBloc nếu có sẵn
-    String? participantId = _participantId;
-    try {
-      final state = BlocProvider.of<AuthBloc>(context, listen: false).state;
-      if (state is AuthAuthenticated && state.userEntity?.id != null && state.userEntity!.id.isNotEmpty) {
-        participantId = state.userEntity!.id;
-      }
-    } catch (_) {
-      // AuthBloc có thể không có trong context, fallback dùng _participantId
-    }
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        // Lấy participantId ưu tiên từ AuthBloc
+        String participantId = '';
+        if (authState is AuthAuthenticated &&
+            authState.userEntity != null &&
+            authState.userEntity!.id.isNotEmpty) {
+          participantId = authState.userEntity!.id;
+        } else if (_participantId != null && _participantId!.isNotEmpty) {
+          participantId = _participantId!;
+        }
 
-    if (participantId == null || participantId.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.calendar_today,
-              size: 64,
-              color: Colors.grey,
+        if (participantId.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.calendar_today,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Kế hoạch',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Vui lòng đăng nhập để xem lịch trình',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 16),
-            Text(
-              'Kế hoạch',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Vui lòng đăng nhập để xem lịch trình',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+          );
+        }
 
-    return ScheduleListContent(
-      participantId: participantId,
-      onScheduleTap: widget.onScheduleTap,
-      onScheduleViewTap: widget.onScheduleViewTap,
+        return ScheduleListContent(
+          participantId: participantId,
+          onScheduleTap: widget.onScheduleTap,
+          onScheduleViewTap: widget.onScheduleViewTap,
+        );
+      },
     );
   }
 }

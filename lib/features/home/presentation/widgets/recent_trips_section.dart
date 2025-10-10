@@ -177,6 +177,5 @@ class RecentTripsSection extends StatelessWidget {
 
   void _handleTripTap(String destination) {
     // Handle trip selection
-    print('Selected trip: $destination');
   }
 }

@@ -1,6 +1,6 @@
 name: vivu_travel
 description: "A travel planning mobile app with clean architecture."
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -10,53 +10,34 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # Environment & Configuration
-  flutter_dotenv: ^5.1.0
-
-  # State Management
-  flutter_bloc: ^8.1.6
+  flutter_dotenv: ^6.0.0
+  flutter_bloc: ^9.1.1
   equatable: ^2.0.5
-
-  # Dependency Injection
   get_it: ^8.0.0
-
-  # Network
   dio: ^5.7.0
   internet_connection_checker: ^3.0.1
-  
-  # Functional Programming
   dartz: ^0.10.1
-
-  # Local Storage
   shared_preferences: ^2.3.2
   flutter_secure_storage: ^9.2.2
-  
-  # JSON Serialization
   json_annotation: ^4.9.0
-  
-  # UI & Icons
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.9
-  google_fonts: ^6.2.1
+  google_fonts: ^6.3.2
   image_picker: ^1.1.2
   qr_flutter: ^4.1.0
-  intl: ^0.19.0
+  intl: ^0.20.2
   path: ^1.9.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  flutter_lints: ^5.0.0
-  
-  # Code Generation
-  build_runner: ^2.4.13
+  flutter_lints: ^6.0.0
+  build_runner: ^2.9.0
   json_serializable: ^6.8.0
 
 flutter:
   uses-material-design: true
-  
+
   # Assets
   assets:
     - assets/images/

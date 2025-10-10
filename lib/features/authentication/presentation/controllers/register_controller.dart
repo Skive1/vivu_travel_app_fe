@@ -169,24 +169,6 @@ class RegisterController {
     
     return null;
   }
-
-  /// Validate address field
-  String? validateAddress(String? value) {
-    if (value == null || value.isEmpty) {
-      return ValidationMessages.addressRequired;
-    }
-    
-    if (value.length > InputConstraints.maxAddressLength) {
-      return ValidationMessages.addressTooLong;
-    }
-    
-    if (!RegExp(ValidationConstants.addressPattern).hasMatch(value)) {
-      return ValidationMessages.addressInvalid;
-    }
-    
-    return null;
-  }
-
   /// Handle registration form submission
   void handleRegister(BuildContext context) {
     if (!formKey.currentState!.validate()) return;

@@ -11,17 +11,11 @@ class UpdateSchedule implements UseCase<ScheduleEntity, UpdateScheduleParams> {
   UpdateSchedule(this.repository);
 
   @override
-  Future<Either<Failure, ScheduleEntity>> call(UpdateScheduleParams params) async {
-    print('🔧 UpdateSchedule UseCase: Starting');
-    print('🔧 ScheduleId: ${params.scheduleId}');
-    print('🔧 Request: ${params.request.toJson()}');
-    
+  Future<Either<Failure, ScheduleEntity>> call(UpdateScheduleParams params) async {  
     try {
       final schedule = await repository.updateSchedule(params.scheduleId, params.request);
-      print('✅ UpdateSchedule UseCase: Success - ${schedule.id}');
       return Right(schedule);
     } catch (e) {
-      print('❌ UpdateSchedule UseCase: Error - $e');
       return Left(ServerFailure(e.toString()));
     }
   }

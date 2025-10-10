@@ -42,7 +42,6 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
         oldWidget.schedule.title != widget.schedule.title ||
         oldWidget.schedule.status != widget.schedule.status ||
         oldWidget.schedule.sharedCode != widget.schedule.sharedCode) {
-      print('🔄 ScheduleListItem: Schedule data changed, updating cache');
       _cacheFormattedDates();
     }
   }

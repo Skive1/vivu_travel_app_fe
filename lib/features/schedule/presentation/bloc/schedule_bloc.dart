@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/foundation.dart';
 import '../../domain/usecases/get_schedules_by_participant_usecase.dart';
 import '../../domain/usecases/get_activities_by_schedule_usecase.dart';
 import '../../domain/usecases/share_schedule_usecase.dart';
@@ -63,24 +62,16 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     on<DeleteActivityEvent>(_onDeleteActivity);
   }
 
-  void _d(String message) {
-    if (kDebugMode) {
-      print(message);
-    }
-  }
-
   Future<void> _onGetSchedulesByParticipant(
     GetSchedulesByParticipantEvent event,
     Emitter<ScheduleState> emit,
   ) async {
     // Check cache first with timestamp validation
     if (_cachedSchedules != null && _isCacheValid(_lastSchedulesFetch)) {
-      _d('🚀 ScheduleBloc: Using cached schedules (${_cachedSchedules!.length} items)');
       emit(ScheduleLoaded(schedules: _cachedSchedules!));
       return;
     }
     
-    _d('🌐 ScheduleBloc: Fetching fresh schedules from server');
     emit(ScheduleLoading());
     final result = await _getSchedulesByParticipant(
       GetSchedulesByParticipantParams(participantId: event.participantId),
@@ -90,7 +81,6 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
       (schedules) {
         _cachedSchedules = schedules;
         _lastSchedulesFetch = DateTime.now();
-        _d('✅ ScheduleBloc: Cached ${schedules.length} schedules');
         emit(ScheduleLoaded(schedules: schedules));
       },
     );
@@ -168,12 +158,10 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     // Check cache first with timestamp validation
     if (_cachedActivities.containsKey(event.scheduleId) && 
         _isCacheValid(_lastActivitiesFetch[event.scheduleId])) {
-      _d('🚀 ScheduleBloc: Using cached activities for ${event.scheduleId} (${_cachedActivities[event.scheduleId]!.length} items)');
       emit(ActivitiesLoaded(activities: _cachedActivities[event.scheduleId]!));
       return;
     }
     
-    _d('🌐 ScheduleBloc: Fetching fresh activities for ${event.scheduleId}');
     emit(ActivitiesLoading());
     final result = await _getActivitiesBySchedule(
       GetActivitiesByScheduleParams(scheduleId: event.scheduleId),
@@ -183,7 +171,6 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
       (activities) {
         _cachedActivities[event.scheduleId] = activities;
         _lastActivitiesFetch[event.scheduleId] = DateTime.now();
-        _d('✅ ScheduleBloc: Cached ${activities.length} activities for ${event.scheduleId}');
         emit(ActivitiesLoaded(activities: activities));
       },
     );
@@ -193,7 +180,6 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     RefreshSchedulesEvent event,
     Emitter<ScheduleState> emit,
   ) async {
-    _d('🔄 ScheduleBloc: Refreshing schedules for participant ${event.participantId}');
     // Clear cache and fetch fresh data
     _cachedSchedules = null;
     _cachedActivities.clear(); // Clear activities cache too
@@ -227,25 +213,19 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     CreateScheduleEvent event,
     Emitter<ScheduleState> emit,
   ) async {
-    _d('📝 ScheduleBloc: _onCreateSchedule called');
-    _d('📝 Request prepared');
     
     emit(CreateScheduleLoading());
-    _d('📝 ScheduleBloc: Emitted CreateScheduleLoading');
     
     final result = await _createSchedule(
       CreateScheduleParams(request: event.request),
     );
     
-    _d('📝 ScheduleBloc: UseCase result received');
     
     result.fold(
       (failure) {
-        _d('❌ ScheduleBloc: Create failed - ${failure.message}');
         emit(CreateScheduleError(message: failure.message));
       },
       (schedule) {
-        _d('✅ ScheduleBloc: Create success - ${schedule.id}');
         // Clear all cache to ensure fresh data
         _clearAllCache();
         emit(CreateScheduleSuccess(schedule: schedule));
@@ -257,12 +237,8 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     UpdateScheduleEvent event,
     Emitter<ScheduleState> emit,
   ) async {
-    _d('📝 ScheduleBloc: _onUpdateSchedule called');
-    _d('📝 ScheduleId: ${event.scheduleId}');
-    _d('📝 Request prepared');
     
     emit(UpdateScheduleLoading());
-    _d('📝 ScheduleBloc: Emitted UpdateScheduleLoading');
     
     final result = await _updateSchedule(
       UpdateScheduleParams(
@@ -271,15 +247,12 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
       ),
     );
     
-    _d('📝 ScheduleBloc: Update UseCase result received');
     
     result.fold(
       (failure) {
-        _d('❌ ScheduleBloc: Update failed - ${failure.message}');
         emit(UpdateScheduleError(message: failure.message));
       },
       (schedule) {
-        _d('✅ ScheduleBloc: Update success - ${schedule.id}');
         // Clear all cache to ensure fresh data
         _clearAllCache();
         emit(UpdateScheduleSuccess(schedule: schedule));
@@ -295,12 +268,10 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
 
   // Helper method to clear all cache
   void _clearAllCache() {
-    _d('🗑️ ScheduleBloc: Clearing all cache');
     _cachedSchedules = null;
     _cachedActivities.clear();
     _lastSchedulesFetch = null;
     _lastActivitiesFetch.clear();
-    _d('✅ ScheduleBloc: All cache cleared');
   }
 
   Future<void> _onClearCache(

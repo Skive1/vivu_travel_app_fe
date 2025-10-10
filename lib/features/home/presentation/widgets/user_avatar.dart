@@ -12,22 +12,17 @@ class UserAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        debugPrint('🎨 UserAvatar building with state: ${state.runtimeType}');
         
         if (state is AuthAuthenticated) {
-          debugPrint('🔐 AuthAuthenticated - hasUserProfile: ${state.hasUserProfile}');
           
           if (state.hasUserProfile) {
             final user = state.userEntity!;
-            debugPrint('👤 User info: ${user.name} (${user.email})');
             return _buildUserInfo(context, user);
           } else {
-            debugPrint('⏳ User authenticated but no profile yet, showing placeholder');
             return _buildPlaceholder();
           }
         }
-        
-        debugPrint('❌ Not authenticated or other state, showing placeholder');
+          
         // Show loading or placeholder when user profile is not available
         return _buildPlaceholder();
       },

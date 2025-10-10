@@ -238,27 +238,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       ),
     );
   }
-
-  Widget _readOnlyValue(String value) {
-    return Container(
-      margin: const EdgeInsets.only(top: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accentOrange.withValues(alpha: 0.35), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Text(value.isEmpty ? '-' : value, style: const TextStyle(fontSize: 16)),
-    );
-  }
-
+  
   InputDecoration _filledDecoration({String? hint}) {
     final baseBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),

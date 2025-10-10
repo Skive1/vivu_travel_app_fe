@@ -74,19 +74,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     await result.fold(
       (failure) async {
-        debugPrint('🔴 Login failed: ${failure.message}');
         if (!emit.isDone) {
           emit(AuthError(failure.message, title: 'Login Failed'));
         }
       },
       (authEntity) async {
-        debugPrint('🟢 Login successful');
 
         // 1) Load cached profile quickly and emit immediately for fast UI paint
         final cachedUser = await UserStorage.getUserProfile();
         if (!emit.isDone) {
           emit(AuthAuthenticated(authEntity, userEntity: cachedUser));
-          debugPrint('✅ Emitted AuthAuthenticated with ${cachedUser != null ? "cached" : "no"} user');
         }
 
         // 2) Then trigger fresh user profile load in background to update UI
@@ -102,12 +99,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     GetUserProfileRequested event,
     Emitter<AuthState> emit,
   ) async {
-    debugPrint('🔍 Getting user profile...');
     
     // Only proceed if we're currently authenticated
     final currentState = state;
     if (currentState is! AuthAuthenticated) {
-      debugPrint('🔴 Not authenticated, cannot get user profile');
       return;
     }
 
@@ -115,21 +110,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     await result.fold(
       (failure) async {
-        debugPrint('🔴 Failed to get user profile: ${failure.message}');
         // If getting user profile fails, we still keep them authenticated
         // but without user profile data
       },
       (userEntity) async {
-        debugPrint('🟢 User profile received: ${userEntity.name} (${userEntity.email})');
         
         // Save user profile to storage for future fast loading
         final saved = await UserStorage.saveUserProfile(userEntity);
-        debugPrint('💾 User profile saved to storage: $saved');
         
         // Update authenticated state with fresh user profile
         if (!emit.isDone) {
           emit(currentState.copyWith(userEntity: userEntity));
-          debugPrint('✅ Emitted updated AuthAuthenticated with fresh user profile');
         }
       },
     );

@@ -296,6 +296,5 @@ class PopularDestinationsSection extends StatelessWidget {
 
   void _handleDestinationTap(String destination) {
     // Handle destination selection
-    print('Selected destination: $destination');
   }
 }
