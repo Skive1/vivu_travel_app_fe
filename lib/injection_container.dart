@@ -39,7 +39,7 @@ import 'features/schedule/domain/repositories/schedule_repository.dart';
 import 'features/schedule/domain/usecases/get_schedules_by_participant_usecase.dart';
 import 'features/schedule/domain/usecases/get_activities_by_schedule_usecase.dart';
 import 'features/schedule/domain/usecases/share_schedule_usecase.dart';
-import 'features/schedule/domain/usecases/create_schedule.dart';
+import 'features/schedule/domain/usecases/create_schedule_usecase.dart';
 import 'features/schedule/domain/usecases/update_schedule_usecase.dart';
 import 'features/schedule/domain/usecases/create_activity_usecase.dart';
 import 'features/schedule/domain/usecases/update_activity_usecase.dart';

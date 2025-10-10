@@ -153,7 +153,9 @@ class ScheduleList extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom,
+                ),
                 itemCount: activities.length + (scheduleId != null ? 1 : 0),
                 itemBuilder: (context, index) {
                     final isAppendButton = scheduleId != null && index == activities.length;

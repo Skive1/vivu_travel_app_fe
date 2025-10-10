@@ -1,4 +1,5 @@
 import '../../../../core/errors/failures.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/network/network_info.dart';
 import '../../domain/entities/schedule_entity.dart';
 import '../../domain/entities/activity_entity.dart';
@@ -18,6 +19,13 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
     required NetworkInfo networkInfo,
   })  : _remoteDataSource = remoteDataSource,
         _networkInfo = networkInfo;
+
+  void _d(String message) {
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print(message);
+    }
+  }
 
   @override
   Future<List<ScheduleEntity>> getSchedulesByParticipant(String participantId) async {
@@ -63,43 +71,43 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
 
   @override
   Future<ScheduleEntity> createSchedule(CreateScheduleRequest request) async {
-    print('🌐 ScheduleRepository: createSchedule called');
-    print('🌐 Request: ${request.toJson()}');
+    _d('🌐 ScheduleRepository: createSchedule called');
+    _d('🌐 Request prepared');
     
     if (await _networkInfo.isConnected) {
-      print('🌐 Network connected, calling remote data source');
+      _d('🌐 Network connected, calling remote data source');
       try {
         final schedule = await _remoteDataSource.createSchedule(request);
-        print('✅ ScheduleRepository: Success - ${schedule.id}');
+        _d('✅ ScheduleRepository: Success - ${schedule.id}');
         return schedule;
       } catch (e) {
-        print('❌ ScheduleRepository: Error - $e');
+        _d('❌ ScheduleRepository: Error');
         throw ServerFailure(e.toString());
       }
     } else {
-      print('❌ ScheduleRepository: No internet connection');
+      _d('❌ ScheduleRepository: No internet connection');
       throw NetworkFailure('No internet connection');
     }
   }
 
   @override
   Future<ScheduleEntity> updateSchedule(String scheduleId, UpdateScheduleRequest request) async {
-    print('🌐 ScheduleRepository: updateSchedule called');
-    print('🌐 ScheduleId: $scheduleId');
-    print('🌐 Request: ${request.toJson()}');
+    _d('🌐 ScheduleRepository: updateSchedule called');
+    _d('🌐 ScheduleId: $scheduleId');
+    _d('🌐 Request prepared');
     
     if (await _networkInfo.isConnected) {
-      print('🌐 Network connected, calling remote data source');
+      _d('🌐 Network connected, calling remote data source');
       try {
         final schedule = await _remoteDataSource.updateSchedule(scheduleId, request);
-        print('✅ ScheduleRepository: Update Success - ${schedule.id}');
+        _d('✅ ScheduleRepository: Update Success - ${schedule.id}');
         return schedule;
       } catch (e) {
-        print('❌ ScheduleRepository: Update Error - $e');
+        _d('❌ ScheduleRepository: Update Error');
         throw ServerFailure(e.toString());
       }
     } else {
-      print('❌ ScheduleRepository: No internet connection');
+      _d('❌ ScheduleRepository: No internet connection');
       throw NetworkFailure('No internet connection');
     }
   }

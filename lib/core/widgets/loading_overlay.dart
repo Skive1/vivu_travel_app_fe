@@ -11,7 +11,7 @@ class LoadingOverlay extends StatelessWidget {
       child: IgnorePointer(
         ignoring: false,
         child: Container(
-          color: Colors.black.withOpacity(0.35),
+          color: Colors.black.withValues(alpha: 0.35),
           alignment: Alignment.center,
           child: const SizedBox(
             height: 56,

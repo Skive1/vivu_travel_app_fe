@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../../../core/constants/app_colors.dart';
 import 'search_section.dart';
 import 'popular_destinations_section.dart';
@@ -15,6 +14,8 @@ class HomeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomSafe = MediaQuery.of(context).padding.bottom;
+
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
@@ -25,21 +26,16 @@ class HomeBody extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            
-            // Search Section
+
             const SearchSection(),
-            
             const SizedBox(height: 32),
-            
-            // Popular Destinations Section
+
             const PopularDestinationsSection(),
-            
             const SizedBox(height: 32),
-            
-            // Recent Trips Section
+
             const RecentTripsSection(),
-            
-            const SizedBox(height: 100), // Bottom padding
+
+            SizedBox(height: bottomSafe + 12),
           ],
         ),
       ),

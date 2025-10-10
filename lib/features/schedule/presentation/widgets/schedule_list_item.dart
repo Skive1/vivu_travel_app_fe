@@ -6,11 +6,13 @@ import '../../domain/entities/schedule_entity.dart';
 class ScheduleListItem extends StatefulWidget {
   final ScheduleEntity schedule;
   final VoidCallback onTap;
+  final Function(String)? onScheduleViewTap;
 
   const ScheduleListItem({
     Key? key,
     required this.schedule,
     required this.onTap,
+    this.onScheduleViewTap,
   }) : super(key: key);
 
   @override
@@ -62,7 +64,7 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -87,7 +89,7 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(widget.schedule.status).withOpacity(0.1),
+                    color: _getStatusColor(widget.schedule.status).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -164,7 +166,7 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
                   ),
                 ),
                 const Spacer(),
-                if (widget.schedule.sharedCode != null) ...[
+                if (widget.schedule.sharedCode != '') ...[
                   const Icon(
                     Icons.share,
                     size: 16,
@@ -207,11 +209,7 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/schedule',
-                    arguments: widget.schedule.id,
-                  );
+                  widget.onScheduleViewTap?.call(widget.schedule.id);
                 },
                 icon: const Icon(Icons.calendar_today, size: 16),
                 label: const Text('Xem lịch trình'),

@@ -217,7 +217,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   InputDecoration _filledDecoration({String? hint, Widget? prefix}) {
     final baseBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: AppColors.accentOrange.withOpacity(0.4), width: 1.2),
+      borderSide: BorderSide(color: AppColors.accentOrange.withValues(alpha: 0.4), width: 1.2),
     );
     return InputDecoration(
       hintText: hint,

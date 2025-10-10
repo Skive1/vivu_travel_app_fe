@@ -246,10 +246,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accentOrange.withOpacity(0.35), width: 1.2),
+        border: Border.all(color: AppColors.accentOrange.withValues(alpha: 0.35), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -262,7 +262,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   InputDecoration _filledDecoration({String? hint}) {
     final baseBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: AppColors.accentOrange.withOpacity(0.4), width: 1.2),
+      borderSide: BorderSide(color: AppColors.accentOrange.withValues(alpha: 0.4), width: 1.2),
     );
     return InputDecoration(
       hintText: hint,
@@ -396,7 +396,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   void _openAvatarPreview({String? filePath, String? url, required String initials}) {
     showDialog<void>(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.9),
+      barrierColor: Colors.black.withValues(alpha: 0.9),
       builder: (ctx) {
         Widget imageWidget;
         if (filePath != null && filePath.isNotEmpty) {

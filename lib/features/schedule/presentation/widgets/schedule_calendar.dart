@@ -112,8 +112,14 @@ class _ScheduleCalendarState extends State<ScheduleCalendar> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppColors.accentOrange
-                    : Colors.transparent,
+                    : (isToday ? AppColors.accentOrange.withValues(alpha: 0.1) : Colors.transparent),
                 borderRadius: BorderRadius.circular(14),
+                border: isToday && !isSelected
+                    ? Border.all(
+                        color: AppColors.accentOrange,
+                        width: 2,
+                      )
+                    : null,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -124,22 +130,27 @@ class _ScheduleCalendarState extends State<ScheduleCalendar> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                    color: isSelected
-                        ? Colors.white
-                        : (isToday ? AppColors.textPrimary : AppColors.textSecondary),
+                      color: isSelected
+                          ? Colors.white
+                          : (isToday ? AppColors.accentOrange : AppColors.textSecondary),
                     ),
                   ),
                   const SizedBox(height: 6),
-                  // Date number
-                  Text(
-                    '${date.day}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? Colors.white
-                          : (isToday ? AppColors.textPrimary : AppColors.textPrimary),
-                    ),
+                  // Date number with today indicator
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Text(
+                        '${date.day}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? Colors.white
+                              : (isToday ? AppColors.accentOrange : AppColors.textPrimary),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

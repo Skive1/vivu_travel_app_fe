@@ -24,151 +24,188 @@ class ActivityTimelineItem extends StatelessWidget {
     final emoji = _guessEmoji(activity);
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Column(
-            children: [
-              Container(
-                width: 20,
-                alignment: Alignment.center,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.primary, AppColors.accent]),
-                    shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: AppColors.primary.withOpacity(0.25), blurRadius: 6, offset: const Offset(0, 2))],
-                  ),
-                ),
-              ),
-              if (!isLast) const _DashedLine(height: 72, color: AppColors.border),
-            ],
-          ),
-          const SizedBox(width: 12),
-          
-          Expanded(
+          // Timeline indicator and connector, positioned relative to card height
+          Positioned(
+            top: 2,
+            left: 10,
             child: Container(
+              width: 12,
+              height: 12,
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border.withOpacity(0.6)),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+                gradient: LinearGradient(colors: [AppColors.primary, AppColors.accent]),
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.25), blurRadius: 6, offset: const Offset(0, 2))],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+            ),
+          ),
+          if (!isLast)
+            const Positioned(
+              left: 15, // center of the 12px dot (10 + 6 - 1)
+              top: 20,
+              bottom: 0,
+              child: _DashedLinePaint(color: AppColors.border),
+            ),
+
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(width: 32),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            '$emoji ${activity.placeName}',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _TimeChip(text: '${_formatTime(activity.checkInTime)} - ${_formatTime(activity.checkOutTime)}'),
-                        const SizedBox(width: 4),
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'edit') {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (_) => Container(
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                                  ),
-                                  child: BlocProvider.value(
-                                    value: context.read<ScheduleBloc>(),
-                                    child: EditActivitySheet(activity: activity, rootContext: context),
-                                  ),
-                                ),
-                              );
-                            } else if (value == 'delete') {
-                              _confirmDelete(context);
-                            }
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit, size: 18), SizedBox(width: 8), Text('Chỉnh sửa')])),
-                            PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline, size: 18), SizedBox(width: 8), Text('Xoá')]))
-                          ],
-                          child: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    
-                    Row(
-                      children: [
-                        _TagChip(text: period),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.location_on_outlined, size: 16, color: AppColors.textSecondary),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            activity.location,
-                            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    
-                    if (activity.description.isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.notes_rounded, size: 16, color: AppColors.textSecondary),
-                            const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                activity.description,
-                                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.35),
+                                '$emoji ${activity.placeName}',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _TimeChip(text: '${_formatTime(activity.checkInTime)} - ${_formatTime(activity.checkOutTime)}'),
+                            const SizedBox(width: 4),
+                            PopupMenuButton<String>(
+                              color: Colors.white,
+                              elevation: 6,
+                              offset: const Offset(0, 24),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+                              ),
+                              onSelected: (value) {
+                                if (value == 'edit') {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (_) => Container(
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                      ),
+                                      child: BlocProvider.value(
+                                        value: context.read<ScheduleBloc>(),
+                                        child: EditActivitySheet(activity: activity, rootContext: context),
+                                      ),
+                                    ),
+                                  );
+                                } else if (value == 'delete') {
+                                  _confirmDelete(context);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.edit_rounded, size: 18, color: AppColors.primary),
+                                      SizedBox(width: 10),
+                                      Text('Chỉnh sửa', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuDivider(height: 4),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  child: Row(
+                                    children: const [
+                                      Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
+                                      SizedBox(width: 10),
+                                      Text('Xoá', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              child: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        
+                        Row(
+                          children: [
+                            _TagChip(text: period),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.location_on_outlined, size: 16, color: AppColors.textSecondary),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                activity.location,
+                                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                    
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time, size: 16, color: AppColors.textSecondary),
-                        const SizedBox(width: 6),
-                        Text('~ ${_calculateDuration()}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                        const Spacer(),
-                        _TagChip(text: '#${activity.orderIndex + 1}'),
+                        
+                        if (activity.description.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.notes_rounded, size: 16, color: AppColors.textSecondary),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    activity.description,
+                                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.35),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time, size: 16, color: AppColors.textSecondary),
+                            const SizedBox(width: 6),
+                            Text('~ ${_calculateDuration()}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                            const Spacer(),
+                            _TagChip(text: '#${activity.orderIndex + 1}'),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),
     );
   }
 
+  static final DateFormat _timeFmt = DateFormat('HH:mm');
+
   String _formatTime(DateTime dateTime) {
-    return DateFormat('HH:mm').format(dateTime);
+    return _timeFmt.format(dateTime);
   }
 
   String _calculateDuration() {
@@ -219,26 +256,44 @@ class ActivityTimelineItem extends StatelessWidget {
   }
 }
 
-class _DashedLine extends StatelessWidget {
-  final double height;
+class _DashedLinePaint extends StatelessWidget {
   final Color color;
-  const _DashedLine({required this.height, required this.color});
+  const _DashedLinePaint({required this.color});
 
   @override
   Widget build(BuildContext context) {
-    const dashHeight = 5.0;
-    const gap = 3.0;
-    final dashCount = (height / (dashHeight + gap)).floor();
-    return SizedBox(
-      width: 2,
-      height: height,
-      child: Column(
-        children: List.generate(dashCount, (_) => Container(height: dashHeight, width: 2, color: color)).expand((w) sync* {
-          yield w;
-          yield const SizedBox(height: gap);
-        }).toList(),
-      ),
+    return CustomPaint(
+      painter: _VerticalDashedLinePainter(color: color),
+      size: const Size(2, double.infinity),
     );
+  }
+}
+
+class _VerticalDashedLinePainter extends CustomPainter {
+  final Color color;
+  static const double dashHeight = 5.0;
+  static const double gap = 3.0;
+
+  const _VerticalDashedLinePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = size.width
+      ..strokeCap = StrokeCap.square;
+
+    double y = 0;
+    while (y < size.height) {
+      final endY = (y + dashHeight).clamp(0.0, size.height);
+      canvas.drawLine(Offset(size.width / 2, y), Offset(size.width / 2, endY), paint);
+      y += dashHeight + gap;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _VerticalDashedLinePainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
 
@@ -251,9 +306,9 @@ class _TimeChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.08),
+        color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary)),
     );

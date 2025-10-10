@@ -8,21 +8,19 @@ class HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
         decoration: const BoxDecoration(
           color: Colors.white,
           border: Border(
             bottom: BorderSide(color: Color(0xFFF0F0F0), width: 1),
           ),
         ),
-        child: Row(
+        child: const Row(
           children: [
-            // User Info Section
-            const Expanded(child: UserAvatar()),
-
-            // Notification Bell
-            const NotificationBell(),
+            Expanded(child: UserAvatar()),
+            NotificationBell(),
           ],
         ),
       ),

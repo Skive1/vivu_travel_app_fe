@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 
-import 'schedule_content.dart';
+import 'schedule_list.dart';
 
 class ScheduleContainer extends StatelessWidget {
   final String? scheduleId;
+  final DateTime selectedDate;
 
-  const ScheduleContainer({super.key, this.scheduleId});
+  const ScheduleContainer({
+    super.key, 
+    this.scheduleId,
+    required this.selectedDate,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +40,10 @@ class ScheduleContainer extends StatelessWidget {
           ),
         ],
       ),
-      child: ScheduleContent(scheduleId: scheduleId),
+      child: ScheduleList(
+        selectedDate: selectedDate,
+        scheduleId: scheduleId,
+      ),
     );
   }
 }

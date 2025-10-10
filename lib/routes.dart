@@ -8,18 +8,12 @@ import 'features/authentication/presentation/screens/forgot_password_screen.dart
 import 'features/authentication/presentation/screens/otp_verification_reset_password_screen.dart';
 import 'features/authentication/presentation/screens/reset_password_screen.dart';
 import 'features/authentication/presentation/screens/change_password_screen.dart';
-import 'features/home/presentation/screens/home_screen.dart';
-import 'features/schedule/presentation/screens/schedule_screen.dart';
-import 'features/schedule/presentation/screens/schedule_list_screen.dart';
-import 'features/schedule/presentation/screens/schedule_detail_screen.dart';
-import 'features/user/presentation/screens/profile_screen.dart';
+import 'core/widgets/main_layout.dart';
 import 'features/user/presentation/screens/profile_detail_screen.dart';
 import 'features/user/presentation/screens/edit_profile_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'injection_container.dart';
 import 'features/user/presentation/bloc/user_bloc.dart';
-import 'features/schedule/presentation/bloc/schedule_bloc.dart';
-import 'features/schedule/domain/entities/schedule_entity.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -32,9 +26,6 @@ class AppRoutes {
   static const String resetPassword = '/reset-password';
   static const String changePassword = '/change-password';
   static const String home = '/home';
-  static const String schedule = '/schedule';
-  static const String scheduleList = '/schedule-list';
-  static const String scheduleDetail = '/schedule-detail';
   static const String profile = '/profile';
   static const String profileDetail = '/profile-detail';
   static const String editProfile = '/edit-profile';
@@ -92,36 +83,7 @@ class AppRoutes {
         
       case home:
         return MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
-        );
-        
-      case schedule:
-        final scheduleId = settings.arguments as String?;
-        return MaterialPageRoute(
-          builder: (_) => ScheduleScreen(scheduleId: scheduleId),
-        );
-        
-      case scheduleList:
-        final participantId = settings.arguments as String;
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => sl<ScheduleBloc>(),
-            child: ScheduleListScreen(participantId: participantId),
-          ),
-        );
-        
-      case scheduleDetail:
-        final schedule = settings.arguments as ScheduleEntity;
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) => sl<ScheduleBloc>(),
-            child: ScheduleDetailScreen(schedule: schedule),
-          ),
-        );
-        
-      case profile:
-        return MaterialPageRoute(
-          builder: (_) => const ProfileScreen(),
+          builder: (_) => const MainLayout(),
         );
       case profileDetail:
         return MaterialPageRoute(

@@ -12,15 +12,11 @@ class CreateSchedule implements UseCase<ScheduleEntity, CreateScheduleParams> {
 
   @override
   Future<Either<Failure, ScheduleEntity>> call(CreateScheduleParams params) async {
-    print('🔧 CreateSchedule UseCase: Starting');
-    print('🔧 Request: ${params.request.toJson()}');
     
     try {
       final schedule = await repository.createSchedule(params.request);
-      print('✅ CreateSchedule UseCase: Success - ${schedule.id}');
       return Right(schedule);
     } catch (e) {
-      print('❌ CreateSchedule UseCase: Error - $e');
       return Left(ServerFailure(e.toString()));
     }
   }

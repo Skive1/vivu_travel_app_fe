@@ -20,7 +20,7 @@ class ScheduleDetailInfo extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -45,7 +45,7 @@ class ScheduleDetailInfo extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(schedule.status).withOpacity(0.1),
+                  color: _getStatusColor(schedule.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
@@ -83,15 +83,7 @@ class ScheduleDetailInfo extends StatelessWidget {
             title: 'Số người tham gia',
             content: '${schedule.participantsCount} người',
           ),
-          const SizedBox(height: 16),
-          
-          // Shared status
-          _buildInfoRow(
-            icon: Icons.share_outlined,
-            title: 'Trạng thái chia sẻ',
-            content: schedule.sharedCode != null ? 'Đã chia sẻ' : 'Chưa chia sẻ',
-            contentColor: schedule.sharedCode != null ? AppColors.primary : AppColors.textSecondary,
-          ),
+          const SizedBox(height: 16),       
           
           // Notes (if available)
           if (schedule.notes.isNotEmpty) ...[

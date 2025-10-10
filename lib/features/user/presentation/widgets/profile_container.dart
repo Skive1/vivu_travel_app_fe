@@ -63,9 +63,8 @@ class ProfileContent extends StatelessWidget {
         // Top safe area spacer
         SizedBox(height: topPadding),
         
-        // Header với back button và title
+        // Header với title (không back button)
         Container(
-          height: 60,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -76,41 +75,40 @@ class ProfileContent extends StatelessWidget {
               ),
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  color: AppColors.textPrimary,
-                  size: 20,
-                ),
-              ),
-              const Expanded(
-                child: Text(
-                  'Profile',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+          child: SizedBox(
+            height: 64,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Center(
+                  child: Text(
+                    'Profile',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
-              ),
-              IconButton(
-                onPressed: () {
-                  // Refresh user profile
-                  context.read<AuthBloc>().add(GetUserProfileRequested());
-                },
-                icon: const Icon(
-                  Icons.refresh_outlined,
-                  color: AppColors.primary,
-                  size: 20,
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: IconButton(
+                    onPressed: () {
+                      // Refresh user profile
+                      context.read<AuthBloc>().add(GetUserProfileRequested());
+                    },
+                    icon: const Icon(
+                      Icons.refresh_outlined,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         

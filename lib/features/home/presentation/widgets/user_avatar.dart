@@ -81,7 +81,7 @@ class UserAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.2),
+          color: AppColors.primary.withValues(alpha: 0.2),
           width: 2,
         ),
       ),
@@ -116,7 +116,7 @@ class UserAvatar extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
+            AppColors.primary.withValues(alpha: 0.8),
           ],
         ),
       ),

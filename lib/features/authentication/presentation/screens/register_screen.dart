@@ -218,8 +218,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                             children: [
                                               Expanded(
                                                 child: RadioListTile<String>(
-                                                  title: const Text('Nam'),
-                                                  value: 'Nam',
+                                                  title: const Text('Male'),
+                                                  value: 'Male',
                                                   groupValue: _registerController.selectedGender,
                                                   onChanged: (String? value) {
                                                     setState(() {
@@ -233,8 +233,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                               ),
                                               Expanded(
                                                 child: RadioListTile<String>(
-                                                  title: const Text('Nữ'),
-                                                  value: 'Nữ',
+                                                  title: const Text('Female'),
+                                                  value: 'Female',
                                                   groupValue: _registerController.selectedGender,
                                                   onChanged: (String? value) {
                                                     setState(() {

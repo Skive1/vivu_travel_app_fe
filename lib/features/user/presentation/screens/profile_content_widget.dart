@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../authentication/presentation/bloc/auth_bloc.dart';
 import '../../../authentication/presentation/bloc/auth_event.dart';
 import '../../../authentication/presentation/bloc/auth_state.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../widgets/profile_container.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileContentWidget extends StatefulWidget {
+  const ProfileContentWidget({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileContentWidget> createState() => _ProfileContentWidgetState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileContentWidgetState extends State<ProfileContentWidget> {
   @override
   void initState() {
     super.initState();
@@ -32,24 +31,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       statusBarIconBrightness: Brightness.dark,
     ));
 
-    // Get screen dimensions
-    final screenSize = MediaQuery.of(context).size;
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: BlocListener<AuthBloc, AuthState>(
-        listenWhen: (prev, curr) => curr is AuthError,
-        listener: (context, state) {
-          if (state is AuthError) {
-            DialogUtils.showErrorDialog(context: context, title: state.title ?? 'Error', message: state.message);
-          }
-        },
-        child: SizedBox(
-          width: screenSize.width,
-          height: screenSize.height,
-          child: const ProfileContainer(),
-        ),
-      ),
+    return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (prev, curr) => curr is AuthError,
+      listener: (context, state) {
+        if (state is AuthError) {
+          DialogUtils.showErrorDialog(context: context, title: state.title ?? 'Error', message: state.message);
+        }
+      },
+      child: const ProfileContainer(),
     );
   }
 }
