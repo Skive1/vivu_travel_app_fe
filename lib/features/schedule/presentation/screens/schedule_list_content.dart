@@ -9,6 +9,7 @@ import '../widgets/schedule_list_item.dart';
 import '../widgets/create_schedule_drawer.dart';
 import '../widgets/join_schedule_modal.dart';
 import '../widgets/optimized_skeleton.dart';
+ 
 
 class ScheduleListContent extends StatefulWidget {
   final String participantId;
@@ -31,6 +32,7 @@ class _ScheduleListContentState extends State<ScheduleListContent>
   String _searchQuery = '';
   String _statusFilter = 'all'; // all | active | completed | pending | cancelled
   Timer? _searchDebounce;
+  
 
   @override
   bool get wantKeepAlive => true;
@@ -334,7 +336,8 @@ class _ScheduleListContentState extends State<ScheduleListContent>
           ),
         ),
       ],
-    ));
+    ),
+    );
   }
 
   Widget _buildFilterChip(String label, String value) {

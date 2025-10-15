@@ -17,6 +17,7 @@ import '../../domain/usecases/add_participant_by_email_usecase.dart';
 import '../../domain/usecases/get_schedule_by_id_usecase.dart';
 import '../../domain/usecases/kick_participant_usecase.dart';
 import '../../domain/usecases/change_participant_role_usecase.dart';
+import '../../domain/usecases/reorder_activity_usecase.dart';
 
 class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   final GetSchedulesByParticipant _getSchedulesByParticipant;
@@ -33,6 +34,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   final AddParticipantByEmail _addParticipantByEmail;
   final KickParticipant _kickParticipant;
   final ChangeParticipantRole _changeParticipantRole;
+  final ReorderActivity _reorderActivity;
 
   // Enhanced cache for schedules and activities with timestamps
   List<ScheduleEntity>? _cachedSchedules;
@@ -63,6 +65,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     required AddParticipantByEmail addParticipantByEmail,
     required KickParticipant kickParticipant,
     required ChangeParticipantRole changeParticipantRole,
+    required ReorderActivity reorderActivity,
   }) : _getSchedulesByParticipant = getSchedulesByParticipant,
        _getScheduleById = getScheduleById,
        _getActivitiesBySchedule = getActivitiesBySchedule,
@@ -77,6 +80,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
        _addParticipantByEmail = addParticipantByEmail,
        _kickParticipant = kickParticipant,
        _changeParticipantRole = changeParticipantRole,
+       _reorderActivity = reorderActivity,
        super(ScheduleInitial()) {
     on<GetSchedulesByParticipantEvent>(_onGetSchedulesByParticipant);
     on<GetScheduleByIdEvent>(_onGetScheduleById);
@@ -95,6 +99,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     on<AddParticipantByEmailEvent>(_onAddParticipantByEmail);
     on<KickParticipantEvent>(_onKickParticipant);
     on<ChangeParticipantRoleEvent>(_onChangeParticipantRole);
+    on<ReorderActivityEvent>(_onReorderActivity);
   }
 
   Future<void> _onGetScheduleById(
@@ -528,6 +533,22 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
         emit(const ChangeParticipantRoleSuccess(message: "Participant's role changed"));
         // Refresh participants to update UI and cached role
         add(GetScheduleParticipantsEvent(scheduleId: event.scheduleId));
+      },
+    );
+  }
+
+  Future<void> _onReorderActivity(
+    ReorderActivityEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(ReorderActivityLoading());
+    final result = await _reorderActivity(newIndex: event.newIndex, activityId: event.activityId);
+    result.fold(
+      (failure) => emit(ReorderActivityError(message: failure.message)),
+      (_) {
+        emit(const ReorderActivitySuccess(message: 'Update order successfully'));
+        // Refresh activities for the given schedule and date
+        add(RefreshActivitiesEvent(scheduleId: event.scheduleId, date: event.date));
       },
     );
   }

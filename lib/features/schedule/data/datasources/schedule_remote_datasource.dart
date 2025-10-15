@@ -40,6 +40,7 @@ abstract class ScheduleRemoteDataSource {
   Future<AddParticipantByEmailResponse> addParticipantByEmail(String scheduleId, AddParticipantByEmailRequest request);
   Future<KickParticipantResponse> kickParticipant(String scheduleId, String participantId);
   Future<void> changeParticipantRole(String scheduleId, String participantId);
+  Future<void> reorderActivity({required int newIndex, required int activityId});
 }
 
 class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
@@ -297,6 +298,15 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
       );
     } on DioException catch (e) {
       throw Exception('Failed to change participant role: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> reorderActivity({required int newIndex, required int activityId}) async {
+    try {
+      await _apiClient.put(Endpoints.reorderActivity(newIndex, activityId));
+    } on DioException catch (e) {
+      throw Exception('Failed to reorder activity: ${e.message}');
     }
   }
 }

@@ -6,6 +6,7 @@ import '../../domain/entities/activity_entity.dart';
 import '../bloc/schedule_bloc.dart';
 import '../bloc/schedule_event.dart';
 import 'edit_activity_sheet.dart';
+import '../screens/activity_navigation_screen.dart';
 import 'package:flutter/material.dart';
 
 class ActivityTimelineItem extends StatelessWidget {
@@ -28,7 +29,13 @@ class ActivityTimelineItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final period = _getPeriodLabel(activity.checkInTime);
     final emoji = _guessEmoji(activity);
-    return Container(
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => ActivityNavigationScreen(activity: activity),
+        ));
+      },
+      child: Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Stack(
         children: [
@@ -196,7 +203,7 @@ class ActivityTimelineItem extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text('~ ${_calculateDuration()}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                             const Spacer(),
-                            _TagChip(text: '#${activity.orderIndex + 1}'),
+                            _TagChip(text: '#${activity.orderIndex}'),
                           ],
                         ),
                       ],
@@ -208,6 +215,7 @@ class ActivityTimelineItem extends StatelessWidget {
           ),
         ],
       ),
+    )
     );
   }
 

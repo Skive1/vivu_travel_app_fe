@@ -53,17 +53,24 @@ class DioFactory {
           
           final token = await TokenStorage.getToken();
           if (token != null && token.isNotEmpty) {
+            // Log token TTL before request
+            final timeRemaining = await TokenStorage.getTokenTimeRemaining();
+            print('DioFactory: Token TTL before request: ${timeRemaining?.inMinutes ?? 0} minutes');
+            
             // Chỉ refresh nếu token sắp hết hạn và chưa có refresh đang chạy
-            if (await TokenStorage.isTokenNearExpiry(threshold: Duration(minutes: 2)) && !_isRefreshing) {
-              print('DioFactory: Preemptive refresh triggered');
+            if (await TokenStorage.isTokenNearExpiry(threshold: Duration(minutes: 3)) && !_isRefreshing) {
+              print('DioFactory: Preemptive refresh triggered - using _authDio');
               final newToken = await _refreshToken();
               if (newToken != null) {
+                print('DioFactory: Token refreshed successfully - old: ${token.substring(0, 10)}... new: ${newToken.substring(0, 10)}...');
                 options.headers['Authorization'] = 'Bearer $newToken';
               } else {
                 // Nếu refresh fail, vẫn dùng token cũ và để error handler xử lý
+                print('DioFactory: Preemptive refresh failed - using old token');
                 options.headers['Authorization'] = 'Bearer $token';
               }
             } else {
+              print('DioFactory: Using current token (no refresh needed)');
               options.headers['Authorization'] = 'Bearer $token';
             }
           }
@@ -89,9 +96,10 @@ class DioFactory {
 
               // Chỉ refresh nếu chưa có refresh đang chạy
               if (!_isRefreshing) {
-                print('DioFactory: Reactive refresh triggered');
+                print('DioFactory: Reactive refresh triggered (401 error) - using _authDio');
                 final newToken = await _refreshToken();
                 if (newToken != null) {
+                  print('DioFactory: Reactive refresh successful - retrying request with new token');
                   requestOptions.headers['Authorization'] = 'Bearer $newToken';
                   requestOptions.extra['retried'] = true;
                   final retryResponse = await dio.fetch(requestOptions);
@@ -102,6 +110,7 @@ class DioFactory {
                 print('DioFactory: Waiting for existing refresh to complete');
                 final newToken = await _refreshCompleter!.future;
                 if (newToken != null) {
+                  print('DioFactory: Got new token from existing refresh - retrying request');
                   requestOptions.headers['Authorization'] = 'Bearer $newToken';
                   requestOptions.extra['retried'] = true;
                   final retryResponse = await dio.fetch(requestOptions);
@@ -145,8 +154,8 @@ class DioFactory {
       // Use separate Dio instance for refresh token call
       final authDio = _createAuthDio();
       
-      // Call refresh endpoint with GET and refreshToken as query param (temporary until BE supports POST)
-      final response = await authDio.get(
+      // Call refresh endpoint with POST method and refreshToken as query parameter
+      final response = await authDio.post(
         '${Endpoints.refreshToken}?refreshToken=$refreshToken',
         options: Options(
           // Set timeout để tránh hang
@@ -198,6 +207,7 @@ class DioFactory {
         headers: NetworkConfig.defaultHeaders,
         validateStatus: (status) => status != null && status >= 200 && status < 300,
       ));
+      return _authDio!;
     }
     return _authDio!;
   }

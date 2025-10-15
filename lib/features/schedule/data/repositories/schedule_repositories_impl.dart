@@ -314,4 +314,18 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
       return Left(NetworkFailure('No internet connection'));
     }
   }
+
+  @override
+  Future<Either<Failure, Unit>> reorderActivity({required int newIndex, required int activityId}) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        await _remoteDataSource.reorderActivity(newIndex: newIndex, activityId: activityId);
+        return const Right(unit);
+      } catch (e) {
+        return Left(ServerFailure(e.toString()));
+      }
+    } else {
+      return Left(NetworkFailure('No internet connection'));
+    }
+  }
 }

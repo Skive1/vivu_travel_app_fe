@@ -291,3 +291,21 @@ class ChangeParticipantRoleError extends ScheduleState {
   @override
   List<Object> get props => [message];
 }
+
+class ReorderActivityLoading extends ScheduleState {}
+
+class ReorderActivitySuccess extends ScheduleState {
+  final String message;
+  const ReorderActivitySuccess({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class ReorderActivityError extends ScheduleState {
+  final String message;
+  const ReorderActivityError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}

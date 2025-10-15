@@ -67,8 +67,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception('No refresh token available');
       }
 
-      // Send refresh token as query parameter (temporary until BE supports POST)
-      final response = await apiClient.get(
+      // Send refresh token as query parameter with POST method
+      final response = await apiClient.post(
         '${Endpoints.refreshToken}?refreshToken=$currentRefreshToken',
       );
       

@@ -51,6 +51,7 @@ import 'features/schedule/domain/usecases/add_participant_by_email_usecase.dart'
 import 'features/schedule/presentation/bloc/schedule_bloc.dart';
 import 'features/schedule/domain/usecases/kick_participant_usecase.dart';
 import 'features/schedule/domain/usecases/change_participant_role_usecase.dart';
+import 'features/schedule/domain/usecases/reorder_activity_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -180,6 +181,7 @@ void _initSchedule() {
   sl.registerLazySingleton(() => AddParticipantByEmail(sl()));
   sl.registerLazySingleton(() => KickParticipant(sl()));
   sl.registerLazySingleton(() => ChangeParticipantRole(sl()));
+  sl.registerLazySingleton(() => ReorderActivity(sl()));
 
   // Bloc
   sl.registerFactory(
@@ -198,6 +200,7 @@ void _initSchedule() {
       addParticipantByEmail: sl(),
       kickParticipant: sl(),
       changeParticipantRole: sl(),
+      reorderActivity: sl(),
     ),
   );
 }

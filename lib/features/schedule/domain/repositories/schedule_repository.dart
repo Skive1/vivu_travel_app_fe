@@ -37,4 +37,5 @@ abstract class ScheduleRepository {
   Future<Either<Failure, AddParticipantByEmailResponse>> addParticipantByEmail(String scheduleId, AddParticipantByEmailRequest request);
   Future<Either<Failure, KickParticipantResult>> kickParticipant(String scheduleId, String participantId);
   Future<Either<Failure, Unit>> changeParticipantRole(String scheduleId, String participantId);
+  Future<Either<Failure, Unit>> reorderActivity({required int newIndex, required int activityId});
 }

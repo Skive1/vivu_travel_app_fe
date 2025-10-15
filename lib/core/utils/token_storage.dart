@@ -254,7 +254,7 @@ class TokenStorage {
   }
 
   static Future<bool> isTokenNearExpiry({
-    Duration threshold = const Duration(minutes: 2),
+    Duration threshold = const Duration(minutes: 3),
     Duration skew = const Duration(seconds: 90),
   }) async {
     final token = await getToken();

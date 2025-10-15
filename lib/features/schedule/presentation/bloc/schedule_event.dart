@@ -179,3 +179,15 @@ class ChangeParticipantRoleEvent extends ScheduleEvent {
   @override
   List<Object> get props => [scheduleId, participantId];
 }
+
+class ReorderActivityEvent extends ScheduleEvent {
+  final int activityId;
+  final int newIndex;
+  final String scheduleId;
+  final DateTime date;
+
+  const ReorderActivityEvent({required this.activityId, required this.newIndex, required this.scheduleId, required this.date});
+
+  @override
+  List<Object> get props => [activityId, newIndex, scheduleId, date];
+}

@@ -91,6 +91,9 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
             useRootNavigator: true,
           );
         } else if (state is ChangeParticipantRoleSuccess) {
+          // Refresh schedule detail to get updated participant count
+          context.read<ScheduleBloc>().add(GetScheduleByIdEvent(scheduleId: _currentSchedule.id));
+          
           await DialogUtils.showSuccessDialog(
             context: context,
             title: 'Thay đổi quyền thành công',
@@ -107,13 +110,8 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
             Navigator.of(context).pop();
           }
           
-          // Calculate active participants count from kick response
-          final activeParticipantsCount = state.result.scheduleParticipantResponses
-              .where((participant) => participant.status == 'Active')
-              .length;
-          
-          print('DEBUG[UI]: Calculated active participants: $activeParticipantsCount');
-          print('DEBUG[UI]: Total participants in response: ${state.result.scheduleParticipantResponses.length}');
+          // Refresh schedule detail to get updated participant count
+          context.read<ScheduleBloc>().add(GetScheduleByIdEvent(scheduleId: _currentSchedule.id));
           
           await DialogUtils.showSuccessDialog(
             context: context,
@@ -123,34 +121,9 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
           );
           print('DEBUG[UI]: Success dialog shown');
         } else if (state is GetScheduleParticipantsSuccess) {
-          // Participants loaded successfully - update schedule with active participants count
-          final activeParticipantsCount = state.participants
-              .where((participant) => participant.status.toLowerCase() == 'active')
-              .length;
-          
-          print('DEBUG[UI]: GetScheduleParticipantsSuccess - Active participants: $activeParticipantsCount');
-          
-          // Update schedule with new active participants count
-          final updatedSchedule = ScheduleEntity(
-            id: _currentSchedule.id,
-            sharedCode: _currentSchedule.sharedCode,
-            ownerId: _currentSchedule.ownerId,
-            participantRole: _currentSchedule.participantRole,
-            title: _currentSchedule.title,
-            startLocation: _currentSchedule.startLocation,
-            destination: _currentSchedule.destination,
-            startDate: _currentSchedule.startDate,
-            endDate: _currentSchedule.endDate,
-            participantsCount: activeParticipantsCount, // Update with actual active count
-            notes: _currentSchedule.notes,
-            isShared: _currentSchedule.isShared,
-            status: _currentSchedule.status,
-          );
-          
-          // Update the current schedule
-          setState(() {
-            _currentSchedule = updatedSchedule;
-          });
+          // Participants loaded successfully - no need to manually calculate count
+          // The participant count should come from the schedule detail API
+          print('DEBUG[UI]: GetScheduleParticipantsSuccess - Participants loaded: ${state.participants.length}');
         }
         
         // Store participant role from schedule if available
@@ -322,7 +295,7 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
                 child: Row(
                   children: [
                     Text(
-                      '${activeParticipants.length} người',
+                      '${_currentSchedule.participantsCount} người',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,

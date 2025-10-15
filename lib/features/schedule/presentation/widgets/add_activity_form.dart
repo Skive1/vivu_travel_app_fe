@@ -259,7 +259,7 @@ class _AddActivityFormState extends State<AddActivityForm> {
               border: Border.all(color: AppColors.border),
             ),
             child: Text(
-              'Thứ tự: ${_orderIndex ?? 0}',
+              'Thứ tự: ${(_orderIndex ?? 0) + 1}',
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,

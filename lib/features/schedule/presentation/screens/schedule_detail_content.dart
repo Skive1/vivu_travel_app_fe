@@ -284,31 +284,14 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
         } else if (state is UpdateScheduleSuccess) {
           _updateScheduleData(state.schedule);
         } else if (state is KickParticipantSuccess) {
-          // Calculate active participants count from kick response
-          final activeParticipantsCount = state.result.scheduleParticipantResponses
-              .where((participant) => participant.status == 'Active')
-              .length;
-          
-          print('DEBUG[DetailContent]: Calculated active participants: $activeParticipantsCount');
-          print('DEBUG[DetailContent]: Total participants in response: ${state.result.scheduleParticipantResponses.length}');
-          
-          // Update schedule with calculated active participants count
-          final updatedSchedule = ScheduleEntity(
-            id: _currentSchedule.id,
-            sharedCode: _currentSchedule.sharedCode,
-            ownerId: _currentSchedule.ownerId,
-            participantRole: _currentSchedule.participantRole,
-            title: _currentSchedule.title,
-            startLocation: _currentSchedule.startLocation,
-            destination: _currentSchedule.destination,
-            startDate: _currentSchedule.startDate,
-            endDate: _currentSchedule.endDate,
-            participantsCount: activeParticipantsCount, // Use calculated active count
-            notes: _currentSchedule.notes,
-            isShared: _currentSchedule.isShared,
-            status: _currentSchedule.status,
-          );
-          _updateScheduleData(updatedSchedule);
+          // Refresh schedule detail to get updated participant count from API
+          context.read<ScheduleBloc>().add(GetScheduleByIdEvent(scheduleId: _currentSchedule.id));
+        } else if (state is AddParticipantByEmailSuccess) {
+          // Refresh schedule detail to get updated participant count from API
+          context.read<ScheduleBloc>().add(GetScheduleByIdEvent(scheduleId: _currentSchedule.id));
+        } else if (state is ChangeParticipantRoleSuccess) {
+          // Refresh schedule detail to get updated participant count from API
+          context.read<ScheduleBloc>().add(GetScheduleByIdEvent(scheduleId: _currentSchedule.id));
         } else if (state is ScheduleLoaded) {
           // Tìm schedule hiện tại trong danh sách mới và update nếu có thay đổi
           try {
