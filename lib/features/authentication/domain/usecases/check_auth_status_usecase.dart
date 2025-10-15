@@ -29,26 +29,13 @@ class CheckAuthStatusUseCase implements UseCase<AuthEntity, NoParams> {
 
       // Step 3: Check token expiration
       if (JwtDecoder.isExpired(token)) {
-        // Try to refresh token before giving up
-        final refreshResult = await repository.refreshToken();
-        return refreshResult.fold(
-          (failure) {
-            // Refresh failed - clear all tokens and return failure
-            return Left(AuthFailure('Session expired. Please login again.'));
-          },
-          (newToken) {
-            // Refresh successful - recursively call this method with new token
-            return call(params);
-          },
-        );
+        // Token đã hết hạn - clear và return failure
+        // DioFactory sẽ handle refresh token automatically
+        await TokenStorage.clearAll();
+        return const Left(AuthFailure('Session expired. Please login again.'));
       }
 
-      // Step 4: Check if token is near expiry (optional warning)
-      final isNearExpiry = await TokenStorage.isTokenNearExpiry();
-      if (isNearExpiry) {
-        // Token will expire soon - could trigger proactive refresh here
-        // For now, just continue with current token
-      }
+      // Step 4: Token is valid and not expired - continue
 
       // Step 5: Validate claims match backend expectations
       final userClaims = JwtDecoder.getUserClaims(token);

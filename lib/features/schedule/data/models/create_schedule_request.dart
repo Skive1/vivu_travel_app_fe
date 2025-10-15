@@ -16,7 +16,7 @@ class CreateScheduleRequest {
     required this.destination,
     required this.startDate,
     required this.endDate,
-    required this.participantsCount,
+    this.participantsCount = 1,
     required this.notes,
     required this.isShared,
   });

@@ -7,6 +7,7 @@ import '../bloc/schedule_event.dart';
 import '../bloc/schedule_state.dart';
 import '../widgets/schedule_list_item.dart';
 import '../widgets/create_schedule_drawer.dart';
+import '../widgets/join_schedule_modal.dart';
 import '../widgets/optimized_skeleton.dart';
 
 class ScheduleListContent extends StatefulWidget {
@@ -89,6 +90,19 @@ class _ScheduleListContentState extends State<ScheduleListContent>
     );
   }
 
+  void _showJoinScheduleModal(BuildContext context) {
+    final scheduleBloc = context.read<ScheduleBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BlocProvider.value(
+        value: scheduleBloc,
+        child: const JoinScheduleModal(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
@@ -110,8 +124,14 @@ class _ScheduleListContentState extends State<ScheduleListContent>
               ),
               const Spacer(),
               IconButton(
+                icon: const Icon(Icons.group_add, color: AppColors.primary),
+                onPressed: () => _showJoinScheduleModal(context),
+                tooltip: 'Tham gia lịch trình',
+              ),
+              IconButton(
                 icon: const Icon(Icons.add, color: AppColors.primary),
                 onPressed: () => _showCreateScheduleDrawer(context),
+                tooltip: 'Tạo lịch trình mới',
               ),
             ],
           ),
@@ -168,9 +188,15 @@ class _ScheduleListContentState extends State<ScheduleListContent>
             listener: (context, state) {
               if (state is CreateScheduleSuccess) {
                 // Force refresh để hiển thị lịch trình mới
+                print('DEBUG: CreateScheduleSuccess - refreshing schedules');
                 _forceRefreshSchedules();
               } else if (state is UpdateScheduleSuccess) {
                 // Force refresh để hiển thị thay đổi
+                print('DEBUG: UpdateScheduleSuccess - refreshing schedules');
+                _forceRefreshSchedules();
+              } else if (state is JoinScheduleSuccess) {
+                // Force refresh để hiển thị lịch trình đã tham gia
+                print('DEBUG: JoinScheduleSuccess - refreshing schedules');
                 _forceRefreshSchedules();
               }
             },

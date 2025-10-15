@@ -13,6 +13,7 @@ class ScheduleEntity extends Equatable {
   final String notes;
   final bool isShared;
   final String status;
+  final String? participantRole;
 
   const ScheduleEntity({
     required this.id,
@@ -27,6 +28,7 @@ class ScheduleEntity extends Equatable {
     required this.notes,
     required this.isShared,
     required this.status,
+    this.participantRole,
   });
 
   @override
@@ -43,5 +45,6 @@ class ScheduleEntity extends Equatable {
         notes,
         isShared,
         status,
+        participantRole,
       ];
 }

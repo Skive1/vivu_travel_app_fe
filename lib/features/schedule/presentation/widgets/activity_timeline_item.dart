@@ -11,11 +11,17 @@ import 'package:flutter/material.dart';
 class ActivityTimelineItem extends StatelessWidget {
   final ActivityEntity activity;
   final bool isLast;
+  final DateTime selectedDate;
+  final bool canEdit;
+  final bool canDelete;
 
   const ActivityTimelineItem({
     Key? key,
     required this.activity,
     required this.isLast,
+    required this.selectedDate,
+    this.canEdit = false,
+    this.canDelete = false,
   }) : super(key: key);
 
   @override
@@ -79,7 +85,8 @@ class ActivityTimelineItem extends StatelessWidget {
                             const SizedBox(width: 8),
                             _TimeChip(text: '${_formatTime(activity.checkInTime)} - ${_formatTime(activity.checkOutTime)}'),
                             const SizedBox(width: 4),
-                            PopupMenuButton<String>(
+                            if (canEdit || canDelete)
+                              PopupMenuButton<String>(
                               color: Colors.white,
                               elevation: 6,
                               offset: const Offset(0, 24),
@@ -88,7 +95,7 @@ class ActivityTimelineItem extends StatelessWidget {
                                 side: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
                               ),
                               onSelected: (value) {
-                                if (value == 'edit') {
+                                if (value == 'edit' && canEdit) {
                                   showModalBottomSheet(
                                     context: context,
                                     isScrollControlled: true,
@@ -104,34 +111,36 @@ class ActivityTimelineItem extends StatelessWidget {
                                       ),
                                     ),
                                   );
-                                } else if (value == 'delete') {
+                                } else if (value == 'delete' && canDelete) {
                                   _confirmDelete(context);
                                 }
                               },
                               itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: 'edit',
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  child: Row(
-                                    children: const [
-                                      Icon(Icons.edit_rounded, size: 18, color: AppColors.primary),
-                                      SizedBox(width: 10),
-                                      Text('Chỉnh sửa', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                                    ],
+                                if (canEdit)
+                                  PopupMenuItem(
+                                    value: 'edit',
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.edit_rounded, size: 18, color: AppColors.primary),
+                                        SizedBox(width: 10),
+                                        Text('Chỉnh sửa', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const PopupMenuDivider(height: 4),
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  child: Row(
-                                    children: const [
-                                      Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
-                                      SizedBox(width: 10),
-                                      Text('Xoá', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                                    ],
+                                if (canEdit && canDelete) const PopupMenuDivider(height: 4),
+                                if (canDelete)
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.delete_outline_rounded, size: 18, color: Colors.redAccent),
+                                        SizedBox(width: 10),
+                                        Text('Xoá', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                                      ],
+                                    ),
                                   ),
-                                ),
                               ],
                               child: const Icon(Icons.more_vert, color: AppColors.textSecondary),
                             ),
@@ -251,7 +260,11 @@ class ActivityTimelineItem extends StatelessWidget {
       ),
     );
     if (ok == true && context.mounted) {
-      context.read<ScheduleBloc>().add(DeleteActivityEvent(activityId: activity.id, scheduleId: activity.scheduleId));
+      context.read<ScheduleBloc>().add(DeleteActivityEvent(
+        activityId: activity.id, 
+        scheduleId: activity.scheduleId,
+        date: selectedDate,
+      ));
     }
   }
 }

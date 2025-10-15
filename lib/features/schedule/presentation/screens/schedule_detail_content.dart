@@ -8,18 +8,22 @@ import '../../domain/entities/schedule_entity.dart';
 import '../widgets/schedule_detail_info.dart';
 import '../widgets/schedule_qr_code.dart';
 import '../widgets/edit_schedule_drawer.dart';
+import '../widgets/invite_participant_modal.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/utils/user_storage.dart';
 
 class ScheduleDetailContent extends StatefulWidget {
   final ScheduleEntity schedule;
   final Function(String)? onScheduleViewTap;
   final VoidCallback? onBack;
+  final String? currentUserId;
 
   const ScheduleDetailContent({
     Key? key,
     required this.schedule,
     this.onScheduleViewTap,
     this.onBack,
+    this.currentUserId,
   }) : super(key: key);
 
   @override
@@ -32,6 +36,7 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
   String? _currentSharedCode;
   bool _isSharing = false;
   bool _currentIsShared = false;
+  String? _resolvedUserId; // fetched from UserStorage when not provided
 
   @override
   bool get wantKeepAlive => true;
@@ -47,6 +52,38 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
       _currentIsShared = (widget.schedule.isShared == true);
     } catch (_) {
       _currentIsShared = (widget.schedule.sharedCode != null && widget.schedule.sharedCode!.isNotEmpty);
+    }
+
+    // Optimistic UI: Show UI immediately with available data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Show UI first, then fetch data
+      if (mounted) setState(() {});
+      
+      // Then fetch fresh data in background
+      _fetchScheduleDetails();
+    });
+
+    // Resolve current user id from storage if not passed in
+    if (widget.currentUserId == null) {
+      () async {
+        final user = await UserStorage.getUserProfile();
+        // ignore: avoid_print
+        print('DEBUG[Detail]: Loaded current user from storage -> ' + (user?.id ?? 'null'));
+        if (mounted) setState(() => _resolvedUserId = user?.id);
+      }();
+    }
+  }
+
+  void _fetchScheduleDetails() async {
+    try {
+      // Only fetch schedule details, participants will be loaded when user taps on participants count
+      print('DEBUG[Detail]: Fetching schedule details only...');
+      
+      // Only fetch schedule details
+      context.read<ScheduleBloc>().add(GetScheduleByIdEvent(scheduleId: _currentSchedule.id));
+      
+    } catch (e) {
+      print('DEBUG[Detail]: Error fetching schedule details: $e');
     }
   }
 
@@ -84,6 +121,21 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
     );
   }
 
+  void _showInviteParticipantModal() {
+    final scheduleBloc = context.read<ScheduleBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BlocProvider.value(
+        value: scheduleBloc,
+        child: InviteParticipantModal(
+          scheduleId: _currentSchedule.id,
+        ),
+      ),
+    );
+  }
+
   void _updateScheduleData(ScheduleEntity newSchedule) {
     setState(() {
       _currentSchedule = newSchedule;
@@ -94,6 +146,20 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
         _currentIsShared = (_currentSharedCode != null && _currentSharedCode!.isNotEmpty);
       }
     });
+    
+    // Cache the updated participantRole
+    if (newSchedule.participantRole != null && newSchedule.participantRole!.isNotEmpty) {
+      () async {
+        try {
+          await UserStorage.setScheduleRole(
+            scheduleId: newSchedule.id, 
+            role: newSchedule.participantRole!.toLowerCase(),
+          );
+          // ignore: avoid_print
+          print('DEBUG[Detail]: Updated cached role from schedule update: ${newSchedule.participantRole!.toLowerCase()}');
+        } catch (_) {}
+      }();
+    }
   }
 
   void _showShareDialog(BuildContext context) {
@@ -163,6 +229,16 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
     super.build(context);
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) {
+        if (state is GetScheduleByIdSuccess) {
+          // Update local schedule with full detail (includes participantRole)
+          // ignore: avoid_print
+          print('DEBUG[Detail]: Received schedule detail with participantRole=' + (state.schedule.participantRole?.toString() ?? 'null'));
+          _updateScheduleData(state.schedule);
+          return;
+        } else if (state is GetScheduleByIdError) {
+          // ignore: avoid_print
+          print('DEBUG[Detail]: Failed to load schedule detail: ' + state.message);
+        }
         if (state is ShareScheduleLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -206,9 +282,33 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
             ),
           );
         } else if (state is UpdateScheduleSuccess) {
-
           _updateScheduleData(state.schedule);
-
+        } else if (state is KickParticipantSuccess) {
+          // Calculate active participants count from kick response
+          final activeParticipantsCount = state.result.scheduleParticipantResponses
+              .where((participant) => participant.status == 'Active')
+              .length;
+          
+          print('DEBUG[DetailContent]: Calculated active participants: $activeParticipantsCount');
+          print('DEBUG[DetailContent]: Total participants in response: ${state.result.scheduleParticipantResponses.length}');
+          
+          // Update schedule with calculated active participants count
+          final updatedSchedule = ScheduleEntity(
+            id: _currentSchedule.id,
+            sharedCode: _currentSchedule.sharedCode,
+            ownerId: _currentSchedule.ownerId,
+            participantRole: _currentSchedule.participantRole,
+            title: _currentSchedule.title,
+            startLocation: _currentSchedule.startLocation,
+            destination: _currentSchedule.destination,
+            startDate: _currentSchedule.startDate,
+            endDate: _currentSchedule.endDate,
+            participantsCount: activeParticipantsCount, // Use calculated active count
+            notes: _currentSchedule.notes,
+            isShared: _currentSchedule.isShared,
+            status: _currentSchedule.status,
+          );
+          _updateScheduleData(updatedSchedule);
         } else if (state is ScheduleLoaded) {
           // Tìm schedule hiện tại trong danh sách mới và update nếu có thay đổi
           try {
@@ -230,39 +330,83 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
             bottom: false,
             child: Container(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
-                    onPressed: widget.onBack,
-                  ),
-                  const Text(
-                    'Chi tiết lịch trình',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: AppColors.primary),
-                    onPressed: _showEditScheduleDrawer,
-                  ),
-                  IconButton(
-                    icon: _isSharing 
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                          ),
-                        )
-                      : const Icon(Icons.share, color: AppColors.primary),
-                    onPressed: _isSharing ? null : _shareSchedule,
-                  ),
-                ],
+              child: BlocBuilder<ScheduleBloc, ScheduleState>(
+                buildWhen: (prev, cur) =>
+                    cur is GetScheduleParticipantsLoading ||
+                    cur is GetScheduleParticipantsSuccess ||
+                    cur is GetScheduleParticipantsError,
+                builder: (context, state) {
+                  // Smart role prediction: Use ownerId to predict role immediately
+                  String role = 'viewer';
+                  final currentUserId = widget.currentUserId ?? _resolvedUserId;
+                  
+                  if (currentUserId != null && _currentSchedule.ownerId == currentUserId) {
+                    // Optimistic prediction: If current user is owner, show owner UI immediately
+                    role = 'owner';
+                    print('DEBUG[DetailHeader]: Optimistic role prediction: owner (based on ownerId)');
+                  } else if (_currentSchedule.participantRole != null && _currentSchedule.participantRole!.isNotEmpty) {
+                    // Use actual participantRole from API if available
+                    role = _currentSchedule.participantRole!.toLowerCase();
+                    print('DEBUG[DetailHeader]: Using API participantRole: $role');
+                  } else {
+                    // Fallback to viewer
+                    role = 'viewer';
+                    print('DEBUG[DetailHeader]: Fallback to viewer role');
+                  }
+
+                  // DEBUG: Log role resolution
+                  // ignore: avoid_print
+                  print('DEBUG[DetailHeader]: participantRole from schedule = ${_currentSchedule.participantRole}, resolved role = $role');
+
+                  final bool canInvite = role == 'owner';
+                  final bool canEditSchedule = role == 'owner' || role == 'editor';
+                  final bool canShare = role == 'owner';
+
+                  return Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
+                        onPressed: widget.onBack,
+                      ),
+                      const Text(
+                        'Chi tiết lịch trình',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (canInvite)
+                        IconButton(
+                          icon: const Icon(Icons.person_add, color: AppColors.primary),
+                          onPressed: _showInviteParticipantModal,
+                          tooltip: 'Mời người tham gia',
+                        ),
+                      if (canEditSchedule)
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: AppColors.primary),
+                          onPressed: _showEditScheduleDrawer,
+                          tooltip: 'Chỉnh sửa lịch trình',
+                        ),
+                      if (canShare)
+                        IconButton(
+                          icon: _isSharing 
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                ),
+                              )
+                            : const Icon(Icons.share, color: AppColors.primary),
+                          onPressed: _isSharing ? null : _shareSchedule,
+                          tooltip: 'Chia sẻ lịch trình',
+                        ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -279,11 +423,12 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Schedule Info Card
-                  ScheduleDetailInfo(schedule: _currentSchedule),
-                  
-                  const SizedBox(height: 24),
-                  
+                   // Schedule Info Card (with integrated participants)
+                   ScheduleDetailInfo(
+                     schedule: _currentSchedule,
+                     currentUserId: widget.currentUserId ?? _resolvedUserId,
+                   ),
+                  const SizedBox(height: 16),
                   // Share status + QR
                   Row(
                     children: [

@@ -14,6 +14,7 @@ class ScheduleModel extends ScheduleEntity {
     required super.notes,
     required super.isShared,
     required super.status,
+    required super.participantRole,
   });
 
   factory ScheduleModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +31,7 @@ class ScheduleModel extends ScheduleEntity {
       notes: json['notes'] as String? ?? '',
       isShared: json['isShared'] as bool,
       status: json['status'] as String,
+      participantRole: json['participantRole'] as String?,
     );
   }
 
@@ -47,6 +49,7 @@ class ScheduleModel extends ScheduleEntity {
       'notes': notes,
       'isShared': isShared,
       'status': status,
+      'participantRole': participantRole,
     };
   }
 }

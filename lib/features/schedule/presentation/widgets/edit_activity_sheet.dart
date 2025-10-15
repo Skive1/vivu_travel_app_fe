@@ -26,6 +26,7 @@ class _EditActivitySheetState extends State<EditActivitySheet> {
   late TextEditingController _descCtrl;
   late TimeOfDay _checkIn;
   late TimeOfDay _checkOut;
+  late int _orderIndex;
 
   @override
   void initState() {
@@ -33,6 +34,7 @@ class _EditActivitySheetState extends State<EditActivitySheet> {
     _placeCtrl = TextEditingController(text: widget.activity.placeName);
     _locCtrl = TextEditingController(text: widget.activity.location);
     _descCtrl = TextEditingController(text: widget.activity.description);
+    _orderIndex = widget.activity.orderIndex;
     _checkIn = TimeOfDay.fromDateTime(widget.activity.checkInTime);
     _checkOut = TimeOfDay.fromDateTime(widget.activity.checkOutTime);
   }
@@ -142,6 +144,8 @@ class _EditActivitySheetState extends State<EditActivitySheet> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  _buildOrderIndexPicker(),
                   const SizedBox(height: 20),
                   Row(
                     children: [
@@ -235,6 +239,67 @@ class _EditActivitySheetState extends State<EditActivitySheet> {
         checkOutTime: outDt,
       ),
     ));
+  }
+
+  Widget _buildOrderIndexPicker() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () {
+              setState(() {
+                final next = _orderIndex - 1;
+                _orderIndex = next < 0 ? 0 : next;
+              });
+            },
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              backgroundColor: Colors.white,
+            ),
+            child: const Icon(Icons.remove, color: AppColors.textSecondary),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: Container(
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              'Thứ tự: $_orderIndex',
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () {
+              setState(() {
+                _orderIndex = _orderIndex + 1;
+              });
+            },
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              backgroundColor: Colors.white,
+            ),
+            child: const Icon(Icons.add, color: AppColors.textSecondary),
+          ),
+        ),
+      ],
+    );
   }
 }
 

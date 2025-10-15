@@ -5,6 +5,7 @@ abstract class ApiClient {
   Future<Response> post(String path, {dynamic data});
   Future<Response> put(String path, {dynamic data});
   Future<Response> delete(String path);
+  Future<Response> patch(String path, {dynamic data});
 }
 
 class ApiClientImpl implements ApiClient {
@@ -25,6 +26,11 @@ class ApiClientImpl implements ApiClient {
   @override
   Future<Response> put(String path, {dynamic data}) {
     return dio.put(path, data: data);
+  }
+
+  @override
+  Future<Response> patch(String path, {dynamic data}) {
+    return dio.patch(path, data: data);
   }
 
   @override

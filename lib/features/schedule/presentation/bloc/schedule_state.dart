@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/schedule_entity.dart';
 import '../../domain/entities/activity_entity.dart';
+import '../../domain/entities/participant_entity.dart';
+import '../../domain/entities/kick_participant_result.dart';
 
 abstract class ScheduleState extends Equatable {
   const ScheduleState();
@@ -169,6 +171,122 @@ class UpdateScheduleError extends ScheduleState {
   final String message;
 
   const UpdateScheduleError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class JoinScheduleLoading extends ScheduleState {}
+
+class JoinScheduleSuccess extends ScheduleState {
+  final String message;
+
+  const JoinScheduleSuccess({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class JoinScheduleError extends ScheduleState {
+  final String message;
+
+  const JoinScheduleError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class GetScheduleParticipantsLoading extends ScheduleState {}
+
+class GetScheduleParticipantsSuccess extends ScheduleState {
+  final List<ParticipantEntity> participants;
+
+  const GetScheduleParticipantsSuccess({required this.participants});
+
+  @override
+  List<Object> get props => [participants];
+}
+
+class GetScheduleParticipantsError extends ScheduleState {
+  final String message;
+
+  const GetScheduleParticipantsError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class AddParticipantByEmailLoading extends ScheduleState {}
+
+class AddParticipantByEmailSuccess extends ScheduleState {
+  final String message;
+
+  const AddParticipantByEmailSuccess({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class AddParticipantByEmailError extends ScheduleState {
+  final String message;
+
+  const AddParticipantByEmailError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class KickParticipantLoading extends ScheduleState {}
+
+class KickParticipantSuccess extends ScheduleState {
+  final KickParticipantResult result;
+  const KickParticipantSuccess({required this.result});
+
+  @override
+  List<Object> get props => [result];
+}
+
+class KickParticipantError extends ScheduleState {
+  final String message;
+  const KickParticipantError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class ChangeParticipantRoleLoading extends ScheduleState {}
+
+class ChangeParticipantRoleSuccess extends ScheduleState {
+  final String message;
+  const ChangeParticipantRoleSuccess({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class GetScheduleByIdLoading extends ScheduleState {}
+
+class GetScheduleByIdSuccess extends ScheduleState {
+  final ScheduleEntity schedule;
+
+  const GetScheduleByIdSuccess({required this.schedule});
+
+  @override
+  List<Object> get props => [schedule];
+}
+
+class GetScheduleByIdError extends ScheduleState {
+  final String message;
+
+  const GetScheduleByIdError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class ChangeParticipantRoleError extends ScheduleState {
+  final String message;
+  const ChangeParticipantRoleError({required this.message});
 
   @override
   List<Object> get props => [message];

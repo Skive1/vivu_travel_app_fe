@@ -37,6 +37,7 @@ import 'features/schedule/data/datasources/schedule_remote_datasource.dart';
 import 'features/schedule/data/repositories/schedule_repositories_impl.dart';
 import 'features/schedule/domain/repositories/schedule_repository.dart';
 import 'features/schedule/domain/usecases/get_schedules_by_participant_usecase.dart';
+import 'features/schedule/domain/usecases/get_schedule_by_id_usecase.dart';
 import 'features/schedule/domain/usecases/get_activities_by_schedule_usecase.dart';
 import 'features/schedule/domain/usecases/share_schedule_usecase.dart';
 import 'features/schedule/domain/usecases/create_schedule_usecase.dart';
@@ -44,7 +45,12 @@ import 'features/schedule/domain/usecases/update_schedule_usecase.dart';
 import 'features/schedule/domain/usecases/create_activity_usecase.dart';
 import 'features/schedule/domain/usecases/update_activity_usecase.dart';
 import 'features/schedule/domain/usecases/delete_activity_usecase.dart';
+import 'features/schedule/domain/usecases/join_schedule_usecase.dart';
+import 'features/schedule/domain/usecases/get_schedule_participants_usecase.dart';
+import 'features/schedule/domain/usecases/add_participant_by_email_usecase.dart';
 import 'features/schedule/presentation/bloc/schedule_bloc.dart';
+import 'features/schedule/domain/usecases/kick_participant_usecase.dart';
+import 'features/schedule/domain/usecases/change_participant_role_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -161,6 +167,7 @@ void _initSchedule() {
 
   // Use cases
   sl.registerLazySingleton(() => GetSchedulesByParticipant(sl()));
+  sl.registerLazySingleton(() => GetScheduleById(sl()));
   sl.registerLazySingleton(() => GetActivitiesBySchedule(sl()));
   sl.registerLazySingleton(() => ShareSchedule(sl()));
   sl.registerLazySingleton(() => CreateSchedule(sl()));
@@ -168,11 +175,17 @@ void _initSchedule() {
   sl.registerLazySingleton(() => CreateActivity(sl()));
   sl.registerLazySingleton(() => UpdateActivity(sl()));
   sl.registerLazySingleton(() => DeleteActivity(sl()));
+  sl.registerLazySingleton(() => JoinSchedule(sl()));
+  sl.registerLazySingleton(() => GetScheduleParticipants(sl()));
+  sl.registerLazySingleton(() => AddParticipantByEmail(sl()));
+  sl.registerLazySingleton(() => KickParticipant(sl()));
+  sl.registerLazySingleton(() => ChangeParticipantRole(sl()));
 
   // Bloc
   sl.registerFactory(
     () => ScheduleBloc(
       getSchedulesByParticipant: sl(),
+      getScheduleById: sl(),
       getActivitiesBySchedule: sl(),
       shareSchedule: sl(),
       createSchedule: sl(),
@@ -180,6 +193,11 @@ void _initSchedule() {
       createActivity: sl(),
       updateActivity: sl(),
       deleteActivity: sl(),
+      joinSchedule: sl(),
+      getScheduleParticipants: sl(),
+      addParticipantByEmail: sl(),
+      kickParticipant: sl(),
+      changeParticipantRole: sl(),
     ),
   );
 }

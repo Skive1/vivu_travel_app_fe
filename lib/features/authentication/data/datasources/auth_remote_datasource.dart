@@ -67,7 +67,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception('No refresh token available');
       }
 
-      final response = await apiClient.get(Endpoints.refreshToken);
+      // Send refresh token as query parameter (temporary until BE supports POST)
+      final response = await apiClient.get(
+        '${Endpoints.refreshToken}?refreshToken=$currentRefreshToken',
+      );
       
       return RefreshTokenResponseModel.fromJson(response.data);
     } on DioException catch (e) {

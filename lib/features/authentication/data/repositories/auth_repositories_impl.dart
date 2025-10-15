@@ -18,7 +18,6 @@ import '../models/request_password_reset_request_model.dart';
 import '../models/verify_reset_password_otp_request_model.dart';
 import '../models/reset_password_request_model.dart';
 import '../models/change_password_request_model.dart';
-import 'package:flutter/material.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -69,8 +68,6 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, UserEntity>> getUserProfile() async {
     try {
-      final token = await TokenStorage.getToken();
-
       final response = await remoteDataSource.getUserProfile();
       return Right(response.toEntity());
     } catch (e) {
@@ -175,13 +172,14 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         final response = await remoteDataSource.refreshToken();
 
-        // Save new tokens
-        final saveSuccess = await TokenStorage.saveToken(response.accessToken);
+        // Save new tokens using batch operation for consistency
+        final saveSuccess = await TokenStorage.saveBothTokens(
+          response.accessToken,
+          response.refreshToken,
+        );
         if (!saveSuccess) {
-          return const Left(CacheFailure('Failed to save new access token'));
+          return const Left(CacheFailure('Failed to save new tokens'));
         }
-
-        await TokenStorage.saveRefreshToken(response.refreshToken);
 
         return Right(response.accessToken);
       } catch (e) {

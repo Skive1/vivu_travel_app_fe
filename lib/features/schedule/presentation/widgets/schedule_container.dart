@@ -5,11 +5,13 @@ import 'schedule_list.dart';
 class ScheduleContainer extends StatelessWidget {
   final String? scheduleId;
   final DateTime selectedDate;
+  final String? currentUserId;
 
   const ScheduleContainer({
     super.key, 
     this.scheduleId,
     required this.selectedDate,
+    this.currentUserId,
   });
 
   @override
@@ -43,6 +45,7 @@ class ScheduleContainer extends StatelessWidget {
       child: ScheduleList(
         selectedDate: selectedDate,
         scheduleId: scheduleId,
+        currentUserId: currentUserId,
       ),
     );
   }

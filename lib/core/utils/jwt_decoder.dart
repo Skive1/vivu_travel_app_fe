@@ -29,12 +29,11 @@ class JwtDecoder {
     final exp = decoded['exp'] as int?;
     if (exp == null) return true;
 
-    // Convert từ Unix timestamp sang DateTime UTC rồi chuyển sang UTC+7
+    // So sánh UTC với UTC để tránh lỗi timezone
     final expiryDateUTC = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
-    final expiryDateLocal = expiryDateUTC.add(const Duration(hours: 7)); // UTC+7
-    final nowLocal = DateTime.now();
+    final nowUTC = DateTime.now().toUtc();
     
-    return nowLocal.isAfter(expiryDateLocal);
+    return nowUTC.isAfter(expiryDateUTC);
   }
 
   static String? getUserId(String token) {
@@ -67,19 +66,18 @@ class JwtDecoder {
     final exp = decoded['exp'] as int?;
     if (exp == null) return null;
 
-    // Convert sang UTC+7
-    final expiryDateUTC = DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
-    return expiryDateUTC.add(const Duration(hours: 7));
+    // Trả về UTC time để consistent với isExpired
+    return DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
   }
 
   static Duration? getTimeUntilExpiry(String token) {
     final expiryDate = getExpiryDate(token);
     if (expiryDate == null) return null;
 
-    final now = DateTime.now();
-    if (now.isAfter(expiryDate)) return Duration.zero;
+    final nowUTC = DateTime.now().toUtc();
+    if (nowUTC.isAfter(expiryDate)) return Duration.zero;
 
-    return expiryDate.difference(now);
+    return expiryDate.difference(nowUTC);
   }
 
   // Validate token structure và required claims

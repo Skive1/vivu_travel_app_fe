@@ -11,6 +11,7 @@ class UserStorage {
 
   static const String _userKey = 'user_profile';
   static const String _userCacheTimeKey = 'user_cache_time';
+  static const String _scheduleRolePrefix = 'schedule_role_';
   static const Duration _cacheExpiry = Duration(hours: 24); // Cache for 24 hours
 
   // In-memory cache to avoid repeated secure storage reads and JSON parsing
@@ -100,15 +101,33 @@ class UserStorage {
 
   // Clear user profile
   static Future<void> clearUserProfile() async {
-    try {
       await Future.wait([
         _storage.delete(key: _userKey),
         _storage.delete(key: _userCacheTimeKey),
       ]);
       _cachedUser = null;
       _cachedAt = null;
-    } catch (e) {
+  }
+
+  // ----- Schedule role cache -----
+  static Future<void> setScheduleRole({required String scheduleId, required String role}) async {
+    try {
+      await _storage.write(key: _scheduleRolePrefix + scheduleId, value: role);
+    } catch (_) {}
+  }
+
+  static Future<String?> getScheduleRole(String scheduleId) async {
+    try {
+      return await _storage.read(key: _scheduleRolePrefix + scheduleId);
+    } catch (_) {
+      return null;
     }
+  }
+
+  static Future<void> removeScheduleRole(String scheduleId) async {
+    try {
+      await _storage.delete(key: _scheduleRolePrefix + scheduleId);
+    } catch (_) {}
   }
 
   // Check if user profile exists

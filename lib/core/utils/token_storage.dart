@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'jwt_decoder.dart';
+import '../network/dio_factory.dart';
 
 class TokenStorage {
   static const FlutterSecureStorage _storage = FlutterSecureStorage(
@@ -85,9 +86,13 @@ class TokenStorage {
       // Batch ALL storage operations for maximum performance
       final allWrites = <Future<void>>[
         _storage.write(key: _tokenKey, value: accessToken),
-        _storage.write(key: _refreshTokenKey, value: refreshToken),
         _storage.write(key: _loginTimeKey, value: DateTime.now().toIso8601String()),
       ];
+      
+      // Only save refresh token if it's valid (not null/empty)
+      if (refreshToken.isNotEmpty) {
+        allWrites.add(_storage.write(key: _refreshTokenKey, value: refreshToken));
+      }
       
       // Add conditional writes
       if (userId != null) allWrites.add(_storage.write(key: _userIdKey, value: userId));
@@ -99,7 +104,55 @@ class TokenStorage {
       
       // Update in-memory caches
       _cachedToken = accessToken;
-      _cachedRefreshToken = refreshToken;
+      if (refreshToken.isNotEmpty) {
+        _cachedRefreshToken = refreshToken;
+      }
+
+      return true;
+    } catch (e) {
+      // If save fails, clear any partial data
+      await clearAll();
+      return false;
+    }
+  }
+
+  // Secure refresh token rotation - only save refresh token if valid
+  static Future<bool> saveBothTokensSecure(String accessToken, String? refreshToken) async {
+    try {
+      // Validate token structure first
+      if (!JwtDecoder.isValidTokenStructure(accessToken)) {
+        throw Exception('Invalid token structure');
+      }
+
+      // Extract user info from JWT
+      final userId = JwtDecoder.getUserId(accessToken);
+      final userName = JwtDecoder.getUserName(accessToken);
+      final userEmail = JwtDecoder.getUserEmail(accessToken);
+      
+      // Batch ALL storage operations for maximum performance
+      final allWrites = <Future<void>>[
+        _storage.write(key: _tokenKey, value: accessToken),
+        _storage.write(key: _loginTimeKey, value: DateTime.now().toIso8601String()),
+      ];
+      
+      // Only save refresh token if it's valid (not null/empty)
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        allWrites.add(_storage.write(key: _refreshTokenKey, value: refreshToken));
+      }
+      
+      // Add conditional writes
+      if (userId != null) allWrites.add(_storage.write(key: _userIdKey, value: userId));
+      if (userName != null) allWrites.add(_storage.write(key: _userNameKey, value: userName));
+      if (userEmail != null) allWrites.add(_storage.write(key: _userEmailKey, value: userEmail));
+      
+      // Execute all writes in parallel
+      await Future.wait(allWrites);
+      
+      // Update in-memory caches
+      _cachedToken = accessToken;
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        _cachedRefreshToken = refreshToken;
+      }
 
       return true;
     } catch (e) {
@@ -142,16 +195,20 @@ class TokenStorage {
   // Clear methods
   static Future<void> clearToken() async {
     await _storage.delete(key: _tokenKey);
+    _cachedToken = null; // Clear in-memory cache
   }
 
   static Future<void> clearRefreshToken() async {
     await _storage.delete(key: _refreshTokenKey);
+    _cachedRefreshToken = null; // Clear in-memory cache
   }
 
   static Future<void> clearAll() async {
     await _storage.deleteAll();
     _cachedToken = null;
     _cachedRefreshToken = null;
+    // Clear refresh lock để tránh stuck state
+    DioFactory.clearRefreshLock();
   }
 
   // Enhanced validation methods
@@ -164,19 +221,24 @@ class TokenStorage {
     final token = await getToken();
     if (token == null || token.isEmpty) return false;
     
-    // Check structure validity
-    if (!JwtDecoder.isValidTokenStructure(token)) {
-      await clearAll(); // Clear invalid token
+    try {
+      // Check structure validity
+      if (!JwtDecoder.isValidTokenStructure(token)) {
+        await clearToken(); // Only clear access token, keep refresh token
+        return false;
+      }
+      
+      // Check expiry
+      if (JwtDecoder.isExpired(token)) {
+        await clearToken(); // Only clear access token, keep refresh token
+        return false;
+      }
+      
+      return true;
+    } catch (_) {
+      await clearToken(); // Only clear access token on error
       return false;
     }
-    
-    // Check expiry
-    if (JwtDecoder.isExpired(token)) {
-      await clearAll(); // Clear expired token
-      return false;
-    }
-    
-    return true;
   }
 
   // Get token expiry info
@@ -184,13 +246,27 @@ class TokenStorage {
     final token = await getToken();
     if (token == null) return null;
     
-    return JwtDecoder.getTimeUntilExpiry(token);
+    try {
+      return JwtDecoder.getTimeUntilExpiry(token);
+    } catch (_) {
+      return null;
+    }
   }
 
-  static Future<bool> isTokenNearExpiry({Duration threshold = const Duration(minutes: 10)}) async {
-    final timeRemaining = await getTokenTimeRemaining();
-    if (timeRemaining == null) return true;
+  static Future<bool> isTokenNearExpiry({
+    Duration threshold = const Duration(minutes: 2),
+    Duration skew = const Duration(seconds: 90),
+  }) async {
+    final token = await getToken();
+    if (token == null) return true;
     
-    return timeRemaining <= threshold;
+    try {
+      final timeRemaining = JwtDecoder.getTimeUntilExpiry(token);
+      if (timeRemaining == null) return true;
+      
+      return timeRemaining <= (threshold + skew);
+    } catch (_) {
+      return true;
+    }
   }
 }

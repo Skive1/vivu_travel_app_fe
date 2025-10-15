@@ -120,24 +120,7 @@ class _CreateScheduleFormState extends State<CreateScheduleForm> {
           _buildSectionTitle('Cài đặt'),
           const SizedBox(height: 16),
           
-          _buildTextField(
-            controller: widget.participantsController,
-            label: 'Số người tham gia',
-            hint: '1',
-            icon: Icons.people_outline,
-            keyboardType: TextInputType.number,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Vui lòng nhập số người tham gia';
-              }
-              final count = int.tryParse(value);
-              if (count == null || count < 1) {
-                return 'Số người tham gia phải lớn hơn 0';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
+          // participantsCount mặc định = 1 (không hiển thị trường nhập)
           
           // Shared toggle
           Container(

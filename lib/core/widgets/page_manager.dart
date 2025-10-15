@@ -5,6 +5,8 @@ import '../../features/schedule/presentation/screens/schedule_list_content.dart'
 import '../../features/schedule/presentation/screens/schedule_detail_content.dart';
 import '../../features/schedule/presentation/screens/schedule_content.dart';
 import '../../features/schedule/presentation/bloc/schedule_bloc.dart';
+import '../../features/schedule/presentation/bloc/schedule_state.dart';
+import '../../features/schedule/presentation/bloc/schedule_event.dart';
 import '../../features/user/presentation/screens/profile_content_widget.dart';
 import '../../features/authentication/presentation/bloc/auth_bloc.dart';
 import '../../features/authentication/presentation/bloc/auth_state.dart';
@@ -36,6 +38,7 @@ class PageManager {
           child: SchedulePageWrapper(
             onScheduleTap: _onScheduleTap,
             onScheduleViewTap: _onScheduleViewTap,
+            onScheduleDetailLoaded: updateScheduleDetail,
           ),
         ),
         // Nhắn tin (placeholder)
@@ -48,8 +51,14 @@ class PageManager {
   }
 
   void showScheduleDetail(ScheduleEntity schedule) {
+    print('DEBUG[PageManager]: showScheduleDetail called for schedule: ${schedule.id}');
+    print('DEBUG[PageManager]: Initial schedule participantRole: ${schedule.participantRole}');
     _currentScheduleDetail = schedule;
-    // Tái sử dụng BlocProvider hiện có thay vì tạo mới
+    
+    // Preload data while showing UI
+    _preloadScheduleData(schedule.id);
+    
+    // Show UI immediately - let ScheduleDetailContent handle role fetching/caching
     _pages![2] = BlocProvider.value(
       value: _scheduleBloc,
       child: ScheduleDetailContent(
@@ -62,6 +71,31 @@ class PageManager {
     _onPageChanged?.call();
   }
 
+  void _preloadScheduleData(String scheduleId) {
+    // Only preload schedule details, participants will be loaded on demand
+    Future.microtask(() {
+      _scheduleBloc.add(GetScheduleByIdEvent(scheduleId: scheduleId));
+    });
+  }
+
+  void updateScheduleDetail(ScheduleEntity schedule) {
+    print('DEBUG[PageManager]: updateScheduleDetail called with participantRole: ${schedule.participantRole}');
+    print('DEBUG[PageManager]: Updating UI with full schedule data');
+    _currentScheduleDetail = schedule;
+    // Update the page with the full schedule data
+    _pages![2] = BlocProvider.value(
+      value: _scheduleBloc,
+      child: ScheduleDetailContent(
+        schedule: schedule,
+        onScheduleViewTap: _onScheduleViewTap,
+        onBack: () => showScheduleList(),
+      ),
+    );
+    // Thông báo MainLayout cập nhật UI
+    print('DEBUG[PageManager]: Calling _onPageChanged to update UI');
+    _onPageChanged?.call();
+  }
+
   void showScheduleList() {
     _currentScheduleDetail = null;
     _currentScheduleId = null;
@@ -71,6 +105,7 @@ class PageManager {
       child: SchedulePageWrapper(
         onScheduleTap: _onScheduleTap,
         onScheduleViewTap: _onScheduleViewTap,
+        onScheduleDetailLoaded: updateScheduleDetail,
       ),
     );
     // Thông báo MainLayout cập nhật UI
@@ -153,11 +188,13 @@ class ExplorePage extends StatelessWidget {
 class SchedulePageWrapper extends StatefulWidget {
   final Function(dynamic)? onScheduleTap;
   final Function(String)? onScheduleViewTap;
+  final Function(ScheduleEntity)? onScheduleDetailLoaded;
   
   const SchedulePageWrapper({
     super.key, 
     this.onScheduleTap,
     this.onScheduleViewTap,
+    this.onScheduleDetailLoaded,
   });
 
   @override
@@ -186,8 +223,17 @@ class _SchedulePageWrapperState extends State<SchedulePageWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState) {
+    return BlocListener<ScheduleBloc, ScheduleState>(
+      listener: (context, state) {
+        if (state is GetScheduleByIdSuccess) {
+          print('DEBUG[SchedulePageWrapper]: GetScheduleByIdSuccess received - participantRole: ${state.schedule.participantRole}');
+          print('DEBUG[SchedulePageWrapper]: Calling onScheduleDetailLoaded callback');
+          // Call the callback to handle schedule detail update
+          widget.onScheduleDetailLoaded?.call(state.schedule);
+        }
+      },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, authState) {
         // Lấy participantId ưu tiên từ AuthBloc
         String participantId = '';
         if (authState is AuthAuthenticated &&
@@ -235,7 +281,8 @@ class _SchedulePageWrapperState extends State<SchedulePageWrapper> {
           onScheduleTap: widget.onScheduleTap,
           onScheduleViewTap: widget.onScheduleViewTap,
         );
-      },
+        },
+      ),
     );
   }
 }
