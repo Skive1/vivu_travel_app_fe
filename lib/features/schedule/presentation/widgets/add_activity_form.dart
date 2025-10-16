@@ -38,7 +38,7 @@ class _AddActivityFormState extends State<AddActivityForm> {
   @override
   void initState() {
     super.initState();
-    _orderIndex = 0;
+    _orderIndex = 1;
   }
 
   @override
@@ -220,7 +220,7 @@ class _AddActivityFormState extends State<AddActivityForm> {
       description: _descriptionCtrl.text.trim(),
       checkInTime: checkIn,
       checkOutTime: checkOut,
-      orderIndex: _orderIndex ?? 0,
+      orderIndex: _orderIndex ?? 1,
       scheduleId: widget.scheduleId,
     );
 
@@ -234,8 +234,8 @@ class _AddActivityFormState extends State<AddActivityForm> {
           child: OutlinedButton(
             onPressed: () {
               setState(() {
-                final next = (_orderIndex ?? 0) - 1;
-                _orderIndex = next < 0 ? 0 : next;
+                final next = (_orderIndex ?? 1) - 1;
+                _orderIndex = next < 1 ? 1 : next;
               });
             },
             style: OutlinedButton.styleFrom(
@@ -259,7 +259,7 @@ class _AddActivityFormState extends State<AddActivityForm> {
               border: Border.all(color: AppColors.border),
             ),
             child: Text(
-              'Thứ tự: ${(_orderIndex ?? 0) + 1}',
+              'Thứ tự: ${(_orderIndex ?? 1)}',
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -272,7 +272,7 @@ class _AddActivityFormState extends State<AddActivityForm> {
           child: OutlinedButton(
             onPressed: () {
               setState(() {
-                _orderIndex = (_orderIndex ?? 0) + 1;
+                _orderIndex = (_orderIndex ?? 1) + 1;
               });
             },
             style: OutlinedButton.styleFrom(

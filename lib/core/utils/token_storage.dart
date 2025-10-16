@@ -9,9 +9,10 @@ class TokenStorage {
     ),
   );
 
-  // In-memory caches to avoid repeated secure storage reads on hot paths
-  static String? _cachedToken;
+  // In-memory caches for hot paths
+  static String? _cachedAccessToken;
   static String? _cachedRefreshToken;
+  static DateTime? _cachedAccessExpiry;
 
   static const String _tokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
@@ -19,6 +20,31 @@ class TokenStorage {
   static const String _userNameKey = 'user_name';
   static const String _userEmailKey = 'user_email';
   static const String _loginTimeKey = 'login_time';
+  static const String _accessExpKey = 'access_expiry';
+
+  // Init must be called once on app start to warm caches
+  static Future<void> init() async {
+    final reads = await Future.wait<String?>([
+      _storage.read(key: _tokenKey),
+      _storage.read(key: _refreshTokenKey),
+      _storage.read(key: _accessExpKey),
+    ]);
+    _cachedAccessToken = reads[0];
+    _cachedRefreshToken = reads[1];
+    final expIso = reads[2];
+    if (expIso != null) {
+      try {
+        _cachedAccessExpiry = DateTime.parse(expIso);
+      } catch (_) {
+        _cachedAccessExpiry = null;
+      }
+    }
+  }
+
+  // Synchronous getters for hot paths
+  static String? get accessTokenSync => _cachedAccessToken;
+  static String? get refreshTokenSync => _cachedRefreshToken;
+  static DateTime? get accessExpirySync => _cachedAccessExpiry;
 
   // Enhanced token saving with validation
   static Future<bool> saveToken(String token) async {
@@ -32,12 +58,18 @@ class TokenStorage {
       final userId = JwtDecoder.getUserId(token);
       final userName = JwtDecoder.getUserName(token);
       final userEmail = JwtDecoder.getUserEmail(token);
+      // Derive expiry once and cache
+      final remaining = JwtDecoder.getTimeUntilExpiry(token);
+      final expiry = remaining != null ? DateTime.now().add(remaining) : null;
       
       // Batch ALL storage operations for maximum performance
       final allWrites = <Future<void>>[
         _storage.write(key: _tokenKey, value: token),
         _storage.write(key: _loginTimeKey, value: DateTime.now().toIso8601String()),
       ];
+      if (expiry != null) {
+        allWrites.add(_storage.write(key: _accessExpKey, value: expiry.toIso8601String()));
+      }
       
       // Add conditional writes
       if (userId != null) allWrites.add(_storage.write(key: _userIdKey, value: userId));
@@ -48,20 +80,21 @@ class TokenStorage {
       await Future.wait(allWrites);
 
       // Update in-memory cache
-      _cachedToken = token;
+      _cachedAccessToken = token;
+      _cachedAccessExpiry = expiry;
 
       return true;
     } catch (e) {
       // If save fails, clear any partial data
-      await clearAll();
+      await clearAuthData();
       return false;
     }
   }
 
   static Future<String?> getToken() async {
-    if (_cachedToken != null) return _cachedToken;
+    if (_cachedAccessToken != null) return _cachedAccessToken;
     final t = await _storage.read(key: _tokenKey);
-    _cachedToken = t;
+    _cachedAccessToken = t;
     return t;
   }
 
@@ -82,12 +115,17 @@ class TokenStorage {
       final userId = JwtDecoder.getUserId(accessToken);
       final userName = JwtDecoder.getUserName(accessToken);
       final userEmail = JwtDecoder.getUserEmail(accessToken);
+      final remaining = JwtDecoder.getTimeUntilExpiry(accessToken);
+      final expiry = remaining != null ? DateTime.now().add(remaining) : null;
       
       // Batch ALL storage operations for maximum performance
       final allWrites = <Future<void>>[
         _storage.write(key: _tokenKey, value: accessToken),
         _storage.write(key: _loginTimeKey, value: DateTime.now().toIso8601String()),
       ];
+      if (expiry != null) {
+        allWrites.add(_storage.write(key: _accessExpKey, value: expiry.toIso8601String()));
+      }
       
       // Only save refresh token if it's valid (not null/empty)
       if (refreshToken.isNotEmpty) {
@@ -103,7 +141,8 @@ class TokenStorage {
       await Future.wait(allWrites);
       
       // Update in-memory caches
-      _cachedToken = accessToken;
+      _cachedAccessToken = accessToken;
+      _cachedAccessExpiry = expiry;
       if (refreshToken.isNotEmpty) {
         _cachedRefreshToken = refreshToken;
       }
@@ -111,7 +150,7 @@ class TokenStorage {
       return true;
     } catch (e) {
       // If save fails, clear any partial data
-      await clearAll();
+      await clearAuthData();
       return false;
     }
   }
@@ -128,12 +167,17 @@ class TokenStorage {
       final userId = JwtDecoder.getUserId(accessToken);
       final userName = JwtDecoder.getUserName(accessToken);
       final userEmail = JwtDecoder.getUserEmail(accessToken);
+      final remaining = JwtDecoder.getTimeUntilExpiry(accessToken);
+      final expiry = remaining != null ? DateTime.now().add(remaining) : null;
       
       // Batch ALL storage operations for maximum performance
       final allWrites = <Future<void>>[
         _storage.write(key: _tokenKey, value: accessToken),
         _storage.write(key: _loginTimeKey, value: DateTime.now().toIso8601String()),
       ];
+      if (expiry != null) {
+        allWrites.add(_storage.write(key: _accessExpKey, value: expiry.toIso8601String()));
+      }
       
       // Only save refresh token if it's valid (not null/empty)
       if (refreshToken != null && refreshToken.isNotEmpty) {
@@ -149,7 +193,8 @@ class TokenStorage {
       await Future.wait(allWrites);
       
       // Update in-memory caches
-      _cachedToken = accessToken;
+      _cachedAccessToken = accessToken;
+      _cachedAccessExpiry = expiry;
       if (refreshToken != null && refreshToken.isNotEmpty) {
         _cachedRefreshToken = refreshToken;
       }
@@ -157,7 +202,7 @@ class TokenStorage {
       return true;
     } catch (e) {
       // If save fails, clear any partial data
-      await clearAll();
+      await clearAuthData();
       return false;
     }
   }
@@ -195,7 +240,9 @@ class TokenStorage {
   // Clear methods
   static Future<void> clearToken() async {
     await _storage.delete(key: _tokenKey);
-    _cachedToken = null; // Clear in-memory cache
+    await _storage.delete(key: _accessExpKey);
+    _cachedAccessToken = null; // Clear in-memory cache
+    _cachedAccessExpiry = null;
   }
 
   static Future<void> clearRefreshToken() async {
@@ -203,70 +250,49 @@ class TokenStorage {
     _cachedRefreshToken = null; // Clear in-memory cache
   }
 
-  static Future<void> clearAll() async {
-    await _storage.deleteAll();
-    _cachedToken = null;
+  static Future<void> clearAuthData() async {
+    await Future.wait([
+      _storage.delete(key: _tokenKey),
+      _storage.delete(key: _refreshTokenKey),
+      _storage.delete(key: _accessExpKey),
+    ]);
+    _cachedAccessToken = null;
     _cachedRefreshToken = null;
-    // Clear refresh lock để tránh stuck state
+    _cachedAccessExpiry = null;
     DioFactory.clearRefreshLock();
   }
 
   // Enhanced validation methods
   static Future<bool> hasToken() async {
-    final token = await getToken();
+    final token = _cachedAccessToken ?? await getToken();
     return token != null && token.isNotEmpty;
   }
 
   static Future<bool> isTokenValid() async {
-    final token = await getToken();
+    final token = _cachedAccessToken ?? await getToken();
     if (token == null || token.isEmpty) return false;
-    
-    try {
-      // Check structure validity
-      if (!JwtDecoder.isValidTokenStructure(token)) {
-        await clearToken(); // Only clear access token, keep refresh token
-        return false;
-      }
-      
-      // Check expiry
-      if (JwtDecoder.isExpired(token)) {
-        await clearToken(); // Only clear access token, keep refresh token
-        return false;
-      }
-      
-      return true;
-    } catch (_) {
-      await clearToken(); // Only clear access token on error
-      return false;
-    }
+    final exp = _cachedAccessExpiry;
+    if (exp == null) return false;
+    return DateTime.now().isBefore(exp);
   }
 
   // Get token expiry info
   static Future<Duration?> getTokenTimeRemaining() async {
-    final token = await getToken();
-    if (token == null) return null;
-    
-    try {
-      return JwtDecoder.getTimeUntilExpiry(token);
-    } catch (_) {
-      return null;
-    }
+    final exp = _cachedAccessExpiry;
+    if (exp == null) return null;
+    final now = DateTime.now();
+    if (now.isAfter(exp)) return Duration.zero;
+    return exp.difference(now);
   }
 
   static Future<bool> isTokenNearExpiry({
     Duration threshold = const Duration(minutes: 3),
     Duration skew = const Duration(seconds: 90),
   }) async {
-    final token = await getToken();
-    if (token == null) return true;
-    
-    try {
-      final timeRemaining = JwtDecoder.getTimeUntilExpiry(token);
-      if (timeRemaining == null) return true;
-      
-      return timeRemaining <= (threshold + skew);
-    } catch (_) {
-      return true;
-    }
+    final exp = _cachedAccessExpiry;
+    if (exp == null) return true;
+    final now = DateTime.now();
+    final remaining = exp.difference(now);
+    return remaining <= (threshold + skew);
   }
 }

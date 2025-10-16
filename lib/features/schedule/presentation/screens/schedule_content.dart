@@ -54,7 +54,6 @@ class _ScheduleContentState extends State<ScheduleContent>
       final user = await UserStorage.getUserProfile();
       if (mounted) setState(() => _currentUserId = user?.id);
       // ignore: avoid_print
-      print('DEBUG[ScheduleContent]: currentUserId=' + (_currentUserId ?? 'null'));
     }();
   }
 

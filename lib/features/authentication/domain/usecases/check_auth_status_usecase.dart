@@ -23,7 +23,7 @@ class CheckAuthStatusUseCase implements UseCase<AuthEntity, NoParams> {
       // Step 2: Get token and validate structure
       final token = await TokenStorage.getToken();
       if (token == null || !JwtDecoder.isValidTokenStructure(token)) {
-        await TokenStorage.clearAll();
+        await TokenStorage.clearAuthData();
         return const Left(AuthFailure('Invalid token structure'));
       }
 
@@ -31,7 +31,7 @@ class CheckAuthStatusUseCase implements UseCase<AuthEntity, NoParams> {
       if (JwtDecoder.isExpired(token)) {
         // Token đã hết hạn - clear và return failure
         // DioFactory sẽ handle refresh token automatically
-        await TokenStorage.clearAll();
+        await TokenStorage.clearAuthData();
         return const Left(AuthFailure('Session expired. Please login again.'));
       }
 
@@ -42,7 +42,7 @@ class CheckAuthStatusUseCase implements UseCase<AuthEntity, NoParams> {
       if (userClaims == null || 
           userClaims['userId'] == null || 
           userClaims['email'] == null) {
-        await TokenStorage.clearAll();
+        await TokenStorage.clearAuthData();
         return const Left(AuthFailure('Invalid token claims'));
       }
 
@@ -64,7 +64,7 @@ class CheckAuthStatusUseCase implements UseCase<AuthEntity, NoParams> {
       
     } catch (e) {
       // Clear corrupted data and return failure
-      await TokenStorage.clearAll();
+      await TokenStorage.clearAuthData();
       return Left(CacheFailure('Authentication validation failed: ${e.toString()}'));
     }
   }

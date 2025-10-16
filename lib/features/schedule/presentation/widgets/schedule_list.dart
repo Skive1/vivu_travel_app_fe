@@ -62,8 +62,6 @@ class _ScheduleListState extends State<ScheduleList> {
   void _loadCachedRole() async {
     if (widget.scheduleId == null) return;
     final role = await UserStorage.getScheduleRole(widget.scheduleId!);
-    // ignore: avoid_print
-    print('DEBUG[ScheduleList]: Cached role read -> ' + (role ?? 'null'));
     if (!mounted) return;
     if (role != null && role.isNotEmpty) {
       setState(() => _cachedRole = role.toLowerCase());
@@ -77,26 +75,33 @@ class _ScheduleListState extends State<ScheduleList> {
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) {
         if (state is KickParticipantSuccess) {
-          // Calculate active participants count from kick response
-          final activeParticipantsCount = state.result.scheduleParticipantResponses
-              .where((participant) => participant.status == 'Active')
-              .length;
-          
-          print('DEBUG[ScheduleList]: Kick participant success');
-          print('DEBUG[ScheduleList]: Calculated active participants: $activeParticipantsCount');
-          print('DEBUG[ScheduleList]: Total participants in response: ${state.result.scheduleParticipantResponses.length}');
-          print('DEBUG[ScheduleList]: API participantCounts: ${state.result.participantCounts}');
-          
           // The schedule list will be refreshed automatically by the parent
         }
         
       },
       child: BlocBuilder<ScheduleBloc, ScheduleState>(
+      buildWhen: (previous, current) {
+        return current is ActivitiesLoading ||
+               current is ActivitiesLoaded ||
+               current is ActivitiesError;
+      },
       builder: (context, state) {
-        // DEBUG
-        // ignore: avoid_print
-        print('DEBUG[ScheduleList]: state=' + state.runtimeType.toString() + ', scheduleId=' + (widget.scheduleId ?? 'null') + ', selectedDate=' + widget.selectedDate.toIso8601String());
         if (state is ActivitiesLoading) {
+          // Keep current UI and show a thin progress bar instead of replacing with skeletons
+          // If we already have items, keep them on screen and overlay a loader
+          if (_activitiesLocal.isNotEmpty) {
+            return Stack(
+              children: [
+                _buildReadonlyList(context, _activitiesLocal),
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  child: LinearProgressIndicator(minHeight: 2),
+                ),
+              ],
+            );
+          }
           return const ActivityListSkeleton(itemCount: 3);
         } else if (state is ActivitiesError) {
           return Center(
@@ -152,10 +157,7 @@ class _ScheduleListState extends State<ScheduleList> {
             ),
           );
         } else if (state is ActivitiesLoaded) {
-          final activities = _filterActivitiesByDate(
-            state.activities,
-            widget.selectedDate,
-          );
+          final activities = _filterActivitiesByDate(state.activities, widget.selectedDate);
 
           if (activities.isEmpty) {
             return Center(
@@ -228,31 +230,25 @@ class _ScheduleListState extends State<ScheduleList> {
 
           // NOTE: Sorting should be done upstream (Bloc) to avoid per-build sorting costs.
 
-          // Keep a local copy for UI reordering UX
-          if (_activitiesLocal.isEmpty || _activitiesLocal.length != activities.length || !_isSameOrder(_activitiesLocal, activities)) {
-            _activitiesLocal = List<ActivityEntity>.from(activities);
-          }
+          // Refresh local copy from latest state
+          _activitiesLocal = List<ActivityEntity>.from(activities);
 
           final role = _getRole(context);
           final bool canEditOrder = role == 'owner' || role == 'editor';
 
-          return RefreshIndicator(
+          final list = RefreshIndicator(
             onRefresh: () async {
               if (widget.scheduleId != null) {
                 context.read<ScheduleBloc>().add(
-                  RefreshActivitiesEvent(
-                                scheduleId: widget.scheduleId!,
-                    date: widget.selectedDate,
-                  ),
+                  RefreshActivitiesEvent(scheduleId: widget.scheduleId!, date: widget.selectedDate),
                 );
               }
             },
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: canEditOrder
-                      ? ReorderableListView.builder(
+            child: RepaintBoundary(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: canEditOrder
+                    ? ReorderableListView.builder(
                       buildDefaultDragHandles: false,
                       proxyDecorator: (child, index, animation) => Material(
                         elevation: 6,
@@ -375,92 +371,94 @@ class _ScheduleListState extends State<ScheduleList> {
                         }
                       },
                     )
-                  : ListView.builder(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).padding.bottom,
-                      ),
-                      itemCount: activities.length + ((widget.scheduleId != null && _canCreateActivity(context)) ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        final isAppendButton =
-                            (widget.scheduleId != null && _canCreateActivity(context)) && index == activities.length;
-                        if (isAppendButton) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: SizedBox(
-                                width: 48,
-                                height: 48,
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (_) => Container(
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.vertical(
-                                            top: Radius.circular(20),
+                    : ListView.builder(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).padding.bottom,
+                        ),
+                        itemCount: activities.length + ((widget.scheduleId != null && _canCreateActivity(context)) ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          final isAppendButton =
+                              (widget.scheduleId != null && _canCreateActivity(context)) && index == activities.length;
+                          if (isAppendButton) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: SizedBox(
+                                  width: 48,
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (_) => Container(
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(20),
+                                            ),
+                                          ),
+                                          child: BlocProvider.value(
+                                            value: context.read<ScheduleBloc>(),
+                                            child: AddActivityForm(
+                                              scheduleId: widget.scheduleId!,
+                                              initialDate: widget.selectedDate,
+                                            ),
                                           ),
                                         ),
-                                        child: BlocProvider.value(
-                                          value: context.read<ScheduleBloc>(),
-                                          child: AddActivityForm(
-                                            scheduleId: widget.scheduleId!,
-                                            initialDate: widget.selectedDate,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    foregroundColor: Colors.white,
-                                    shape: const CircleBorder(),
-                                    padding: const EdgeInsets.all(0),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: Colors.white,
+                                      shape: const CircleBorder(),
+                                      padding: const EdgeInsets.all(0),
+                                    ),
+                                    child: const Icon(Icons.add, size: 24),
                                   ),
-                                  child: const Icon(Icons.add, size: 24),
                                 ),
                               ),
-                            ),
-                          );
-                        }
+                            );
+                          }
 
-                        final activity = activities[index];
-                        final isLast = index == activities.length - 1;
-                        final bool canEdit = false;
-                        final bool canDelete = false;
-                        return ActivityTimelineItem(
-                          key: ValueKey<int>(activity.id),
-                          activity: activity,
-                          isLast: isLast,
-                          selectedDate: widget.selectedDate,
-                          canEdit: canEdit,
-                          canDelete: canDelete,
-                        );
-                      },
-                    ),
-                ),
-                
-                if (canEditOrder && _activitiesLocal.isNotEmpty)
-                  Positioned(
-                    right: 16,
-                    bottom: 16 + MediaQuery.of(context).padding.bottom,
-                    child: FloatingActionButton.extended(
-                      heroTag: 'toggle-drag',
-                      backgroundColor: _dragMode ? Colors.redAccent : AppColors.primary,
-                      foregroundColor: Colors.white,
-                      onPressed: () {
-                        setState(() {
-                          _dragMode = !_dragMode;
-                        });
-                      },
-                      icon: Icon(_dragMode ? Icons.close : Icons.drag_indicator),
-                      label: Text(_dragMode ? 'Xong' : 'Sắp xếp'),
-                    ),
-                  ),
-              ],
+                          final activity = activities[index];
+                          final isLast = index == activities.length - 1;
+                          return ActivityTimelineItem(
+                            key: ValueKey<int>(activity.id),
+                            activity: activity,
+                            isLast: isLast,
+                            selectedDate: widget.selectedDate,
+                            canEdit: false,
+                            canDelete: false,
+                          );
+                        },
+                      ),
+              ),
             ),
+          );
+
+          return Stack(
+            children: [
+              RepaintBoundary(child: list),
+              if (canEditOrder && _activitiesLocal.isNotEmpty)
+                Positioned(
+                  right: 16,
+                  bottom: 16 + MediaQuery.of(context).padding.bottom,
+                  child: FloatingActionButton.extended(
+                    heroTag: 'toggle-drag',
+                    backgroundColor: _dragMode ? Colors.redAccent : AppColors.primary,
+                    foregroundColor: Colors.white,
+                    onPressed: () {
+                      setState(() {
+                        _dragMode = !_dragMode;
+                      });
+                    },
+                    icon: Icon(_dragMode ? Icons.close : Icons.drag_indicator),
+                    label: Text(_dragMode ? 'Xong' : 'Sắp xếp'),
+                  ),
+                ),
+            ],
           );
         }
 
@@ -553,13 +551,7 @@ class _ScheduleListState extends State<ScheduleList> {
     return role == 'owner';
   }
 
-  bool _isSameOrder(List<ActivityEntity> a, List<ActivityEntity> b) {
-    if (a.length != b.length) return false;
-    for (int i = 0; i < a.length; i++) {
-      if (a[i].id != b[i].id) return false;
-    }
-    return true;
-  }
+  // Removed stale order comparison helper; always render from latest activities
 
   ActivityEntity _withOrderIndex(ActivityEntity a, int newOrderIndex) {
     return ActivityEntity(
@@ -572,6 +564,31 @@ class _ScheduleListState extends State<ScheduleList> {
       orderIndex: newOrderIndex,
       isDeleted: a.isDeleted,
       scheduleId: a.scheduleId,
+    );
+  }
+
+  // Readonly list renderer used while loading to avoid rebuilding heavy tree
+  Widget _buildReadonlyList(BuildContext context, List<ActivityEntity> activities) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: ListView.builder(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom,
+        ),
+        itemCount: activities.length,
+        itemBuilder: (context, index) {
+          final activity = activities[index];
+          final isLast = index == activities.length - 1;
+          return ActivityTimelineItem(
+            key: ValueKey<int>(activity.id),
+            activity: activity,
+            isLast: isLast,
+            selectedDate: widget.selectedDate,
+            canEdit: false,
+            canDelete: false,
+          );
+        },
+      ),
     );
   }
 

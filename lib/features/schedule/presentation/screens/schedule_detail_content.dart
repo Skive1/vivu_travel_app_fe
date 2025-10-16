@@ -67,8 +67,6 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
     if (widget.currentUserId == null) {
       () async {
         final user = await UserStorage.getUserProfile();
-        // ignore: avoid_print
-        print('DEBUG[Detail]: Loaded current user from storage -> ' + (user?.id ?? 'null'));
         if (mounted) setState(() => _resolvedUserId = user?.id);
       }();
     }
@@ -77,13 +75,11 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
   void _fetchScheduleDetails() async {
     try {
       // Only fetch schedule details, participants will be loaded when user taps on participants count
-      print('DEBUG[Detail]: Fetching schedule details only...');
       
       // Only fetch schedule details
       context.read<ScheduleBloc>().add(GetScheduleByIdEvent(scheduleId: _currentSchedule.id));
       
     } catch (e) {
-      print('DEBUG[Detail]: Error fetching schedule details: $e');
     }
   }
 
@@ -147,18 +143,13 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
       }
     });
     
-    // Cache the updated participantRole
+    // Cache the updated participantRole (non-blocking)
     if (newSchedule.participantRole != null && newSchedule.participantRole!.isNotEmpty) {
-      () async {
-        try {
-          await UserStorage.setScheduleRole(
-            scheduleId: newSchedule.id, 
-            role: newSchedule.participantRole!.toLowerCase(),
-          );
-          // ignore: avoid_print
-          print('DEBUG[Detail]: Updated cached role from schedule update: ${newSchedule.participantRole!.toLowerCase()}');
-        } catch (_) {}
-      }();
+      // ignore: unawaited_futures
+      UserStorage.setScheduleRole(
+        scheduleId: newSchedule.id, 
+        role: newSchedule.participantRole!.toLowerCase(),
+      );
     }
   }
 
@@ -231,13 +222,9 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
       listener: (context, state) {
         if (state is GetScheduleByIdSuccess) {
           // Update local schedule with full detail (includes participantRole)
-          // ignore: avoid_print
-          print('DEBUG[Detail]: Received schedule detail with participantRole=' + (state.schedule.participantRole?.toString() ?? 'null'));
           _updateScheduleData(state.schedule);
           return;
-        } else if (state is GetScheduleByIdError) {
-          // ignore: avoid_print
-          print('DEBUG[Detail]: Failed to load schedule detail: ' + state.message);
+        } else if (state is GetScheduleByIdError) { 
         }
         if (state is ShareScheduleLoading) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -326,20 +313,13 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
                   if (currentUserId != null && _currentSchedule.ownerId == currentUserId) {
                     // Optimistic prediction: If current user is owner, show owner UI immediately
                     role = 'owner';
-                    print('DEBUG[DetailHeader]: Optimistic role prediction: owner (based on ownerId)');
                   } else if (_currentSchedule.participantRole != null && _currentSchedule.participantRole!.isNotEmpty) {
                     // Use actual participantRole from API if available
                     role = _currentSchedule.participantRole!.toLowerCase();
-                    print('DEBUG[DetailHeader]: Using API participantRole: $role');
                   } else {
                     // Fallback to viewer
                     role = 'viewer';
-                    print('DEBUG[DetailHeader]: Fallback to viewer role');
                   }
-
-                  // DEBUG: Log role resolution
-                  // ignore: avoid_print
-                  print('DEBUG[DetailHeader]: participantRole from schedule = ${_currentSchedule.participantRole}, resolved role = $role');
 
                   final bool canInvite = role == 'owner';
                   final bool canEditSchedule = role == 'owner' || role == 'editor';
@@ -490,9 +470,77 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
                     ],
                   ),
                   const SizedBox(height: 24),
+                  // Leave section placed below the action buttons
+                  _buildLeaveSectionIfApplicable(context),
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+extension _LeaveSection on _ScheduleDetailContentState {
+  Widget _buildLeaveSectionIfApplicable(BuildContext context) {
+    final String role = (_currentSchedule.participantRole ?? '').toLowerCase();
+    if (role.isEmpty || role == 'owner') return const SizedBox.shrink();
+
+    final String? currentUserId = widget.currentUserId ?? _resolvedUserId;
+    if (currentUserId == null || currentUserId.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Hành động',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => _confirmLeave(context, currentUserId),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.error,
+              side: const BorderSide(color: AppColors.error),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.exit_to_app, size: 18, color: AppColors.error),
+            label: const Text('Rời lịch', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.error)),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  void _confirmLeave(BuildContext context, String userId) {
+    final scheduleBloc = context.read<ScheduleBloc>();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rời lịch'),
+        content: const Text('Bạn có chắc muốn rời khỏi lịch này?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              scheduleBloc.add(LeaveScheduleEvent(scheduleId: _currentSchedule.id, userId: userId));
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Rời lịch', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/utils/compute_utils.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/endpoints.dart';
 import '../models/schedule_model.dart';
@@ -39,6 +40,7 @@ abstract class ScheduleRemoteDataSource {
   Future<List<ParticipantModel>> getScheduleParticipants(String scheduleId);
   Future<AddParticipantByEmailResponse> addParticipantByEmail(String scheduleId, AddParticipantByEmailRequest request);
   Future<KickParticipantResponse> kickParticipant(String scheduleId, String participantId);
+  Future<KickParticipantResponse> leaveSchedule(String scheduleId, String userId);
   Future<void> changeParticipantRole(String scheduleId, String participantId);
   Future<void> reorderActivity({required int newIndex, required int activityId});
 }
@@ -59,9 +61,12 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
       );
 
       if (response.data is List) {
-        return (response.data as List)
-            .map((json) => ScheduleModel.fromJson(json as Map<String, dynamic>))
-            .toList();
+        final list = response.data as List;
+        // Offload heavy list parsing to background isolate
+        return await computeMapList<ScheduleModel>(
+          list,
+          (m) => ScheduleModel.fromJson(m),
+        );
       }
 
       throw Exception('Invalid response format');
@@ -76,22 +81,18 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
       final response = await _apiClient.get(
         Endpoints.getScheduleById(scheduleId),
       );
-
-      // DEBUG: Log the raw API response
-      print('DEBUG[DataSource]: GET /api/schedule/$scheduleId response:');
-      print('DEBUG[DataSource]: Status Code: ${response.statusCode}');
-      print('DEBUG[DataSource]: Response Data: ${response.data}');
       
       if (response.data is Map<String, dynamic>) {
         final data = response.data as Map<String, dynamic>;
-        print('DEBUG[DataSource]: participantRole in response: ${data['participantRole']}');
-        return ScheduleModel.fromJson(data);
+        // Offload object parsing if payload is large
+        return await computeParseObject<ScheduleModel>(
+          data,
+          (m) => ScheduleModel.fromJson(m),
+        );
       }
 
       throw Exception('Invalid response format');
     } on DioException catch (e) {
-      print('DEBUG[DataSource]: DioException in getScheduleById: ${e.message}');
-      print('DEBUG[DataSource]: Response data: ${e.response?.data}');
       throw Exception('Failed to get schedule: ${e.message}');
     }
   }
@@ -102,6 +103,7 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
     DateTime date,
   ) async {
     try {
+      final t0 = DateTime.now();
       // Format date as ISO 8601 (2025-10-09T00:00:00)
       final formattedDate =
           '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}T00:00:00';
@@ -109,9 +111,19 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
       final response = await _apiClient.get(
         Endpoints.getActivitiesBySchedule(scheduleId, formattedDate),
       );
+      final t1 = DateTime.now();
+      // ignore: avoid_print
+      print('[TIMING][DS] API activities took ${t1.difference(t0).inMilliseconds}ms');
 
       if (response.data is Map<String, dynamic>) {
-        return ActivitiesResponse.fromJson(response.data as Map<String, dynamic>);
+        final data = response.data as Map<String, dynamic>;
+        final parsed = await computeParseObject<ActivitiesResponse>(
+          data,
+          (m) => ActivitiesResponse.fromJson(m),
+        );
+        final t2 = DateTime.now();
+        print('[TIMING][DS] parse activities took ${t2.difference(t1).inMilliseconds}ms');
+        return parsed;
       }
 
       throw Exception('Invalid response format');
@@ -127,7 +139,10 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
         Endpoints.addActivity,
         data: request.toJson(),
       );
-      return ActivityModel.fromJson(response.data as Map<String, dynamic>);
+      return await computeParseObject<ActivityModel>(
+        response.data as Map<String, dynamic>,
+        (m) => ActivityModel.fromJson(m),
+      );
     } on DioException catch (e) {
       throw Exception('Failed to add activity: ${e.message}');
     }
@@ -143,7 +158,10 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
         '${Endpoints.activities}/$activityId',
         data: request.toJson(),
       );
-      return ActivityModel.fromJson(response.data as Map<String, dynamic>);
+      return await computeParseObject<ActivityModel>(
+        response.data as Map<String, dynamic>,
+        (m) => ActivityModel.fromJson(m),
+      );
     } on DioException catch (e) {
       throw Exception('Failed to update activity: ${e.message}');
     }
@@ -165,8 +183,9 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
         '${Endpoints.shareSchedule}/$scheduleId',
       );
 
-      return ShareScheduleResponse.fromJson(
+      return await computeParseObject<ShareScheduleResponse>(
         response.data as Map<String, dynamic>,
+        (m) => ShareScheduleResponse.fromJson(m),
       );
     } on DioException catch (e) {
       throw Exception('Failed to share schedule: ${e.message}');
@@ -181,7 +200,10 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
         data: request.toJson(),
       );
 
-      return ScheduleModel.fromJson(response.data as Map<String, dynamic>);
+      return await computeParseObject<ScheduleModel>(
+        response.data as Map<String, dynamic>,
+        (m) => ScheduleModel.fromJson(m),
+      );
     } on DioException catch (e) {
       throw Exception('Failed to create schedule: ${e.message}');
     }
@@ -198,7 +220,10 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
         data: request.toJson(),
       );
 
-      return ScheduleModel.fromJson(response.data as Map<String, dynamic>);
+      return await computeParseObject<ScheduleModel>(
+        response.data as Map<String, dynamic>,
+        (m) => ScheduleModel.fromJson(m),
+      );
     } on DioException catch (e) {
       throw Exception('Failed to update schedule: ${e.message}');
     }
@@ -212,7 +237,10 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
         data: request.toJson(),
       );
 
-      return JoinScheduleResponse.fromJson(response.data as Map<String, dynamic>);
+      return await computeParseObject<JoinScheduleResponse>(
+        response.data as Map<String, dynamic>,
+        (m) => JoinScheduleResponse.fromJson(m),
+      );
     } on DioException catch (e) {
       throw Exception('Failed to join schedule: ${e.message}');
     }
@@ -226,9 +254,11 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
       );
 
       if (response.data is List) {
-        return (response.data as List)
-            .map((json) => ParticipantModel.fromJson(json as Map<String, dynamic>))
-            .toList();
+        final list = response.data as List;
+        return await computeMapList<ParticipantModel>(
+          list,
+          (m) => ParticipantModel.fromJson(m),
+        );
       }
 
       throw Exception('Invalid response format');
@@ -244,7 +274,10 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
         '${Endpoints.addParticipantByEmail(scheduleId)}?email=${Uri.encodeComponent(request.email)}',
       );
 
-      return AddParticipantByEmailResponse.fromJson(response.data as Map<String, dynamic>);
+      return await computeParseObject<AddParticipantByEmailResponse>(
+        response.data as Map<String, dynamic>,
+        (m) => AddParticipantByEmailResponse.fromJson(m),
+      );
     } on DioException catch (e) {
       throw Exception('Failed to add participant: ${e.message}');
     }
@@ -253,40 +286,39 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
   @override
   Future<KickParticipantResponse> kickParticipant(String scheduleId, String participantId) async {
     try {
-      print('DEBUG[DataSource]: Starting kick participant API call');
-      print('DEBUG[DataSource]: scheduleId = $scheduleId');
-      print('DEBUG[DataSource]: participantId = $participantId');
-      
       final response = await _apiClient.patch(
         Endpoints.kickParticipant(scheduleId, participantId),
       );
-      
-      print('DEBUG[DataSource]: API response received');
-      print('DEBUG[DataSource]: Status code: ${response.statusCode}');
-      print('DEBUG[DataSource]: Response data type: ${response.data.runtimeType}');
-      print('DEBUG[DataSource]: Response data: ${response.data}');
-      
+
       // Response contains participantCounts and scheduleParticipantResponses
       final data = response.data as Map<String, dynamic>;
-      print('DEBUG[DataSource]: Cast to Map successful');
-      
-      final result = KickParticipantResponse.fromJson(data);
-      print('DEBUG[DataSource]: KickParticipantResponse created successfully');
-      print('DEBUG[DataSource]: participantCounts = ${result.participantCounts}');
-      print('DEBUG[DataSource]: participants count = ${result.scheduleParticipantResponses.length}');
-      
-      return result;
+      return await computeParseObject<KickParticipantResponse>(
+        data,
+        (m) => KickParticipantResponse.fromJson(m),
+      );
     } on DioException catch (e) {
-      print('DEBUG[DataSource]: DioException occurred');
-      print('DEBUG[DataSource]: Error message: ${e.message}');
-      print('DEBUG[DataSource]: Response data: ${e.response?.data}');
-      print('DEBUG[DataSource]: Status code: ${e.response?.statusCode}');
       throw Exception('Failed to kick participant: ${e.message}');
-    } catch (e, stackTrace) {
-      print('DEBUG[DataSource]: Unexpected error occurred');
-      print('DEBUG[DataSource]: Error: $e');
-      print('DEBUG[DataSource]: Stack trace: $stackTrace');
+    } catch (e) {
       throw Exception('Failed to kick participant: $e');
+    }
+  }
+
+  @override
+  Future<KickParticipantResponse> leaveSchedule(String scheduleId, String userId) async {
+    try {
+      final response = await _apiClient.post(
+        Endpoints.leaveParticipant(scheduleId, userId),
+      );
+
+      final data = response.data as Map<String, dynamic>;
+      return await computeParseObject<KickParticipantResponse>(
+        data,
+        (m) => KickParticipantResponse.fromJson(m),
+      );
+    } on DioException catch (e) {
+      throw Exception('Failed to leave schedule: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to leave schedule: $e');
     }
   }
 

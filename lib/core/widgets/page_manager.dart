@@ -51,8 +51,6 @@ class PageManager {
   }
 
   void showScheduleDetail(ScheduleEntity schedule) {
-    print('DEBUG[PageManager]: showScheduleDetail called for schedule: ${schedule.id}');
-    print('DEBUG[PageManager]: Initial schedule participantRole: ${schedule.participantRole}');
     _currentScheduleDetail = schedule;
     
     // Preload data while showing UI
@@ -79,8 +77,6 @@ class PageManager {
   }
 
   void updateScheduleDetail(ScheduleEntity schedule) {
-    print('DEBUG[PageManager]: updateScheduleDetail called with participantRole: ${schedule.participantRole}');
-    print('DEBUG[PageManager]: Updating UI with full schedule data');
     _currentScheduleDetail = schedule;
     // Update the page with the full schedule data
     _pages![2] = BlocProvider.value(
@@ -92,7 +88,6 @@ class PageManager {
       ),
     );
     // Thông báo MainLayout cập nhật UI
-    print('DEBUG[PageManager]: Calling _onPageChanged to update UI');
     _onPageChanged?.call();
   }
 
@@ -225,9 +220,7 @@ class _SchedulePageWrapperState extends State<SchedulePageWrapper> {
   Widget build(BuildContext context) {
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) {
-        if (state is GetScheduleByIdSuccess) {
-          print('DEBUG[SchedulePageWrapper]: GetScheduleByIdSuccess received - participantRole: ${state.schedule.participantRole}');
-          print('DEBUG[SchedulePageWrapper]: Calling onScheduleDetailLoaded callback');
+        if (state is GetScheduleByIdSuccess) {  
           // Call the callback to handle schedule detail update
           widget.onScheduleDetailLoaded?.call(state.schedule);
         }

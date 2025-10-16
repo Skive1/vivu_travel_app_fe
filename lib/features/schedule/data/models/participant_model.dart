@@ -12,18 +12,12 @@ class ParticipantModel {
   });
 
   factory ParticipantModel.fromJson(Map<String, dynamic> json) {
-    print('DEBUG[ParticipantModel]: Parsing participant JSON: $json');
     
     try {
       final userId = json['userId'] as String?;
       final name = json['name'] as String?;
       final roleValue = json['role'];
       final statusValue = json['status'];
-      
-      print('DEBUG[ParticipantModel]: userId = $userId');
-      print('DEBUG[ParticipantModel]: name = $name');
-      print('DEBUG[ParticipantModel]: role = $roleValue (type: ${roleValue.runtimeType})');
-      print('DEBUG[ParticipantModel]: status = $statusValue (type: ${statusValue.runtimeType})');
       
       if (userId == null) {
         throw Exception('userId is null');
@@ -79,9 +73,6 @@ class ParticipantModel {
         }
       }
       
-      print('DEBUG[ParticipantModel]: Final role = $roleString');
-      print('DEBUG[ParticipantModel]: Final status = $statusString');
-      
       return ParticipantModel(
         userId: userId,
         name: finalName,
@@ -89,8 +80,6 @@ class ParticipantModel {
         status: statusString,
       );
     } catch (e, stackTrace) {
-      print('DEBUG[ParticipantModel]: Error parsing participant: $e');
-      print('DEBUG[ParticipantModel]: Stack trace: $stackTrace');
       rethrow;
     }
   }

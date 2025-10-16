@@ -8,7 +8,6 @@ import 'routes.dart';
 import 'core/constants/app_colors.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/authentication/presentation/bloc/auth_bloc.dart';
-import 'features/authentication/presentation/bloc/auth_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<AuthBloc>(
-      create: (context) => di.sl<AuthBloc>()..add(GetUserProfileRequested()),
+      create: (context) => di.sl<AuthBloc>(),
       child: MaterialApp(
         title: 'Vivu Travel',
         theme: ThemeData(

@@ -32,6 +32,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final ChangePasswordUseCase changePasswordUseCase;
   final AuthRepository authRepository;
 
+  bool _isFetchingProfile = false; // prevent duplicate /auth/me calls
+
   AuthBloc({
     required this.loginUseCase,
     required this.logoutUseCase,
@@ -105,24 +107,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       return;
     }
 
-    final result = await getUserProfileUseCase(NoParams());
+    if (_isFetchingProfile) {
+      return; // drop duplicate while in-flight
+    }
 
-    await result.fold(
-      (failure) async {
-        // If getting user profile fails, we still keep them authenticated
-        // but without user profile data
-      },
-      (userEntity) async {
-        
-        // Save user profile to storage for future fast loading
-        final saved = await UserStorage.saveUserProfile(userEntity);
-        
-        // Update authenticated state with fresh user profile
-        if (!emit.isDone) {
-          emit(currentState.copyWith(userEntity: userEntity));
-        }
-      },
-    );
+    _isFetchingProfile = true;
+    try {
+      final result = await getUserProfileUseCase(NoParams());
+
+      await result.fold(
+        (failure) async {
+          // Keep authenticated state; optionally log failure
+        },
+        (userEntity) async {
+          await UserStorage.saveUserProfile(userEntity);
+          if (!emit.isDone) {
+            emit(currentState.copyWith(userEntity: userEntity));
+          }
+        },
+      );
+    } finally {
+      _isFetchingProfile = false;
+    }
   }
 
   Future<void> _onLogoutRequested(

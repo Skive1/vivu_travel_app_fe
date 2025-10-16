@@ -23,32 +23,11 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
   @override
   bool get wantKeepAlive => true;
 
-  // Cache formatted dates to avoid repeated formatting
-  String? _cachedStartDate;
-  String? _cachedEndDate;
+  // Remove over-caching; compute dates directly to avoid stale UI
 
   @override
   void initState() {
     super.initState();
-    _cacheFormattedDates();
-  }
-
-  @override
-  void didUpdateWidget(ScheduleListItem oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Check if any schedule data has changed
-    if (oldWidget.schedule.startDate != widget.schedule.startDate ||
-        oldWidget.schedule.endDate != widget.schedule.endDate ||
-        oldWidget.schedule.title != widget.schedule.title ||
-        oldWidget.schedule.status != widget.schedule.status ||
-        oldWidget.schedule.sharedCode != widget.schedule.sharedCode) {
-      _cacheFormattedDates();
-    }
-  }
-
-  void _cacheFormattedDates() {
-    _cachedStartDate = _formatDate(widget.schedule.startDate);
-    _cachedEndDate = _formatDate(widget.schedule.endDate);
   }
 
   @override
@@ -137,7 +116,7 @@ class _ScheduleListItemState extends State<ScheduleListItem> with AutomaticKeepA
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '$_cachedStartDate - $_cachedEndDate',
+                    '${_formatDate(widget.schedule.startDate)} - ${_formatDate(widget.schedule.endDate)}',
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,

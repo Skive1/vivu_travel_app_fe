@@ -190,15 +190,12 @@ class _ScheduleListContentState extends State<ScheduleListContent>
             listener: (context, state) {
               if (state is CreateScheduleSuccess) {
                 // Force refresh để hiển thị lịch trình mới
-                print('DEBUG: CreateScheduleSuccess - refreshing schedules');
                 _forceRefreshSchedules();
               } else if (state is UpdateScheduleSuccess) {
                 // Force refresh để hiển thị thay đổi
-                print('DEBUG: UpdateScheduleSuccess - refreshing schedules');
                 _forceRefreshSchedules();
               } else if (state is JoinScheduleSuccess) {
                 // Force refresh để hiển thị lịch trình đã tham gia
-                print('DEBUG: JoinScheduleSuccess - refreshing schedules');
                 _forceRefreshSchedules();
               }
             },

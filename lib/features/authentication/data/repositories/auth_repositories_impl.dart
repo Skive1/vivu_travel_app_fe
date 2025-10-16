@@ -2,7 +2,6 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/error_mapper.dart';
-import '../../../../core/network/network_info.dart';
 import '../../../../core/utils/token_storage.dart';
 import '../../../../core/utils/jwt_decoder.dart';
 import '../../domain/entities/auth_entity.dart';
@@ -21,11 +20,9 @@ import '../models/change_password_request_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
-  final NetworkInfo networkInfo;
 
   AuthRepositoryImpl({
     required this.remoteDataSource,
-    required this.networkInfo,
   });
 
   /// Helper method to handle exceptions consistently
@@ -79,7 +76,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, void>> logout() async {
     try {
       // Local logout only - clear all tokens from secure storage
-      await TokenStorage.clearAll();
+      await TokenStorage.clearAuthData();
       return const Right(null);
     } catch (e) {
       return Left(_handleException(e));
@@ -103,7 +100,7 @@ class AuthRepositoryImpl implements AuthRepository {
       // Step 2: Get token and validate structure
       final token = await TokenStorage.getToken();
       if (token == null || !JwtDecoder.isValidTokenStructure(token)) {
-        await TokenStorage.clearAll();
+        await TokenStorage.clearAuthData();
         return const Left(AuthFailure('Invalid token structure'));
       }
 
@@ -128,7 +125,7 @@ class AuthRepositoryImpl implements AuthRepository {
       
     } catch (e) {
       // Clear corrupted data and return failure
-      await TokenStorage.clearAll();
+      await TokenStorage.clearAuthData();
       return Left(CacheFailure('Authentication validation failed: ${e.toString()}'));
     }
   }
@@ -141,7 +138,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (userClaims == null || 
           userClaims['userId'] == null || 
           userClaims['email'] == null) {
-        await TokenStorage.clearAll();
+        await TokenStorage.clearAuthData();
         return const Left(AuthFailure('Invalid token claims'));
       }
 
@@ -161,34 +158,30 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return Right(authEntity);
     } catch (e) {
-      await TokenStorage.clearAll();
+      await TokenStorage.clearAuthData();
       return Left(CacheFailure('Failed to create auth entity: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, String>> refreshToken() async {
-    if (await networkInfo.isConnected) {
-      try {
-        final response = await remoteDataSource.refreshToken();
+    try {
+      final response = await remoteDataSource.refreshToken();
 
-        // Save new tokens using batch operation for consistency
-        final saveSuccess = await TokenStorage.saveBothTokens(
-          response.accessToken,
-          response.refreshToken,
-        );
-        if (!saveSuccess) {
-          return const Left(CacheFailure('Failed to save new tokens'));
-        }
-
-        return Right(response.accessToken);
-      } catch (e) {
-        // If refresh fails, clear all tokens
-        await TokenStorage.clearAll();
-        return Left(_handleException(e));
+      // Save new tokens using batch operation for consistency
+      final saveSuccess = await TokenStorage.saveBothTokens(
+        response.accessToken,
+        response.refreshToken,
+      );
+      if (!saveSuccess) {
+        return const Left(CacheFailure('Failed to save new tokens'));
       }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+
+      return Right(response.accessToken);
+    } catch (e) {
+      // If refresh fails, clear all tokens
+      await TokenStorage.clearAuthData();
+      return Left(_handleException(e));
     }
   }
 
@@ -202,25 +195,21 @@ class AuthRepositoryImpl implements AuthRepository {
     required String phoneNumber,
     required String gender,
   }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final request = RegisterRequestModel(
-          email: email,
-          password: password,
-          dateOfBirth: dateOfBirth,
-          name: name,
-          address: address,
-          phoneNumber: phoneNumber,
-          gender: gender,
-        );
+    try {
+      final request = RegisterRequestModel(
+        email: email,
+        password: password,
+        dateOfBirth: dateOfBirth,
+        name: name,
+        address: address,
+        phoneNumber: phoneNumber,
+        gender: gender,
+      );
 
-        final response = await remoteDataSource.register(request);
-        return Right(response.message);
-      } catch (e) {
-        return Left(_handleException(e));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+      final response = await remoteDataSource.register(request);
+      return Right(response.message);
+    } catch (e) {
+      return Left(_handleException(e));
     }
   }
 
@@ -229,16 +218,12 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String otpCode,
   }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final request = OtpRequestModel(email: email, otpCode: otpCode);
-        final response = await remoteDataSource.verifyRegisterOtp(request);
-        return Right(response.message);
-      } catch (e) {
-        return Left(_handleException(e));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+    try {
+      final request = OtpRequestModel(email: email, otpCode: otpCode);
+      final response = await remoteDataSource.verifyRegisterOtp(request);
+      return Right(response.message);
+    } catch (e) {
+      return Left(_handleException(e));
     }
   }
 
@@ -246,16 +231,12 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, String>> requestPasswordReset({
     required String email,
   }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final request = RequestPasswordResetRequestModel(email: email);
-        final response = await remoteDataSource.requestPasswordReset(request);
-        return Right(response.message);
-      } catch (e) {
-        return Left(_handleException(e));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+    try {
+      final request = RequestPasswordResetRequestModel(email: email);
+      final response = await remoteDataSource.requestPasswordReset(request);
+      return Right(response.message);
+    } catch (e) {
+      return Left(_handleException(e));
     }
   }
 
@@ -264,19 +245,15 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String otpCode,
   }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final request = VerifyResetPasswordOtpRequestModel(
-          email: email,
-          otpCode: otpCode,
-        );
-        final response = await remoteDataSource.verifyResetPasswordOtp(request);
-        return Right(response.toEntity(email));
-      } catch (e) {
-        return Left(_handleException(e));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+    try {
+      final request = VerifyResetPasswordOtpRequestModel(
+        email: email,
+        otpCode: otpCode,
+      );
+      final response = await remoteDataSource.verifyResetPasswordOtp(request);
+      return Right(response.toEntity(email));
+    } catch (e) {
+      return Left(_handleException(e));
     }
   }
 
@@ -285,19 +262,15 @@ class AuthRepositoryImpl implements AuthRepository {
     required String resetToken,
     required String newPassword,
   }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final request = ResetPasswordRequestModel(
-          resetToken: resetToken,
-          newPassword: newPassword,
-        );
-        final response = await remoteDataSource.resetPassword(request);
-        return Right(response.message);
-      } catch (e) {
-        return Left(_handleException(e));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+    try {
+      final request = ResetPasswordRequestModel(
+        resetToken: resetToken,
+        newPassword: newPassword,
+      );
+      final response = await remoteDataSource.resetPassword(request);
+      return Right(response.message);
+    } catch (e) {
+      return Left(_handleException(e));
     }
   }
 
@@ -305,15 +278,11 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, String>> resendRegisterOtp({
     required String email,
   }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final response = await remoteDataSource.resendRegisterOtp(email);
-        return Right(response.message);
-      } catch (e) {
-        return Left(_handleException(e));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+    try {
+      final response = await remoteDataSource.resendRegisterOtp(email);
+      return Right(response.message);
+    } catch (e) {
+      return Left(_handleException(e));
     }
   }
 
@@ -322,19 +291,15 @@ class AuthRepositoryImpl implements AuthRepository {
     required String oldPassword,
     required String newPassword,
   }) async {
-    if (await networkInfo.isConnected) {
-      try {
-        final request = ChangePasswordRequestModel(
-          oldPassword: oldPassword,
-          newPassword: newPassword,
-        );
-        final response = await remoteDataSource.changePassword(request);
-        return Right(response.toEntity());
-      } catch (e) {
-        return Left(_handleException(e));
-      }
-    } else {
-      return const Left(NetworkFailure('No internet connection'));
+    try {
+      final request = ChangePasswordRequestModel(
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      );
+      final response = await remoteDataSource.changePassword(request);
+      return Right(response.toEntity());
+    } catch (e) {
+      return Left(_handleException(e));
     }
   }
 }

@@ -161,6 +161,16 @@ class KickParticipantEvent extends ScheduleEvent {
   List<Object> get props => [scheduleId, participantId];
 }
 
+class LeaveScheduleEvent extends ScheduleEvent {
+  final String scheduleId;
+  final String userId;
+
+  const LeaveScheduleEvent({required this.scheduleId, required this.userId});
+
+  @override
+  List<Object> get props => [scheduleId, userId];
+}
+
 class GetScheduleByIdEvent extends ScheduleEvent {
   final String scheduleId;
 

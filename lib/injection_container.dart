@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'core/network/api_client.dart';
 import 'core/network/dio_factory.dart';
 import 'core/network/network_info.dart';
+import 'core/utils/token_storage.dart';
 
 // Authentication
 import 'features/authentication/data/datasources/auth_remote_datasource.dart';
@@ -50,6 +51,7 @@ import 'features/schedule/domain/usecases/get_schedule_participants_usecase.dart
 import 'features/schedule/domain/usecases/add_participant_by_email_usecase.dart';
 import 'features/schedule/presentation/bloc/schedule_bloc.dart';
 import 'features/schedule/domain/usecases/kick_participant_usecase.dart';
+import 'features/schedule/domain/usecases/leave_schedule_usecase.dart';
 import 'features/schedule/domain/usecases/change_participant_role_usecase.dart';
 import 'features/schedule/domain/usecases/reorder_activity_usecase.dart';
 
@@ -64,6 +66,8 @@ Future<void> init() async {
 
   // Core
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
+  // Warm token caches before creating Dio
+  await TokenStorage.init();
   sl.registerLazySingleton<Dio>(() => DioFactory.create());
   sl.registerLazySingleton<ApiClient>(() => ApiClientImpl(sl()));
  
@@ -90,7 +94,6 @@ void _initAuth() {
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       remoteDataSource: sl(),
-      networkInfo: sl(),
     ),
   );
 
@@ -141,7 +144,6 @@ void _initUser() {
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(
       remoteDataSource: sl(),
-      networkInfo: sl(),
     ),
   );
 
@@ -162,7 +164,6 @@ void _initSchedule() {
   sl.registerLazySingleton<ScheduleRepository>(
     () => ScheduleRepositoryImpl(
       remoteDataSource: sl(),
-      networkInfo: sl(),
     ),
   );
 
@@ -180,6 +181,7 @@ void _initSchedule() {
   sl.registerLazySingleton(() => GetScheduleParticipants(sl()));
   sl.registerLazySingleton(() => AddParticipantByEmail(sl()));
   sl.registerLazySingleton(() => KickParticipant(sl()));
+  sl.registerLazySingleton(() => LeaveSchedule(sl()));
   sl.registerLazySingleton(() => ChangeParticipantRole(sl()));
   sl.registerLazySingleton(() => ReorderActivity(sl()));
 
@@ -199,6 +201,7 @@ void _initSchedule() {
       getScheduleParticipants: sl(),
       addParticipantByEmail: sl(),
       kickParticipant: sl(),
+      leaveSchedule: sl(),
       changeParticipantRole: sl(),
       reorderActivity: sl(),
     ),

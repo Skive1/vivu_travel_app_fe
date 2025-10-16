@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/usecases/get_schedules_by_participant_usecase.dart';
 import '../../domain/usecases/get_activities_by_schedule_usecase.dart';
 import '../../domain/usecases/share_schedule_usecase.dart';
@@ -16,6 +17,7 @@ import '../../domain/usecases/get_schedule_participants_usecase.dart';
 import '../../domain/usecases/add_participant_by_email_usecase.dart';
 import '../../domain/usecases/get_schedule_by_id_usecase.dart';
 import '../../domain/usecases/kick_participant_usecase.dart';
+import '../../domain/usecases/leave_schedule_usecase.dart';
 import '../../domain/usecases/change_participant_role_usecase.dart';
 import '../../domain/usecases/reorder_activity_usecase.dart';
 
@@ -33,6 +35,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   final GetScheduleParticipants _getScheduleParticipants;
   final AddParticipantByEmail _addParticipantByEmail;
   final KickParticipant _kickParticipant;
+  final LeaveSchedule _leaveSchedule;
   final ChangeParticipantRole _changeParticipantRole;
   final ReorderActivity _reorderActivity;
 
@@ -42,10 +45,13 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   DateTime? _lastSchedulesFetch;
   final Map<String, DateTime> _lastActivitiesFetch = {};
   final Map<String, DateTime> _cachedActivitiesDates = {};
+  int _activitiesVersionCounter = 0;
   
   // Cache for individual schedule details to avoid repeated API calls
   final Map<String, ScheduleEntity> _cachedScheduleDetails = {};
   final Map<String, DateTime> _lastScheduleDetailFetch = {};
+  final Set<String> _scheduleDetailInFlight = {};
+  int _participantsVersionCounter = 0;
 
   // Cache duration (5 minutes)
   static const Duration _cacheValidDuration = Duration(minutes: 5);
@@ -64,6 +70,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     required GetScheduleParticipants getScheduleParticipants,
     required AddParticipantByEmail addParticipantByEmail,
     required KickParticipant kickParticipant,
+    required LeaveSchedule leaveSchedule,
     required ChangeParticipantRole changeParticipantRole,
     required ReorderActivity reorderActivity,
   }) : _getSchedulesByParticipant = getSchedulesByParticipant,
@@ -79,6 +86,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
        _getScheduleParticipants = getScheduleParticipants,
        _addParticipantByEmail = addParticipantByEmail,
        _kickParticipant = kickParticipant,
+       _leaveSchedule = leaveSchedule,
        _changeParticipantRole = changeParticipantRole,
        _reorderActivity = reorderActivity,
        super(ScheduleInitial()) {
@@ -98,6 +106,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     on<GetScheduleParticipantsEvent>(_onGetScheduleParticipants);
     on<AddParticipantByEmailEvent>(_onAddParticipantByEmail);
     on<KickParticipantEvent>(_onKickParticipant);
+    on<LeaveScheduleEvent>(_onLeaveSchedule);
     on<ChangeParticipantRoleEvent>(_onChangeParticipantRole);
     on<ReorderActivityEvent>(_onReorderActivity);
   }
@@ -105,35 +114,40 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   Future<void> _onGetScheduleById(
     GetScheduleByIdEvent event,
     Emitter<ScheduleState> emit,
-  ) async {
-    print('DEBUG[Bloc]: GetScheduleByIdEvent received for scheduleId: ${event.scheduleId}');
-    
+  ) async {    
+    // Drop duplicate in-flight requests for the same schedule
+    if (_scheduleDetailInFlight.contains(event.scheduleId)) {
+      return;
+    }
+
     // Check cache first to avoid unnecessary API calls
     final cacheKey = event.scheduleId;
     if (_cachedScheduleDetails.containsKey(cacheKey) && 
         _isCacheValid(_lastScheduleDetailFetch[cacheKey])) {
-      print('DEBUG[Bloc]: Using cached schedule detail for ${event.scheduleId}');
       emit(GetScheduleByIdSuccess(schedule: _cachedScheduleDetails[cacheKey]!));
       return;
     }
     
     emit(GetScheduleByIdLoading());
-    final result = await _getScheduleById(
-      GetScheduleByIdParams(scheduleId: event.scheduleId),
-    );
-    result.fold(
-      (failure) {
-        print('DEBUG[Bloc]: GetScheduleById failed: ${failure.message}');
-        emit(GetScheduleByIdError(message: failure.message));
-      },
-      (schedule) {
-        print('DEBUG[Bloc]: GetScheduleById success - participantRole: ${schedule.participantRole}');
-        // Cache the schedule detail
-        _cachedScheduleDetails[cacheKey] = schedule;
-        _lastScheduleDetailFetch[cacheKey] = DateTime.now();
-        emit(GetScheduleByIdSuccess(schedule: schedule));
-      },
-    );
+    _scheduleDetailInFlight.add(cacheKey);
+    try {
+      final result = await _getScheduleById(
+        GetScheduleByIdParams(scheduleId: event.scheduleId),
+      );
+      result.fold(
+        (failure) {
+          emit(GetScheduleByIdError(message: failure.message));
+        },
+        (schedule) {
+          // Cache the schedule detail
+          _cachedScheduleDetails[cacheKey] = schedule;
+          _lastScheduleDetailFetch[cacheKey] = DateTime.now();
+          emit(GetScheduleByIdSuccess(schedule: schedule));
+        },
+      );
+    } finally {
+      _scheduleDetailInFlight.remove(cacheKey);
+    }
   }
 
   Future<void> _onGetSchedulesByParticipant(
@@ -181,7 +195,8 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
             ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
         }
         emit(CreateActivitySuccess(activity: activity));
-        emit(ActivitiesLoaded(activities: _cachedActivities[cacheKey] ?? []));
+        _activitiesVersionCounter++;
+        emit(ActivitiesLoaded(activities: _cachedActivities[cacheKey] ?? [], version: _activitiesVersionCounter));
       },
     );
   }
@@ -211,12 +226,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
             ..sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
         }
         emit(UpdateActivitySuccess(activity: activity));
-        
-        // Trigger refresh to get fresh data from API
-        add(RefreshActivitiesEvent(
-          scheduleId: activity.scheduleId,
-          date: activityDate,
-        ));
+        // Avoid immediate refresh to prevent double-fetch
       },
     );
   }
@@ -242,12 +252,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
             activityId: event.activityId,
           ),
         );
-        
-        // Trigger refresh to get fresh data from API
-        add(RefreshActivitiesEvent(
-          scheduleId: event.scheduleId,
-          date: event.date,
-        ));
+        // Avoid immediate refresh; cache already updated
       },
     );
   }
@@ -256,6 +261,9 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     GetActivitiesByScheduleEvent event,
     Emitter<ScheduleState> emit,
   ) async {
+    final t0 = DateTime.now();
+    // ignore: avoid_print
+    debugPrint('[TIMING][Activities] start scheduleId=${event.scheduleId} date=${event.date.toIso8601String()}');
     // Create cache key that includes both scheduleId and date
     final cacheKey =
         '${event.scheduleId}_${event.date.toIso8601String().split('T')[0]}';
@@ -263,24 +271,35 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     // Check cache first with timestamp validation
     if (_cachedActivities.containsKey(cacheKey) &&
         _isCacheValid(_lastActivitiesFetch[cacheKey])) {
-      emit(ActivitiesLoaded(activities: _cachedActivities[cacheKey]!));
+      _activitiesVersionCounter++;
+      emit(ActivitiesLoaded(activities: _cachedActivities[cacheKey]!, version: _activitiesVersionCounter));
+      debugPrint('[TIMING][Activities] served from cache in ${DateTime.now().difference(t0).inMilliseconds}ms');
       return;
     }
 
     emit(ActivitiesLoading());
+    final t1 = DateTime.now();
+    debugPrint('[TIMING][Activities] emitted Loading in ${t1.difference(t0).inMilliseconds}ms');
     final result = await _getActivitiesBySchedule(
       GetActivitiesByScheduleParams(
         scheduleId: event.scheduleId,
         date: event.date,
       ),
     );
+    final t2 = DateTime.now();
+    debugPrint('[TIMING][Activities] usecase finished in ${t2.difference(t1).inMilliseconds}ms (total ${t2.difference(t0).inMilliseconds}ms)');
     result.fold((failure) => emit(ActivitiesError(message: failure.message)), (
       activities,
     ) {
       _cachedActivities[cacheKey] = activities;
       _lastActivitiesFetch[cacheKey] = DateTime.now();
       _cachedActivitiesDates[cacheKey] = event.date;
-      emit(ActivitiesLoaded(activities: activities));
+      _activitiesVersionCounter++;
+      final t3 = DateTime.now();
+      debugPrint('[TIMING][Activities] cache+prep in ${t3.difference(t2).inMilliseconds}ms (items=${activities.length})');
+      emit(ActivitiesLoaded(activities: activities, version: _activitiesVersionCounter));
+      final t4 = DateTime.now();
+      debugPrint('[TIMING][Activities] emitted Loaded in ${t4.difference(t3).inMilliseconds}ms (total ${t4.difference(t0).inMilliseconds}ms)');
     });
   }
 
@@ -400,22 +419,18 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     JoinScheduleEvent event,
     Emitter<ScheduleState> emit,
   ) async {
-    print('DEBUG: JoinSchedule event received');
     emit(JoinScheduleLoading());
     final result = await _joinSchedule(
       JoinScheduleParams(request: event.request),
     );
     result.fold(
       (failure) {
-        print('DEBUG: JoinSchedule failed: ${failure.message}');
         emit(JoinScheduleError(message: failure.message));
       },
       (response) {
-        print('DEBUG: JoinSchedule success: ${response.message}');
         emit(JoinScheduleSuccess(message: response.message));
         // Clear cache to refresh schedules list
         _clearAllCache();
-        print('DEBUG: Cache cleared after join success');
         // Trigger refresh schedules event if we have participant info
         // This will be handled by the UI listener
       },
@@ -426,23 +441,17 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     GetScheduleParticipantsEvent event,
     Emitter<ScheduleState> emit,
   ) async {
-    // DEBUG
-    // ignore: avoid_print
-    print('DEBUG[Bloc]: Fetching participants for scheduleId=' + event.scheduleId);
     emit(GetScheduleParticipantsLoading());
     final result = await _getScheduleParticipants(
       GetScheduleParticipantsParams(scheduleId: event.scheduleId),
     );
     result.fold(
       (failure) {
-        // ignore: avoid_print
-        print('DEBUG[Bloc]: Get participants error=' + failure.message);
         emit(GetScheduleParticipantsError(message: failure.message));
       },
       (participants) {
-        // ignore: avoid_print
-        print('DEBUG[Bloc]: Participants loaded count=' + participants.length.toString());
-        emit(GetScheduleParticipantsSuccess(participants: participants));
+        _participantsVersionCounter++;
+        emit(GetScheduleParticipantsSuccess(participants: participants, version: _participantsVersionCounter));
       },
     );
   }
@@ -472,50 +481,49 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     KickParticipantEvent event,
     Emitter<ScheduleState> emit,
   ) async {
-    print('DEBUG[Bloc]: Starting kick participant event');
-    print('DEBUG[Bloc]: scheduleId = ${event.scheduleId}');
-    print('DEBUG[Bloc]: participantId = ${event.participantId}');
-    
     emit(KickParticipantLoading());
-    print('DEBUG[Bloc]: Emitted KickParticipantLoading state');
     
     try {
       final result = await _kickParticipant(
         KickParticipantParams(scheduleId: event.scheduleId, participantId: event.participantId),
       );
       
-      print('DEBUG[Bloc]: Kick participant use case completed');
-      
       result.fold(
         (failure) {
-          print('DEBUG[Bloc]: Kick participant failed with error: ${failure.message}');
           emit(KickParticipantError(message: failure.message));
         },
         (kickResult) {
-          print('DEBUG[Bloc]: Kick participant successful');
-          print('DEBUG[Bloc]: participantCounts = ${kickResult.participantCounts}');
-          print('DEBUG[Bloc]: participants count = ${kickResult.scheduleParticipantResponses.length}');
-          
-          // Calculate active participants count from kick response
-          final activeParticipantsCount = kickResult.scheduleParticipantResponses
-              .where((participant) => participant.status == 'Active')
-              .length;
-          
-          print('DEBUG[Bloc]: Calculated active participants: $activeParticipantsCount');
-          
           emit(KickParticipantSuccess(result: kickResult));
-          print('DEBUG[Bloc]: Emitted KickParticipantSuccess state');
           
           // Update participants list with new data from API response
-          print('DEBUG[Bloc]: Dispatching GetScheduleParticipantsEvent to refresh UI');
           add(GetScheduleParticipantsEvent(scheduleId: event.scheduleId));
         },
       );
-    } catch (e, stackTrace) {
-      print('DEBUG[Bloc]: Unexpected error in _onKickParticipant');
-      print('DEBUG[Bloc]: Error: $e');
-      print('DEBUG[Bloc]: Stack trace: $stackTrace');
+    } catch (e) {
+
       emit(KickParticipantError(message: 'Unexpected error: $e'));
+    }
+  }
+
+  Future<void> _onLeaveSchedule(
+    LeaveScheduleEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(LeaveScheduleLoading());
+    try {
+      final result = await _leaveSchedule(
+        LeaveScheduleParams(scheduleId: event.scheduleId, userId: event.userId),
+      );
+      result.fold(
+        (failure) => emit(LeaveScheduleError(message: failure.message)),
+        (leaveResult) {
+          emit(LeaveScheduleSuccess(result: leaveResult));
+          // Refresh participants list
+          add(GetScheduleParticipantsEvent(scheduleId: event.scheduleId));
+        },
+      );
+    } catch (e) {
+      emit(LeaveScheduleError(message: 'Unexpected error: $e'));
     }
   }
 

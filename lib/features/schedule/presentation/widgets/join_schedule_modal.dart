@@ -362,7 +362,6 @@ class _JoinScheduleModalState extends State<JoinScheduleModal>
     if (barcodes.isNotEmpty && !_isProcessingQR) {
       final String? code = barcodes.first.rawValue;
       if (code != null && _isQRScanning) {
-        print('DEBUG: QR code detected: $code');
         // Đánh dấu đang xử lý để tránh multiple requests
         setState(() {
           _isProcessingQR = true;

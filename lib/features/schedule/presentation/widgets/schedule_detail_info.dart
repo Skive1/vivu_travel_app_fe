@@ -32,18 +32,18 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
   void initState() {
     super.initState();
     _currentSchedule = widget.schedule;
-    // Load participants when widget is created
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ScheduleBloc>().add(
-        GetScheduleParticipantsEvent(scheduleId: _currentSchedule.id),
-      );
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) async {
+        if (state is GetScheduleByIdSuccess) {
+          // Update local schedule to reflect latest participantRole for UI controls (e.g., Leave button)
+          setState(() {
+            _currentSchedule = state.schedule;
+          });
+        }
         if (state is KickParticipantLoading) {
           // Show loading dialog when kicking participant
           showDialog(
@@ -68,9 +68,6 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
         } else if (state is ChangeParticipantRoleLoading) {
           // Optional: keep subtle feedback or a loading dialog if desired
         } else if (state is KickParticipantError) {
-          print('DEBUG[UI]: Received KickParticipantError state');
-          print('DEBUG[UI]: Error message: ${state.message}');
-          
           // Close loading dialog first
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
@@ -82,7 +79,6 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
             message: state.message,
             useRootNavigator: true,
           );
-          print('DEBUG[UI]: Error dialog shown');
         } else if (state is ChangeParticipantRoleError) {
           await DialogUtils.showErrorDialog(
             context: context,
@@ -101,10 +97,6 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
             useRootNavigator: true,
           );
         } else if (state is KickParticipantSuccess) {
-          print('DEBUG[UI]: Received KickParticipantSuccess state');
-          print('DEBUG[UI]: participantCounts = ${state.result.participantCounts}');
-          print('DEBUG[UI]: participants count = ${state.result.scheduleParticipantResponses.length}');
-          
           // Close loading dialog first
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
@@ -119,17 +111,16 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
             message: 'Thành viên đã bị chặn khỏi lịch trình.',
             useRootNavigator: true,
           );
-          print('DEBUG[UI]: Success dialog shown');
         } else if (state is GetScheduleParticipantsSuccess) {
           // Participants loaded successfully - no need to manually calculate count
           // The participant count should come from the schedule detail API
-          print('DEBUG[UI]: GetScheduleParticipantsSuccess - Participants loaded: ${state.participants.length}');
         }
         
         // Store participant role from schedule if available
         if (_currentSchedule.participantRole != null && _currentSchedule.participantRole!.isNotEmpty) {
           try {
-            await UserStorage.setScheduleRole(
+            // ignore: unawaited_futures
+            UserStorage.setScheduleRole(
               scheduleId: _currentSchedule.id, 
               role: _currentSchedule.participantRole!.toLowerCase(),
             );
@@ -199,6 +190,7 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
                   ),
                 ),
               ),
+              // leave button moved to a dedicated action section below
             ],
           ),
           const SizedBox(height: 20),
@@ -237,6 +229,7 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
                   content: _currentSchedule.notes,
                 ),
               ],
+          const SizedBox(height: 16),
             ],
           ),
         );
@@ -244,6 +237,8 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
     ),
   );
   }
+
+  // Leave actions moved to parent screen; no leave controls here
 
   Widget _buildParticipantsRow(
     List<ParticipantEntity> participants,
@@ -458,9 +453,11 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
   }
 
   Widget _buildParticipantItem(ParticipantEntity p, String? currentUserId, String scheduleId) {
-    final isOwner = currentUserId != null && p.userId == currentUserId;
+    final isSameAsCurrentUser = currentUserId != null && p.userId == currentUserId;
     final isBanned = p.status.toLowerCase() == 'banned';
-    final canManage = !isOwner && !isBanned; // Owner can manage others but not themselves, and not banned users
+    final isCurrentUserOwner = (_currentSchedule.participantRole ?? '').toLowerCase() == 'owner';
+    // Only the schedule Owner can manage others (not themselves) and not banned users
+    final canManage = isCurrentUserOwner && !isSameAsCurrentUser && !isBanned;
     
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -537,7 +534,7 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
                     children: [
                       Icon(Icons.block, color: AppColors.error, size: 16),
                       SizedBox(width: 8),
-                      Text('Chặn thành viên'),
+                      Text('C    thành viên'),
                     ],
                   ),
                 ),
@@ -561,14 +558,8 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
   }
 
   void _showKickConfirmation(ParticipantEntity participant, String scheduleId) {
-    print('DEBUG[UI]: Showing kick confirmation dialog');
-    print('DEBUG[UI]: participant.name = ${participant.name}');
-    print('DEBUG[UI]: participant.userId = ${participant.userId}');
-    print('DEBUG[UI]: scheduleId = $scheduleId');
-    
     // Capture ScheduleBloc before showing dialog
     final scheduleBloc = context.read<ScheduleBloc>();
-    print('DEBUG[UI]: ScheduleBloc captured successfully');
     
     showDialog(
       context: context,
@@ -578,24 +569,17 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
         actions: [
           TextButton(
             onPressed: () {
-              print('DEBUG[UI]: User cancelled kick action');
               Navigator.pop(context);
             },
             child: const Text('Hủy'),
           ),
           ElevatedButton(
             onPressed: () {
-              print('DEBUG[UI]: User confirmed kick action');
-              print('DEBUG[UI]: Dispatching KickParticipantEvent');
-              print('DEBUG[UI]: scheduleId = $scheduleId');
-              print('DEBUG[UI]: participantId = ${participant.userId}');
-              
               Navigator.pop(context);
               scheduleBloc.add(KickParticipantEvent(
                 scheduleId: scheduleId,
                 participantId: participant.userId,
-              ));
-              print('DEBUG[UI]: KickParticipantEvent dispatched successfully');
+              ));   
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Chặn', style: TextStyle(color: Colors.white)),

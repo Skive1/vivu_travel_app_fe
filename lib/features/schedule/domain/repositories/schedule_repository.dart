@@ -36,6 +36,7 @@ abstract class ScheduleRepository {
   Future<Either<Failure, List<ParticipantEntity>>> getScheduleParticipants(String scheduleId);
   Future<Either<Failure, AddParticipantByEmailResponse>> addParticipantByEmail(String scheduleId, AddParticipantByEmailRequest request);
   Future<Either<Failure, KickParticipantResult>> kickParticipant(String scheduleId, String participantId);
+  Future<Either<Failure, KickParticipantResult>> leaveSchedule(String scheduleId, String userId);
   Future<Either<Failure, Unit>> changeParticipantRole(String scheduleId, String participantId);
   Future<Either<Failure, Unit>> reorderActivity({required int newIndex, required int activityId});
 }

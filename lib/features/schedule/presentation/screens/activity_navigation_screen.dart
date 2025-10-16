@@ -46,7 +46,14 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
 
   Future<void> _initFlow() async {
     try {
-      await _ensureLocationPermission();
+      final hasLocation = await _ensureLocationPermission();
+      if (!hasLocation) {
+        if (mounted) {
+          // If user denied permission or location services are off, exit this screen
+          Navigator.of(context).maybePop();
+        }
+        return;
+      }
       final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
       _userPoint = mb.Point(coordinates: mb.Position(pos.longitude, pos.latitude));
 
@@ -119,14 +126,15 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
     return data!.buffer.asUint8List();
   }
 
-  Future<void> _ensureLocationPermission() async {
+  Future<bool> _ensureLocationPermission() async {
     LocationPermission perm = await Geolocator.checkPermission();
     if (perm == LocationPermission.denied) perm = await Geolocator.requestPermission();
     if (perm == LocationPermission.deniedForever || perm == LocationPermission.denied) {
-      throw 'Ứng dụng cần quyền truy cập vị trí để chỉ đường.';
+      return false;
     }
     final enabled = await Geolocator.isLocationServiceEnabled();
-    if (!enabled) throw 'Vui lòng bật dịch vụ vị trí trên thiết bị.';
+    if (!enabled) return false;
+    return true;
   }
 
   Future<mb.Point> _geocodeAddress(String query) async {

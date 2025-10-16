@@ -27,6 +27,7 @@ class Endpoints {
   static String getScheduleParticipants(String scheduleId) => '/api/schedule/participants/$scheduleId';
   static String addParticipantByEmail(String scheduleId) => '/api/schedule/$scheduleId/add-participants-by-email';
   static String kickParticipant(String scheduleId, String participantId) => '/api/schedule/$scheduleId/kick/$participantId';
+  static String leaveParticipant(String scheduleId, String userId) => '/api/schedule/$scheduleId/leave/$userId';
   static String changeParticipantRole(String scheduleId, String participantId) => '/api/schedule/$scheduleId/change-role/$participantId';
   static String reorderActivity(int newIndex, int activityId) => '/api/schedule/activities/$newIndex/$activityId';
 }

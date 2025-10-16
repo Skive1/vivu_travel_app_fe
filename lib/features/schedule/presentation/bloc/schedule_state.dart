@@ -37,11 +37,12 @@ class ActivitiesLoading extends ScheduleState {}
 
 class ActivitiesLoaded extends ScheduleState {
   final List<ActivityEntity> activities;
+  final int version;
 
-  const ActivitiesLoaded({required this.activities});
+  const ActivitiesLoaded({required this.activities, required this.version});
 
   @override
-  List<Object> get props => [activities];
+  List<Object> get props => [version, activities.length];
 }
 
 class ActivitiesError extends ScheduleState {
@@ -200,11 +201,12 @@ class GetScheduleParticipantsLoading extends ScheduleState {}
 
 class GetScheduleParticipantsSuccess extends ScheduleState {
   final List<ParticipantEntity> participants;
+  final int version;
 
-  const GetScheduleParticipantsSuccess({required this.participants});
+  const GetScheduleParticipantsSuccess({required this.participants, required this.version});
 
   @override
-  List<Object> get props => [participants];
+  List<Object> get props => [version, participants.length];
 }
 
 class GetScheduleParticipantsError extends ScheduleState {
@@ -249,6 +251,24 @@ class KickParticipantSuccess extends ScheduleState {
 class KickParticipantError extends ScheduleState {
   final String message;
   const KickParticipantError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class LeaveScheduleLoading extends ScheduleState {}
+
+class LeaveScheduleSuccess extends ScheduleState {
+  final KickParticipantResult result;
+  const LeaveScheduleSuccess({required this.result});
+
+  @override
+  List<Object> get props => [result];
+}
+
+class LeaveScheduleError extends ScheduleState {
+  final String message;
+  const LeaveScheduleError({required this.message});
 
   @override
   List<Object> get props => [message];
