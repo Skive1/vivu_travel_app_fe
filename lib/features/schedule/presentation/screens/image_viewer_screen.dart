@@ -332,58 +332,192 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Media type and date
-                    Row(
-                      children: [
-                        Container(
-                          padding: context.responsivePadding(
-                            horizontal: context.responsive(
-                              verySmall: 6,
-                              small: 8,
-                              large: 12,
+                    // Participant info
+                    if (widget.mediaList[_currentIndex].participantName != null && 
+                        widget.mediaList[_currentIndex].participantName!.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          // Avatar
+                          if (widget.mediaList[_currentIndex].participantAvatar != null && 
+                              widget.mediaList[_currentIndex].participantAvatar!.isNotEmpty)
+                            Container(
+                              width: context.responsive(
+                                verySmall: 24,
+                                small: 28,
+                                large: 32,
+                              ),
+                              height: context.responsive(
+                                verySmall: 24,
+                                small: 28,
+                                large: 32,
+                              ),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: ClipOval(
+                                child: Image.network(
+                                  widget.mediaList[_currentIndex].participantAvatar!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    color: Colors.grey[800],
+                                    child: Icon(
+                                      Icons.person,
+                                      size: context.responsive(
+                                        verySmall: 12,
+                                        small: 14,
+                                        large: 16,
+                                      ),
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                            vertical: context.responsive(
-                              verySmall: 3,
-                              small: 4,
-                              large: 6,
-                            ),
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getTypeColor(widget.mediaList[_currentIndex].uploadMethod),
-                            borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                          if (widget.mediaList[_currentIndex].participantAvatar != null && 
+                              widget.mediaList[_currentIndex].participantAvatar!.isNotEmpty)
+                            SizedBox(width: context.responsive(
                               verySmall: 8,
-                              small: 12,
-                              large: 16,
+                              small: 10,
+                              large: 12,
                             )),
+                          // Name
+                          Expanded(
+                            child: Text(
+                              widget.mediaList[_currentIndex].participantName!,
+                              style: TextStyle(
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 12,
+                                  small: 14,
+                                  large: 16,
+                                ),
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          child: Text(
-                            widget.mediaList[_currentIndex].uploadMethodText,
+                          const Spacer(),
+                          // Upload date
+                          Text(
+                            DateFormat('dd/MM/yyyy HH:mm').format(
+                              DateTime.parse(widget.mediaList[_currentIndex].uploadedAt),
+                            ),
                             style: TextStyle(
                               fontSize: context.responsiveFontSize(
                                 verySmall: 8,
                                 small: 10,
                                 large: 12,
                               ),
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: Colors.white70,
                             ),
                           ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          DateFormat('dd/MM/yyyy HH:mm').format(
-                            DateTime.parse(widget.mediaList[_currentIndex].uploadedAt),
-                          ),
-                          style: TextStyle(
-                            fontSize: context.responsiveFontSize(
-                              verySmall: 8,
-                              small: 10,
-                              large: 12,
+                        ],
+                      ),
+                      SizedBox(height: context.responsiveSpacing(
+                        verySmall: 8,
+                        small: 10,
+                        large: 12,
+                      )),
+                    ] else ...[
+                      // Fallback: Media type and date only
+                      Row(
+                        children: [
+                          Container(
+                            padding: context.responsivePadding(
+                              horizontal: context.responsive(
+                                verySmall: 6,
+                                small: 8,
+                                large: 12,
+                              ),
+                              vertical: context.responsive(
+                                verySmall: 3,
+                                small: 4,
+                                large: 6,
+                              ),
                             ),
-                            color: Colors.white70,
+                            decoration: BoxDecoration(
+                              color: _getTypeColor(widget.mediaList[_currentIndex].uploadMethod),
+                              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                                verySmall: 8,
+                                small: 12,
+                                large: 16,
+                              )),
+                            ),
+                            child: Text(
+                              widget.mediaList[_currentIndex].uploadMethodText,
+                              style: TextStyle(
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 8,
+                                  small: 10,
+                                  large: 12,
+                                ),
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
+                          const Spacer(),
+                          Text(
+                            DateFormat('dd/MM/yyyy HH:mm').format(
+                              DateTime.parse(widget.mediaList[_currentIndex].uploadedAt),
+                            ),
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 8,
+                                small: 10,
+                                large: 12,
+                              ),
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: context.responsiveSpacing(
+                        verySmall: 8,
+                        small: 10,
+                        large: 12,
+                      )),
+                    ],
+
+                    // Media type badge
+                    Container(
+                      padding: context.responsivePadding(
+                        horizontal: context.responsive(
+                          verySmall: 6,
+                          small: 8,
+                          large: 12,
                         ),
-                      ],
+                        vertical: context.responsive(
+                          verySmall: 3,
+                          small: 4,
+                          large: 6,
+                        ),
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getTypeColor(widget.mediaList[_currentIndex].uploadMethod),
+                        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                          verySmall: 8,
+                          small: 12,
+                          large: 16,
+                        )),
+                      ),
+                      child: Text(
+                        widget.mediaList[_currentIndex].uploadMethodText,
+                        style: TextStyle(
+                          fontSize: context.responsiveFontSize(
+                            verySmall: 8,
+                            small: 10,
+                            large: 12,
+                          ),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                     
                     // Description

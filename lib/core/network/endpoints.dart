@@ -46,4 +46,12 @@ class Endpoints {
   // Media endpoints
   static String getMediaByActivityId(int activityId) => '/api/schedule/media/get-by-activityId?activityId=$activityId';
   static const String uploadMedia = '/api/schedule/media/upload';
+  
+  // Advertisement endpoints
+  static const String getAllPackages = '/api/advertisement/package/get-all';
+  static const String getAllPosts = '/api/advertisement/post/all';
+  static String getPostById(String postId) => '/api/advertisement/partner/post/get-by-id/$postId';
+  static const String createPost = '/api/advertisement/partner/post/create';
+  static const String createPayment = '/api/payment/create';
+  static const String getPaymentStatus = '/api/payment/transaction/status/by-id';
 }

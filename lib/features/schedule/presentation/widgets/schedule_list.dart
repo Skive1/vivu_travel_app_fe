@@ -564,6 +564,7 @@ class _ScheduleListState extends State<ScheduleList> {
       orderIndex: newOrderIndex,
       isDeleted: a.isDeleted,
       scheduleId: a.scheduleId,
+      attendanceStatus: a.attendanceStatus
     );
   }
 

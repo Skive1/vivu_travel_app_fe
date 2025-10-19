@@ -15,12 +15,14 @@ import '../../data/models/checkout_request.dart';
 class CheckInModal extends StatefulWidget {
   final int activityId;
   final bool isCheckIn; // true for check-in, false for check-out
+  final String attendanceStatus; // Current attendance status
   final VoidCallback? onSuccess;
 
   const CheckInModal({
     Key? key,
     required this.activityId,
     required this.isCheckIn,
+    required this.attendanceStatus,
     this.onSuccess,
   }) : super(key: key);
 
@@ -38,6 +40,77 @@ class _CheckInModalState extends State<CheckInModal> {
   void dispose() {
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  // Helper methods for status display
+  Color _getStatusColor() {
+    if (widget.isCheckIn) {
+      if (widget.attendanceStatus == 'CheckIn') {
+        return AppColors.success; // Already checked in
+      }
+      return AppColors.success; // Can check in
+    } else {
+      if (widget.attendanceStatus == 'CheckOut') {
+        return AppColors.primary; // Already checked out
+      }
+      return AppColors.primary; // Can check out
+    }
+  }
+
+  IconData _getStatusIcon() {
+    if (widget.isCheckIn) {
+      if (widget.attendanceStatus == 'CheckIn') {
+        return Icons.check_circle; // Already completed
+      }
+      return Icons.login; // Can check in
+    } else {
+      if (widget.attendanceStatus == 'CheckOut') {
+        return Icons.check_circle; // Already completed
+      }
+      return Icons.logout; // Can check out
+    }
+  }
+
+  String _getStatusTitle() {
+    if (widget.isCheckIn) {
+      if (widget.attendanceStatus == 'CheckIn') {
+        return 'Đã Check-in';
+      }
+      return 'Check-in';
+    } else {
+      if (widget.attendanceStatus == 'CheckOut') {
+        return 'Đã Check-out';
+      }
+      return 'Check-out';
+    }
+  }
+
+  String _getStatusSubtitle() {
+    if (widget.isCheckIn) {
+      if (widget.attendanceStatus == 'CheckIn') {
+        return 'Bạn đã tham gia hoạt động này';
+      }
+      return 'Xác nhận tham gia hoạt động';
+    } else {
+      if (widget.attendanceStatus == 'CheckOut') {
+        return 'Bạn đã hoàn thành hoạt động này';
+      }
+      return 'Xác nhận hoàn thành hoạt động';
+    }
+  }
+
+  bool _isAlreadyCompleted() {
+    if (widget.isCheckIn && widget.attendanceStatus == 'CheckIn') {
+      return true;
+    }
+    if (!widget.isCheckIn && widget.attendanceStatus == 'CheckOut') {
+      return true;
+    }
+    return false;
+  }
+
+  bool _isFullyCompleted() {
+    return widget.attendanceStatus == 'CheckOut';
   }
 
   Future<void> _showImageSourceDialog() async {
@@ -179,6 +252,27 @@ class _CheckInModalState extends State<CheckInModal> {
   }
 
   void _submitCheckIn() {
+    // Check if already completed
+    if (widget.isCheckIn && widget.attendanceStatus == 'CheckIn') {
+      DialogUtils.showErrorDialog(
+        context: context,
+        title: 'Đã Check-in',
+        message: 'Bạn đã check-in vào hoạt động này rồi.\n\n💡 Mỗi hoạt động chỉ có thể check-in một lần.',
+        buttonText: 'Đóng',
+      );
+      return;
+    }
+    
+    if (!widget.isCheckIn && widget.attendanceStatus == 'CheckOut') {
+      DialogUtils.showErrorDialog(
+        context: context,
+        title: 'Đã Check-out',
+        message: 'Bạn đã check-out khỏi hoạt động này rồi.\n\n💡 Mỗi hoạt động chỉ có thể check-out một lần.',
+        buttonText: 'Đóng',
+      );
+      return;
+    }
+
     if (_selectedImage == null) {
       DialogUtils.showErrorDialog(
         context: context,
@@ -273,14 +367,12 @@ class _CheckInModalState extends State<CheckInModal> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: widget.isCheckIn 
-                              ? AppColors.success.withValues(alpha: 0.1)
-                              : AppColors.primary.withValues(alpha: 0.1),
+                          color: _getStatusColor().withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          widget.isCheckIn ? Icons.login : Icons.logout,
-                          color: widget.isCheckIn ? AppColors.success : AppColors.primary,
+                          _getStatusIcon(),
+                          color: _getStatusColor(),
                           size: 24,
                         ),
                       ),
@@ -290,7 +382,7 @@ class _CheckInModalState extends State<CheckInModal> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.isCheckIn ? 'Check-in' : 'Check-out',
+                              _getStatusTitle(),
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -299,9 +391,7 @@ class _CheckInModalState extends State<CheckInModal> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              widget.isCheckIn 
-                                  ? 'Xác nhận tham gia hoạt động'
-                                  : 'Xác nhận hoàn thành hoạt động',
+                              _getStatusSubtitle(),
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: AppColors.textSecondary,
@@ -321,154 +411,315 @@ class _CheckInModalState extends State<CheckInModal> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Image picker
-                  GestureDetector(
-                    onTap: _showImageSourceDialog,
-                    child: Container(
+                  // Show completion status or form
+                  if (_isAlreadyCompleted()) ...[
+                    // Already completed status
+                    Container(
                       width: double.infinity,
-                      height: 200,
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: _getStatusColor().withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _selectedImage != null 
-                              ? AppColors.primary 
-                              : AppColors.border,
-                          width: 2,
+                          color: _getStatusColor().withValues(alpha: 0.3),
+                          width: 1,
                         ),
                       ),
-                      child: _selectedImage != null
-                          ? Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Image.file(
-                                    _selectedImage!,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: double.infinity,
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            size: 48,
+                            color: _getStatusColor(),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _getStatusTitle(),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: _getStatusColor(),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _getStatusSubtitle(),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ] else if (_isFullyCompleted()) ...[
+                    // Fully completed - both CheckIn and CheckOut
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 40,
+                                color: AppColors.success,
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.check_circle,
+                                size: 40,
+                                color: AppColors.primary,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Hoàn thành hoạt động',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Bạn đã tham gia và hoàn thành hoạt động này',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Text(
+                                  'Đã Check-in',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.success,
                                   ),
                                 ),
-                                Positioned(
-                                  top: 8,
-                                  right: 8,
-                                  child: GestureDetector(
-                                    onTap: _showImageSourceDialog,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.6),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: const Icon(
-                                        Icons.edit,
-                                        color: Colors.white,
-                                        size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Text(
+                                  'Đã Check-out',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ] else ...[
+                    // Image picker
+                    GestureDetector(
+                      onTap: _showImageSourceDialog,
+                      child: Container(
+                        width: double.infinity,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _selectedImage != null 
+                                ? AppColors.primary 
+                                : AppColors.border,
+                            width: 2,
+                          ),
+                        ),
+                        child: _selectedImage != null
+                            ? Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.file(
+                                      _selectedImage!,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: GestureDetector(
+                                      onTap: _showImageSourceDialog,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: const Icon(
+                                          Icons.edit,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            )
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.add_a_photo,
-                                  size: 48,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Chạm để chọn ảnh',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                                ],
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_a_photo,
+                                    size: 48,
                                     color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w500,
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Chụp ảnh hoặc chọn từ thư viện',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary.withValues(alpha: 0.7),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Chạm để chọn ảnh',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Chụp ảnh hoặc chọn từ thư viện',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  // Description field
-                  TextField(
-                    controller: _descriptionController,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      labelText: 'Mô tả (tùy chọn)',
-                      hintText: widget.isCheckIn 
-                          ? 'Chia sẻ cảm xúc của bạn...'
-                          : 'Cảm nhận về hoạt động...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                    // Description field
+                    TextField(
+                      controller: _descriptionController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: 'Mô tả (tùy chọn)',
+                        hintText: widget.isCheckIn 
+                            ? 'Chia sẻ cảm xúc của bạn...'
+                            : 'Cảm nhận về hoạt động...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                  ],
 
                   // Action buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            side: const BorderSide(color: AppColors.border),
+                  if (_isAlreadyCompleted() || _isFullyCompleted()) ...[
+                    // Only close button when already completed
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isFullyCompleted() ? AppColors.primary : _getStatusColor(),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text(
-                            'Hủy',
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          _isFullyCompleted() ? 'Hoàn thành' : 'Đóng',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _selectedImage != null ? _submitCheckIn : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: widget.isCheckIn 
-                                ? AppColors.success 
-                                : AppColors.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                    ),
+                  ] else ...[
+                    // Normal action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              side: const BorderSide(color: AppColors.border),
                             ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            widget.isCheckIn ? 'Check-in' : 'Check-out',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                            child: const Text(
+                              'Hủy',
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _selectedImage != null ? _submitCheckIn : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: widget.isCheckIn 
+                                  ? AppColors.success 
+                                  : AppColors.primary,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              widget.isCheckIn ? 'Check-in' : 'Check-out',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

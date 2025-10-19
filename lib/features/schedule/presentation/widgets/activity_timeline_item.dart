@@ -242,6 +242,18 @@ class ActivityTimelineItem extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text('~ ${_calculateDuration()}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                             const Spacer(),
+                            // Attendance status badges
+                            if (activity.attendanceStatus == 'CheckOut') ...[
+                              // Show both CheckIn and CheckOut when completed
+                              _AttendanceStatusChip(status: 'CheckIn'),
+                              const SizedBox(width: 6),
+                              _AttendanceStatusChip(status: 'CheckOut'),
+                              const SizedBox(width: 8),
+                            ] else if (activity.attendanceStatus.isNotEmpty) ...[
+                              // Show single status for CheckIn only
+                              _AttendanceStatusChip(status: activity.attendanceStatus),
+                              const SizedBox(width: 8),
+                            ],
                             _TagChip(text: '#${activity.orderIndex}'),
                           ],
                         ),
@@ -487,6 +499,7 @@ class ActivityTimelineItem extends StatelessWidget {
         child: CheckInModal(
           activityId: activity.id,
           isCheckIn: isCheckIn,
+          attendanceStatus: activity.attendanceStatus,
           onSuccess: () {
             bloc.add(
               RefreshActivitiesEvent(
@@ -595,6 +608,63 @@ class _TagChip extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Text(text, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
+class _AttendanceStatusChip extends StatelessWidget {
+  final String status;
+  const _AttendanceStatusChip({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    Color backgroundColor;
+    Color textColor;
+    String displayText;
+    IconData icon;
+
+    switch (status) {
+      case 'CheckIn':
+        backgroundColor = AppColors.success.withValues(alpha: 0.1);
+        textColor = AppColors.success;
+        displayText = 'Đã Check-in';
+        icon = Icons.login;
+        break;
+      case 'CheckOut':
+        backgroundColor = AppColors.primary.withValues(alpha: 0.1);
+        textColor = AppColors.primary;
+        displayText = 'Đã Check-out';
+        icon = Icons.logout;
+        break;
+      default:
+        backgroundColor = AppColors.background;
+        textColor = AppColors.textSecondary;
+        displayText = 'Chưa tham gia';
+        icon = Icons.access_time;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: textColor.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: textColor),
+          const SizedBox(width: 4),
+          Text(
+            displayText,
+            style: TextStyle(
+              fontSize: 10,
+              color: textColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

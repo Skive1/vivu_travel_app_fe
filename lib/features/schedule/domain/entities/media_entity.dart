@@ -8,6 +8,8 @@ class MediaEntity {
   final int uploadMethod;
   final String? scheduleId;
   final int activityId;
+  final String? participantName;
+  final String? participantAvatar;
 
   const MediaEntity({
     required this.id,
@@ -19,6 +21,8 @@ class MediaEntity {
     required this.uploadMethod,
     this.scheduleId,
     required this.activityId,
+    this.participantName,
+    this.participantAvatar,
   });
 
   bool get isCheckIn => uploadMethod == 0;

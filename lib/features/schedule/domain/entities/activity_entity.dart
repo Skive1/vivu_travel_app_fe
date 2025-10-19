@@ -10,6 +10,7 @@ class ActivityEntity extends Equatable {
   final int orderIndex;
   final bool isDeleted;
   final String scheduleId;
+  final String attendanceStatus; // "" = chưa check in/out, "CheckIn" = đã check in, "CheckOut" = đã check out
 
   const ActivityEntity({
     required this.id,
@@ -21,6 +22,7 @@ class ActivityEntity extends Equatable {
     required this.orderIndex,
     required this.isDeleted,
     required this.scheduleId,
+    required this.attendanceStatus,
   });
 
   @override
@@ -34,5 +36,6 @@ class ActivityEntity extends Equatable {
         orderIndex,
         isDeleted,
         scheduleId,
+        attendanceStatus,
       ];
 }

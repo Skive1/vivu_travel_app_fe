@@ -8,6 +8,8 @@ class MediaModel {
   final int uploadMethod;
   final String? scheduleId;
   final int activityId;
+  final String? participantName;
+  final String? participantAvatar;
 
   const MediaModel({
     required this.id,
@@ -19,6 +21,8 @@ class MediaModel {
     required this.uploadMethod,
     this.scheduleId,
     required this.activityId,
+    this.participantName,
+    this.participantAvatar,
   });
 
   factory MediaModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +36,8 @@ class MediaModel {
       uploadMethod: json['uploadMethod'] as int,
       scheduleId: json['scheduleId'] as String?,
       activityId: json['activityId'] as int,
+      participantName: json['participantName'] as String?,
+      participantAvatar: json['participantAvatar'] as String?,
     );
   }
 
@@ -46,6 +52,8 @@ class MediaModel {
       'uploadMethod': uploadMethod,
       'scheduleId': scheduleId,
       'activityId': activityId,
+      'participantName': participantName,
+      'participantAvatar': participantAvatar,
     };
   }
 

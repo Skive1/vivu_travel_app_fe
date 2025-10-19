@@ -65,6 +65,18 @@ import 'features/schedule/domain/usecases/checkout_activity_usecase.dart';
 import 'features/schedule/domain/usecases/get_media_by_activity_usecase.dart';
 import 'features/schedule/domain/usecases/upload_media_usecase.dart';
 
+// Advertisement feature
+import 'features/advertisement/data/datasources/advertisement_remote_datasource.dart';
+import 'features/advertisement/data/repositories/advertisement_repositories_impl.dart';
+import 'features/advertisement/domain/repositories/advertisement_repositories.dart';
+import 'features/advertisement/domain/usecases/get_all_packages.dart';
+import 'features/advertisement/domain/usecases/get_all_posts.dart';
+import 'features/advertisement/domain/usecases/get_post_by_id.dart';
+import 'features/advertisement/domain/usecases/create_post.dart';
+import 'features/advertisement/domain/usecases/create_payment.dart';
+import 'features/advertisement/domain/usecases/get_payment_status.dart';
+import 'features/advertisement/presentation/bloc/advertisement_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -92,6 +104,9 @@ Future<void> init() async {
 
   // Features - Schedule
   _initSchedule();
+
+  // Features - Advertisement
+  _initAdvertisement();
 }
 
 void _initAuth() {
@@ -234,6 +249,40 @@ void _initSchedule() {
       checkOutActivity: sl(),
       getMediaByActivity: sl(),
       uploadMedia: sl(),
+    ),
+  );
+}
+
+void _initAdvertisement() {
+  // Data sources
+  sl.registerLazySingleton<AdvertisementRemoteDataSource>(
+    () => AdvertisementRemoteDataSourceImpl(apiClient: sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<AdvertisementRepository>(
+    () => AdvertisementRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetAllPackages(sl()));
+  sl.registerLazySingleton(() => GetAllPosts(sl()));
+  sl.registerLazySingleton(() => GetPostById(sl()));
+  sl.registerLazySingleton(() => CreatePost(sl()));
+  sl.registerLazySingleton(() => CreatePayment(sl()));
+  sl.registerLazySingleton(() => GetPaymentStatus(sl()));
+
+  // Bloc
+  sl.registerLazySingleton(
+    () => AdvertisementBloc(
+      getAllPackages: sl(),
+      getAllPosts: sl(),
+      getPostById: sl(),
+      createPost: sl(),
+      createPayment: sl(),
+      getPaymentStatus: sl(),
     ),
   );
 }

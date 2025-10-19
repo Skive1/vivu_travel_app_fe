@@ -417,6 +417,8 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
         uploadMethod: model.uploadMethod,
         scheduleId: model.scheduleId,
         activityId: model.activityId,
+        participantName: model.participantName,
+        participantAvatar: model.participantAvatar,
       )).toList();
       return Right(entities);
     } catch (e) {
@@ -438,6 +440,8 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
         uploadMethod: model.uploadMethod,
         scheduleId: model.scheduleId,
         activityId: model.activityId,
+        participantName: model.participantName,
+        participantAvatar: model.participantAvatar,
       );
       return Right(entity);
     } catch (e) {

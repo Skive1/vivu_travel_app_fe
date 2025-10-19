@@ -11,6 +11,7 @@ class ActivityModel extends ActivityEntity {
     required super.orderIndex,
     required super.isDeleted,
     required super.scheduleId,
+    required super.attendanceStatus,
   });
 
   factory ActivityModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +25,7 @@ class ActivityModel extends ActivityEntity {
       orderIndex: json['orderIndex'] as int,
       isDeleted: json['isDeleted'] as bool,
       scheduleId: json['scheduleId'] as String,
+      attendanceStatus: json['attendanceStatus'] as String? ?? '',
     );
   }
 
@@ -38,6 +40,7 @@ class ActivityModel extends ActivityEntity {
       'orderIndex': orderIndex,
       'isDeleted': isDeleted,
       'scheduleId': scheduleId,
+      'attendanceStatus': attendanceStatus,
     };
   }
 }

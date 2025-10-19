@@ -16,6 +16,14 @@ Future<T> computeParseObject<T>(
   return compute(_parseObjectEntry, _ParseObjectArgs<T>(json, fromJson));
 }
 
+// Generic helper to offload heavy model to entity mapping to a background isolate
+Future<List<T>> computeMapModels<T, M>(
+  List<M> models,
+  T Function(dynamic) mapper,
+) {
+  return compute(_mapModelsEntry, _MapModelsArgs<T, M>(models, mapper));
+}
+
 // Payload + entry for list mapping
 class _MapListArgs<T> {
   final List<dynamic> source;
@@ -39,6 +47,17 @@ class _ParseObjectArgs<T> {
 
 T _parseObjectEntry<T>(_ParseObjectArgs<T> args) {
   return args.fromJson(args.json);
+}
+
+// Payload + entry for model mapping
+class _MapModelsArgs<T, M> {
+  final List<M> models;
+  final T Function(dynamic) mapper;
+  const _MapModelsArgs(this.models, this.mapper);
+}
+
+List<T> _mapModelsEntry<T, M>(_MapModelsArgs<T, M> args) {
+  return args.models.map<T>((model) => args.mapper(model)).toList(growable: false);
 }
 
 

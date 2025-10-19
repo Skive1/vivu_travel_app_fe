@@ -13,6 +13,8 @@ import '../../features/authentication/presentation/bloc/auth_state.dart';
 import '../../core/utils/user_storage.dart';
 import '../../injection_container.dart' as di;
 import '../../features/schedule/domain/entities/schedule_entity.dart';
+import '../../features/advertisement/presentation/screens/explore_screen.dart';
+import '../../features/advertisement/presentation/bloc/advertisement_bloc.dart';
 
 class PageManager {
   List<Widget>? _pages;
@@ -22,16 +24,21 @@ class PageManager {
   Function(String)? _onScheduleViewTap;
   VoidCallback? _onPageChanged;
   late final ScheduleBloc _scheduleBloc;
+  late final AdvertisementBloc _advertisementBloc;
 
   List<Widget> getPages(BuildContext context) {
     if (_pages == null) {
       _scheduleBloc = di.sl<ScheduleBloc>();
+      _advertisementBloc = di.sl<AdvertisementBloc>();
       
       _pages = [
         // Trang chủ
         const HomeContentWidget(),
-        // Khám phá (placeholder)
-        const ExplorePage(),
+        // Khám phá
+        BlocProvider.value(
+          value: _advertisementBloc,
+          child: const ExploreScreen(),
+        ),
         // Kế hoạch
         BlocProvider.value(
           value: _scheduleBloc,
@@ -137,8 +144,11 @@ class PageManager {
     _onPageChanged = callback;
   }
 
+  AdvertisementBloc get advertisementBloc => _advertisementBloc;
+
   void dispose() {
     _scheduleBloc.close();
+    // Don't close _advertisementBloc as it's a singleton and may be used elsewhere
   }
 }
 
