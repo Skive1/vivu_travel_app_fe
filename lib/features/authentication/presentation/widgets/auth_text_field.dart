@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class AuthTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -39,8 +40,34 @@ class AuthTextField extends StatelessWidget {
         icon: Icon(
           isPasswordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
           color: const Color(0xFF757575),
+          size: context.responsiveIconSize(
+            verySmall: 18.0,
+            small: 20.0,
+            large: 22.0,
+          ),
         ),
         onPressed: onTogglePassword,
+        padding: context.responsivePadding(
+          all: context.responsive(
+            verySmall: 8.0,
+            small: 10.0,
+            large: 12.0,
+          ),
+        ),
+        constraints: context.responsive(
+          verySmall: BoxConstraints(
+            minWidth: 32.0,
+            minHeight: 32.0,
+          ),
+          small: BoxConstraints(
+            minWidth: 36.0,
+            minHeight: 36.0,
+          ),
+          large: BoxConstraints(
+            minWidth: 40.0,
+            minHeight: 40.0,
+          ),
+        ),
       );
     }
     
@@ -50,13 +77,21 @@ class AuthTextField extends StatelessWidget {
         if (label != null) ...[
           Text(
             label!,
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: context.responsiveFontSize(
+                verySmall: 14.0,
+                small: 15.0,
+                large: 16.0,
+              ),
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1A1A1A),
+              color: const Color(0xFF1A1A1A),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: context.responsiveSpacing(
+            verySmall: 6.0,
+            small: 7.0,
+            large: 8.0,
+          )),
         ],
         TextFormField(
           controller: controller,
@@ -65,34 +100,66 @@ class AuthTextField extends StatelessWidget {
           validator: validator,
           decoration: InputDecoration(
             hintText: placeholder,
-            hintStyle: const TextStyle(
-              color: Color(0xFF9E9E9E),
-              fontSize: 16,
+            hintStyle: TextStyle(
+              color: const Color(0xFF9E9E9E),
+              fontSize: context.responsiveFontSize(
+                verySmall: 14.0,
+                small: 15.0,
+                large: 16.0,
+              ),
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                verySmall: 8.0,
+                small: 10.0,
+                large: 12.0,
+              )),
               borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                verySmall: 8.0,
+                small: 10.0,
+                large: 12.0,
+              )),
               borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                verySmall: 8.0,
+                small: 10.0,
+                large: 12.0,
+              )),
               borderSide: const BorderSide(color: Color(0xFF24BAEC), width: 2),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                verySmall: 8.0,
+                small: 10.0,
+                large: 12.0,
+              )),
               borderSide: const BorderSide(color: Color(0xFFE53E3E), width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                verySmall: 8.0,
+                small: 10.0,
+                large: 12.0,
+              )),
               borderSide: const BorderSide(color: Color(0xFFE53E3E), width: 2),
             ),
             suffixIcon: finalSuffixIcon,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
+            contentPadding: context.responsivePadding(
+              horizontal: context.responsive(
+                verySmall: 12.0,
+                small: 14.0,
+                large: 16.0,
+              ),
+              vertical: context.responsive(
+                verySmall: 12.0,
+                small: 14.0,
+                large: 16.0,
+              ),
             ),
             filled: true,
             fillColor: Colors.white,

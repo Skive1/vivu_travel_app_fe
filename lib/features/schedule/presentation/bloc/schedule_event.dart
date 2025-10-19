@@ -5,6 +5,10 @@ import '../../data/models/create_activity_request.dart';
 import '../../data/models/update_activity_request.dart';
 import '../../data/models/join_schedule_request.dart';
 import '../../data/models/add_participant_by_email_request.dart';
+import '../../data/models/add_checked_item_request.dart';
+import '../../data/models/checkin_request.dart';
+import '../../data/models/checkout_request.dart';
+import '../../data/models/upload_media_request.dart';
 
 abstract class ScheduleEvent extends Equatable {
   const ScheduleEvent();
@@ -200,4 +204,98 @@ class ReorderActivityEvent extends ScheduleEvent {
 
   @override
   List<Object> get props => [activityId, newIndex, scheduleId, date];
+}
+
+// Checked items events
+class GetCheckedItemsEvent extends ScheduleEvent {
+  final String scheduleId;
+
+  const GetCheckedItemsEvent({required this.scheduleId});
+
+  @override
+  List<Object> get props => [scheduleId];
+}
+
+class AddCheckedItemEvent extends ScheduleEvent {
+  final List<AddCheckedItemRequest> request;
+
+  const AddCheckedItemEvent({required this.request});
+
+  @override
+  List<Object> get props => [request];
+}
+
+class ToggleCheckedItemEvent extends ScheduleEvent {
+  final int checkedItemId;
+  final bool isChecked;
+
+  const ToggleCheckedItemEvent({required this.checkedItemId, required this.isChecked});
+
+  @override
+  List<Object> get props => [checkedItemId, isChecked];
+}
+
+class DeleteCheckedItemsBulkEvent extends ScheduleEvent {
+  final List<int> checkedItemIds;
+
+  const DeleteCheckedItemsBulkEvent({required this.checkedItemIds});
+
+  @override
+  List<Object> get props => [checkedItemIds];
+}
+
+class CancelScheduleEvent extends ScheduleEvent {
+  final String scheduleId;
+
+  const CancelScheduleEvent({required this.scheduleId});
+
+  @override
+  List<Object> get props => [scheduleId];
+}
+
+class RestoreScheduleEvent extends ScheduleEvent {
+  final String scheduleId;
+
+  const RestoreScheduleEvent({required this.scheduleId});
+
+  @override
+  List<Object> get props => [scheduleId];
+}
+
+// Check-in/Check-out events
+class CheckInActivityEvent extends ScheduleEvent {
+  final CheckInRequest request;
+
+  const CheckInActivityEvent({required this.request});
+
+  @override
+  List<Object> get props => [request];
+}
+
+class CheckOutActivityEvent extends ScheduleEvent {
+  final CheckOutRequest request;
+
+  const CheckOutActivityEvent({required this.request});
+
+  @override
+  List<Object> get props => [request];
+}
+
+// Media events
+class GetMediaByActivityEvent extends ScheduleEvent {
+  final int activityId;
+
+  const GetMediaByActivityEvent({required this.activityId});
+
+  @override
+  List<Object> get props => [activityId];
+}
+
+class UploadMediaEvent extends ScheduleEvent {
+  final UploadMediaRequest request;
+
+  const UploadMediaEvent({required this.request});
+
+  @override
+  List<Object> get props => [request];
 }

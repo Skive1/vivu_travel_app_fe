@@ -79,7 +79,7 @@ class ParticipantModel {
         role: roleString,
         status: statusString,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       rethrow;
     }
   }

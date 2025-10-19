@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../bloc/schedule_bloc.dart';
 import '../widgets/schedule_calendar.dart';
 import '../widgets/schedule_container.dart';
@@ -99,23 +100,72 @@ class _ScheduleContentState extends State<ScheduleContent>
           SafeArea(
             bottom: false,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: context.responsivePadding(
+                left: context.responsive(
+                  verySmall: 10,
+                  small: 12,
+                  large: 16,
+                ),
+                right: context.responsive(
+                  verySmall: 10,
+                  small: 12,
+                  large: 16,
+                ),
+                bottom: context.responsive(
+                  verySmall: 6,
+                  small: 8,
+                  large: 8,
+                ),
+              ),
               decoration: const BoxDecoration(color: AppColors.background),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back_ios,
                       color: AppColors.textPrimary,
+                      size: context.responsiveIconSize(
+                        verySmall: 18,
+                        small: 20,
+                        large: 24,
+                      ),
                     ),
                     onPressed: widget.onBack,
+                    padding: context.responsivePadding(
+                      all: context.responsive(
+                        verySmall: 6,
+                        small: 8,
+                        large: 12,
+                      ),
+                    ),
+                    constraints: context.responsive(
+                      verySmall: BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      small: BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                      large: BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                    ),
                   ),
-                  const Text(
-                    'Lịch trình chi tiết',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      'Lịch trình chi tiết',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: context.responsiveFontSize(
+                          verySmall: 14,
+                          small: 16,
+                          large: 18,
+                        ),
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

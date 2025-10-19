@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../bloc/schedule_bloc.dart';
 import '../bloc/schedule_event.dart';
 import '../bloc/schedule_state.dart';
@@ -9,6 +10,7 @@ import '../widgets/schedule_detail_info.dart';
 import '../widgets/schedule_qr_code.dart';
 import '../widgets/edit_schedule_drawer.dart';
 import '../widgets/invite_participant_modal.dart';
+import '../widgets/checked_items_modal.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/utils/user_storage.dart';
 
@@ -132,6 +134,24 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
     );
   }
 
+  void _showCheckedItemsModal() {
+    final scheduleBloc = context.read<ScheduleBloc>();
+    final String role = _currentSchedule.participantRole?.toLowerCase() ?? 'viewer';
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BlocProvider.value(
+        value: scheduleBloc,
+        child: CheckedItemsModal(
+          scheduleId: _currentSchedule.id,
+          userRole: role,
+        ),
+      ),
+    );
+  }
+
   void _updateScheduleData(ScheduleEntity newSchedule) {
     setState(() {
       _currentSchedule = newSchedule;
@@ -218,6 +238,7 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) {
         if (state is GetScheduleByIdSuccess) {
@@ -299,7 +320,23 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
           SafeArea(
             bottom: false,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: context.responsivePadding(
+                left: context.responsive(
+                  verySmall: 10,
+                  small: 12,
+                  large: 16,
+                ),
+                right: context.responsive(
+                  verySmall: 10,
+                  small: 12,
+                  large: 16,
+                ),
+                bottom: context.responsive(
+                  verySmall: 6,
+                  small: 8,
+                  large: 8,
+                ),
+              ),
               child: BlocBuilder<ScheduleBloc, ScheduleState>(
                 buildWhen: (prev, cur) =>
                     cur is GetScheduleParticipantsLoading ||
@@ -328,44 +365,208 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
                   return Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
-                        onPressed: widget.onBack,
-                      ),
-                      const Text(
-                        'Chi tiết lịch trình',
-                        style: TextStyle(
+                        icon: Icon(
+                          Icons.arrow_back_ios, 
                           color: AppColors.textPrimary,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
+                          size: context.responsiveIconSize(
+                            verySmall: 18,
+                            small: 20,
+                            large: 24,
+                          ),
+                        ),
+                        onPressed: widget.onBack,
+                        padding: context.responsivePadding(
+                          all: context.responsive(
+                            verySmall: 6,
+                            small: 8,
+                            large: 12,
+                          ),
+                        ),
+                        constraints: context.responsive(
+                          verySmall: BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          small: BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          large: BoxConstraints(
+                            minWidth: 48,
+                            minHeight: 48,
+                          ),
                         ),
                       ),
-                      const Spacer(),
+                      Expanded(
+                        child: Text(
+                          'Chi tiết lịch trình',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: context.responsiveFontSize(
+                              verySmall: 14,
+                              small: 16,
+                              large: 20,
+                            ),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       if (canInvite)
                         IconButton(
-                          icon: const Icon(Icons.person_add, color: AppColors.primary),
+                          icon: Icon(
+                            Icons.person_add, 
+                            color: AppColors.primary,
+                            size: context.responsiveIconSize(
+                              verySmall: 18,
+                              small: 20,
+                              large: 24,
+                            ),
+                          ),
                           onPressed: _showInviteParticipantModal,
                           tooltip: 'Mời người tham gia',
+                          padding: context.responsivePadding(
+                            all: context.responsive(
+                              verySmall: 6,
+                              small: 8,
+                              large: 12,
+                            ),
+                          ),
+                          constraints: context.responsive(
+                            verySmall: BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                            small: BoxConstraints(
+                              minWidth: 36,
+                              minHeight: 36,
+                            ),
+                            large: BoxConstraints(
+                              minWidth: 48,
+                              minHeight: 48,
+                            ),
+                          ),
                         ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.checklist, 
+                          color: AppColors.primary,
+                          size: context.responsiveIconSize(
+                            verySmall: 18,
+                            small: 20,
+                            large: 24,
+                          ),
+                        ),
+                        onPressed: _showCheckedItemsModal,
+                        tooltip: 'Danh sách kiểm tra',
+                        padding: context.responsivePadding(
+                          all: context.responsive(
+                            verySmall: 6,
+                            small: 8,
+                            large: 12,
+                          ),
+                        ),
+                        constraints: context.responsive(
+                          verySmall: BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                          small: BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          large: BoxConstraints(
+                            minWidth: 48,
+                            minHeight: 48,
+                          ),
+                        ),
+                      ),
                       if (canEditSchedule)
                         IconButton(
-                          icon: const Icon(Icons.edit, color: AppColors.primary),
+                          icon: Icon(
+                            Icons.edit, 
+                            color: AppColors.primary,
+                            size: context.responsiveIconSize(
+                              verySmall: 18,
+                              small: 20,
+                              large: 24,
+                            ),
+                          ),
                           onPressed: _showEditScheduleDrawer,
                           tooltip: 'Chỉnh sửa lịch trình',
+                          padding: context.responsivePadding(
+                            all: context.responsive(
+                              verySmall: 6,
+                              small: 8,
+                              large: 12,
+                            ),
+                          ),
+                          constraints: context.responsive(
+                            verySmall: BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                            small: BoxConstraints(
+                              minWidth: 36,
+                              minHeight: 36,
+                            ),
+                            large: BoxConstraints(
+                              minWidth: 48,
+                              minHeight: 48,
+                            ),
+                          ),
                         ),
                       if (canShare)
                         IconButton(
                           icon: _isSharing 
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
+                            ? SizedBox(
+                                width: context.responsive(
+                                  verySmall: 14,
+                                  small: 16,
+                                  large: 20,
+                                ),
+                                height: context.responsive(
+                                  verySmall: 14,
+                                  small: 16,
+                                  large: 20,
+                                ),
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                                 ),
                               )
-                            : const Icon(Icons.share, color: AppColors.primary),
+                            : Icon(
+                                Icons.share, 
+                                color: AppColors.primary,
+                                size: context.responsiveIconSize(
+                                  verySmall: 18,
+                                  small: 20,
+                                  large: 24,
+                                ),
+                              ),
                           onPressed: _isSharing ? null : _shareSchedule,
                           tooltip: 'Chia sẻ lịch trình',
+                          padding: context.responsivePadding(
+                            all: context.responsive(
+                              verySmall: 6,
+                              small: 8,
+                              large: 12,
+                            ),
+                          ),
+                          constraints: context.responsive(
+                            verySmall: BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                            small: BoxConstraints(
+                              minWidth: 36,
+                              minHeight: 36,
+                            ),
+                            large: BoxConstraints(
+                              minWidth: 48,
+                              minHeight: 48,
+                            ),
+                          ),
                         ),
                     ],
                   );
@@ -377,11 +578,31 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
           // Main content
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                16 + MediaQuery.of(context).padding.bottom + 24,
+              padding: context.responsivePadding(
+                left: context.responsive(
+                  verySmall: 10,
+                  small: 12,
+                  large: 16,
+                ),
+                right: context.responsive(
+                  verySmall: 10,
+                  small: 12,
+                  large: 16,
+                ),
+                top: context.responsive(
+                  verySmall: 10,
+                  small: 12,
+                  large: 16,
+                ),
+                bottom: context.responsive(
+                  verySmall: 10,
+                  small: 12,
+                  large: 16,
+                ) + MediaQuery.of(context).padding.bottom + context.responsive(
+                  verySmall: 20,
+                  small: 24,
+                  large: 24,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,24 +612,40 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
                      schedule: _currentSchedule,
                      currentUserId: widget.currentUserId ?? _resolvedUserId,
                    ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: context.responsiveSpacing(
+                    verySmall: 10,
+                    small: 12,
+                    large: 16,
+                  )),
                   // Share status + QR
                   Row(
                     children: [
                       Icon(
                         Icons.share,
-                        size: 18,
+                        size: context.responsiveIconSize(
+                          verySmall: 16,
+                          small: 18,
+                          large: 18,
+                        ),
                         color: _currentSharedCode != null && _currentSharedCode!.isNotEmpty
                             ? AppColors.primary
                             : AppColors.textSecondary,
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: context.responsiveSpacing(
+                        verySmall: 4,
+                        small: 6,
+                        large: 6,
+                      )),
                       Text(
                         (_currentSharedCode != null && _currentSharedCode!.isNotEmpty)
                             ? 'Đã chia sẻ'
                             : 'Chưa chia sẻ',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: context.responsiveFontSize(
+                            verySmall: 12,
+                            small: 14,
+                            large: 14,
+                          ),
                           color: _currentSharedCode != null && _currentSharedCode!.isNotEmpty
                               ? AppColors.primary
                               : AppColors.textSecondary,
@@ -417,7 +654,11 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: context.responsiveSpacing(
+                    verySmall: 6,
+                    small: 8,
+                    large: 12,
+                  )),
                   if (_currentSharedCode != null && _currentSharedCode!.isNotEmpty) ...[
                     ScheduleQrCode(sharedCode: _currentSharedCode!),
                     const SizedBox(height: 24),
@@ -431,26 +672,74 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
                           onPressed: () {
                             widget.onScheduleViewTap?.call(_currentSchedule.id);
                           },
-                          icon: const Icon(Icons.calendar_today),
-                          label: const Text('Xem lịch trình'),
+                          icon: Icon(
+                            Icons.calendar_today,
+                            size: context.responsiveIconSize(
+                              verySmall: 16,
+                              small: 18,
+                              large: 20,
+                            ),
+                          ),
+                          label: Text(
+                            'Xem lịch trình',
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 11,
+                                small: 13,
+                                large: 14,
+                              ),
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: context.responsivePadding(
+                              vertical: context.responsive(
+                                verySmall: 8,
+                                small: 10,
+                                large: 12,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: context.responsiveSpacing(
+                        verySmall: 6,
+                        small: 8,
+                        large: 12,
+                      )),
                       if (_currentIsShared)
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () => _copySharedCode(context),
-                            icon: const Icon(Icons.copy),
-                            label: const Text('Sao chép mã'),
+                            icon: Icon(
+                              Icons.copy,
+                              size: context.responsiveIconSize(
+                                verySmall: 16,
+                                small: 18,
+                                large: 20,
+                              ),
+                            ),
+                            label: Text(
+                              'Sao chép mã',
+                              style: TextStyle(
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 11,
+                                  small: 13,
+                                  large: 14,
+                                ),
+                              ),
+                            ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.primary,
                               side: const BorderSide(color: AppColors.primary),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: context.responsivePadding(
+                                vertical: context.responsive(
+                                  verySmall: 8,
+                                  small: 10,
+                                  large: 12,
+                                ),
+                              ),
                             ),
                           ),
                         )
@@ -458,12 +747,34 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: _currentIsShared ? _shareSchedule : null,
-                            icon: const Icon(Icons.share),
-                            label: const Text('Tạo mã chia sẻ'),
+                            icon: Icon(
+                              Icons.share,
+                              size: context.responsiveIconSize(
+                                verySmall: 16,
+                                small: 18,
+                                large: 20,
+                              ),
+                            ),
+                            label: Text(
+                              'Tạo mã chia sẻ',
+                              style: TextStyle(
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 11,
+                                  small: 13,
+                                  large: 14,
+                                ),
+                              ),
+                            ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: _currentIsShared ? AppColors.primary : AppColors.textSecondary,
                               side: BorderSide(color: _currentIsShared ? AppColors.primary : AppColors.border),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: context.responsivePadding(
+                                vertical: context.responsive(
+                                  verySmall: 8,
+                                  small: 10,
+                                  large: 12,
+                                ),
+                              ),
                             ),
                           ),
                         ),

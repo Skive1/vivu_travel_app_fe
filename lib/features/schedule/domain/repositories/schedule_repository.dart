@@ -12,6 +12,14 @@ import '../../data/models/join_schedule_response.dart';
 import '../../data/models/add_participant_by_email_request.dart';
 import '../../data/models/add_participant_by_email_response.dart';
 import '../entities/participant_entity.dart';
+import '../entities/checked_item_entity.dart';
+import '../../data/models/add_checked_item_request.dart';
+import '../../data/models/add_checked_item_response.dart';
+import '../entities/checkin_entity.dart';
+import '../entities/media_entity.dart';
+import '../../data/models/checkin_request.dart';
+import '../../data/models/checkout_request.dart';
+import '../../data/models/upload_media_request.dart';
 
 abstract class ScheduleRepository {
   Future<List<ScheduleEntity>> getSchedulesByParticipant(String participantId);
@@ -26,6 +34,8 @@ abstract class ScheduleRepository {
     String scheduleId,
     UpdateScheduleRequest request,
   );
+  Future<Either<Failure, ScheduleEntity>> cancelSchedule(String scheduleId);
+  Future<Either<Failure, String>> restoreSchedule(String scheduleId);
   Future<ActivityEntity> addActivity(CreateActivityRequest request);
   Future<ActivityEntity> updateActivity(
     int activityId,
@@ -39,4 +49,18 @@ abstract class ScheduleRepository {
   Future<Either<Failure, KickParticipantResult>> leaveSchedule(String scheduleId, String userId);
   Future<Either<Failure, Unit>> changeParticipantRole(String scheduleId, String participantId);
   Future<Either<Failure, Unit>> reorderActivity({required int newIndex, required int activityId});
+  
+  // Checked items methods
+  Future<Either<Failure, List<CheckedItemEntity>>> getCheckedItems(String scheduleId);
+  Future<Either<Failure, List<AddCheckedItemResponse>>> addCheckedItem(List<AddCheckedItemRequest> request);
+  Future<Either<Failure, CheckedItemEntity>> toggleCheckedItem(int checkedItemId, bool isChecked);
+  Future<Either<Failure, String>> deleteCheckedItemsBulk(List<int> checkedItemIds);
+  
+  // Check-in/Check-out methods
+  Future<Either<Failure, CheckInEntity>> checkInActivity(CheckInRequest request);
+  Future<Either<Failure, CheckInEntity>> checkOutActivity(CheckOutRequest request);
+  
+  // Media methods
+  Future<Either<Failure, List<MediaEntity>>> getMediaByActivity(int activityId);
+  Future<Either<Failure, MediaEntity>> uploadMedia(UploadMediaRequest request);
 }

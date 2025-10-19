@@ -31,7 +31,7 @@ class KickParticipantResponse {
         participantCounts: participantCounts,
         scheduleParticipantResponses: participants,
       );
-    } catch (e, stackTrace) {
+    } catch (e) {
       rethrow;
     }
   }

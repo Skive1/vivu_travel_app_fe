@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/user_storage.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../bloc/schedule_bloc.dart';
 import '../bloc/schedule_event.dart';
 import '../bloc/schedule_state.dart';
@@ -32,6 +34,7 @@ class _ScheduleListContentState extends State<ScheduleListContent>
   String _searchQuery = '';
   String _statusFilter = 'all'; // all | active | completed | pending | cancelled
   Timer? _searchDebounce;
+  String? _currentUserId;
   
 
   @override
@@ -40,7 +43,17 @@ class _ScheduleListContentState extends State<ScheduleListContent>
   @override
   void initState() {
     super.initState();
+    _loadCurrentUserId();
     _loadSchedules();
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    final user = await UserStorage.getUserProfile();
+    if (mounted) {
+      setState(() {
+        _currentUserId = user?.id;
+      });
+    }
   }
 
   void _loadSchedules() {
@@ -105,35 +118,124 @@ class _ScheduleListContentState extends State<ScheduleListContent>
     );
   }
 
+  void _cancelSchedule(String scheduleId) {
+    context.read<ScheduleBloc>().add(CancelScheduleEvent(scheduleId: scheduleId));
+  }
+
+  void _restoreSchedule(String scheduleId) {
+    context.read<ScheduleBloc>().add(RestoreScheduleEvent(scheduleId: scheduleId));
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
+    
     return SafeArea(
       child: Column(
       children: [
         // Header
         Container(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: context.responsivePadding(
+            left: context.responsive(
+              verySmall: 10,
+              small: 12,
+              large: 16,
+            ),
+            right: context.responsive(
+              verySmall: 10,
+              small: 12,
+              large: 16,
+            ),
+            bottom: context.responsive(
+              verySmall: 6,
+              small: 8,
+              large: 8,
+            ),
+          ),
           child: Row(
             children: [
-              const Text(
-                'Lịch trình của tôi',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  'Lịch trình của tôi',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: context.responsiveFontSize(
+                      verySmall: 16,
+                      small: 18,
+                      large: 20,
+                    ),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
               IconButton(
-                icon: const Icon(Icons.group_add, color: AppColors.primary),
+                icon: Icon(
+                  Icons.group_add, 
+                  color: AppColors.primary,
+                  size: context.responsiveIconSize(
+                    verySmall: 18,
+                    small: 20,
+                    large: 24,
+                  ),
+                ),
                 onPressed: () => _showJoinScheduleModal(context),
                 tooltip: 'Tham gia lịch trình',
+                padding: context.responsivePadding(
+                  all: context.responsive(
+                    verySmall: 6,
+                    small: 8,
+                    large: 12,
+                  ),
+                ),
+                constraints: context.responsive(
+                  verySmall: BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  small: BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                  large: BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                ),
               ),
               IconButton(
-                icon: const Icon(Icons.add, color: AppColors.primary),
+                icon: Icon(
+                  Icons.add, 
+                  color: AppColors.primary,
+                  size: context.responsiveIconSize(
+                    verySmall: 18,
+                    small: 20,
+                    large: 24,
+                  ),
+                ),
                 onPressed: () => _showCreateScheduleDrawer(context),
                 tooltip: 'Tạo lịch trình mới',
+                padding: context.responsivePadding(
+                  all: context.responsive(
+                    verySmall: 6,
+                    small: 8,
+                    large: 12,
+                  ),
+                ),
+                constraints: context.responsive(
+                  verySmall: BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  small: BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                  large: BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                ),
               ),
             ],
           ),
@@ -141,41 +243,110 @@ class _ScheduleListContentState extends State<ScheduleListContent>
         
         // Search and filters
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          padding: context.responsivePadding(
+            left: context.responsive(
+              verySmall: 10,
+              small: 12,
+              large: 16,
+            ),
+            right: context.responsive(
+              verySmall: 10,
+              small: 12,
+              large: 16,
+            ),
+            top: context.responsive(
+              verySmall: 6,
+              small: 8,
+              large: 8,
+            ),
+            bottom: context.responsive(
+              verySmall: 6,
+              small: 8,
+              large: 8,
+            ),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
-                  hintText: 'Tìm kiếm theo tiêu đề, điểm đến...',
-                  prefixIcon: const Icon(Icons.search),
+                  hintText: context.isVerySmallScreen || context.isSmallScreen 
+                    ? 'Tìm kiếm...' 
+                    : 'Tìm kiếm theo tiêu đề, điểm đến...',
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: context.responsiveIconSize(
+                      verySmall: 18,
+                      small: 20,
+                      large: 24,
+                    ),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                  contentPadding: context.responsivePadding(
+                    vertical: context.responsive(
+                      verySmall: 6,
+                      small: 8,
+                      large: 12,
+                    ),
+                    horizontal: context.responsive(
+                      verySmall: 6,
+                      small: 8,
+                      large: 12,
+                    ),
+                  ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                      verySmall: 6,
+                      small: 8,
+                      large: 12,
+                    )),
                     borderSide: const BorderSide(color: AppColors.border),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                      verySmall: 6,
+                      small: 8,
+                      large: 12,
+                    )),
                     borderSide: const BorderSide(color: AppColors.primary),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: context.responsiveSpacing(
+                verySmall: 4,
+                small: 6,
+                large: 8,
+              )),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
                     _buildFilterChip('Tất cả', 'all'),
-                    const SizedBox(width: 8),
+                    SizedBox(width: context.responsiveSpacing(
+                      verySmall: 4,
+                      small: 6,
+                      large: 8,
+                    )),
                     _buildFilterChip('Đang diễn ra', 'active'),
-                    const SizedBox(width: 8),
+                    SizedBox(width: context.responsiveSpacing(
+                      verySmall: 4,
+                      small: 6,
+                      large: 8,
+                    )),
                     _buildFilterChip('Chờ bắt đầu', 'pending'),
-                    const SizedBox(width: 8),
+                    SizedBox(width: context.responsiveSpacing(
+                      verySmall: 4,
+                      small: 6,
+                      large: 8,
+                    )),
                     _buildFilterChip('Hoàn thành', 'completed'),
-                    const SizedBox(width: 8),
+                    SizedBox(width: context.responsiveSpacing(
+                      verySmall: 4,
+                      small: 6,
+                      large: 8,
+                    )),
                     _buildFilterChip('Đã hủy', 'cancelled'),
                   ],
                 ),
@@ -196,6 +367,12 @@ class _ScheduleListContentState extends State<ScheduleListContent>
                 _forceRefreshSchedules();
               } else if (state is JoinScheduleSuccess) {
                 // Force refresh để hiển thị lịch trình đã tham gia
+                _forceRefreshSchedules();
+              } else if (state is CancelScheduleSuccess) {
+                // Force refresh để hiển thị lịch trình đã hủy
+                _forceRefreshSchedules();
+              } else if (state is RestoreScheduleSuccess) {
+                // Force refresh để hiển thị lịch trình đã khôi phục
                 _forceRefreshSchedules();
               }
             },
@@ -307,12 +484,22 @@ class _ScheduleListContentState extends State<ScheduleListContent>
                       _forceRefreshSchedules();
                     },
                     child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
+                      padding: context.responsivePadding(
+                        all: context.responsive(
+                          verySmall: 10,
+                          small: 12,
+                          large: 16,
+                        ),
+                      ),
                       itemCount: filteredSchedules.length,
                       itemBuilder: (context, index) {
                         final schedule = filteredSchedules[index];
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
+                          padding: EdgeInsets.only(bottom: context.responsiveSpacing(
+                            verySmall: 10,
+                            small: 12,
+                            large: 16,
+                          )),
                           child: ScheduleListItem(
                             schedule: schedule,
                             onTap: () {
@@ -320,6 +507,9 @@ class _ScheduleListContentState extends State<ScheduleListContent>
                               widget.onScheduleTap?.call(schedule);
                             },
                             onScheduleViewTap: widget.onScheduleViewTap,
+                            onCancelSchedule: _cancelSchedule,
+                            onRestoreSchedule: _restoreSchedule,
+                            currentUserId: _currentUserId,
                           ),
                         );
                       },
@@ -340,18 +530,44 @@ class _ScheduleListContentState extends State<ScheduleListContent>
   Widget _buildFilterChip(String label, String value) {
     final bool isSelected = _statusFilter == value;
     return ChoiceChip(
-      label: Text(label),
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: context.responsiveFontSize(
+            verySmall: 10,
+            small: 12,
+            large: 14,
+          ),
+        ),
+      ),
       selected: isSelected,
       onSelected: (_) => setState(() => _statusFilter = value),
       selectedColor: AppColors.primary.withValues(alpha: 0.12),
       labelStyle: TextStyle(
         color: isSelected ? AppColors.primary : AppColors.textSecondary,
         fontWeight: FontWeight.w500,
+        fontSize: context.responsiveFontSize(
+          verySmall: 10,
+          small: 12,
+          large: 14,
+        ),
       ),
       shape: StadiumBorder(
         side: BorderSide(color: isSelected ? AppColors.primary : AppColors.border),
       ),
       backgroundColor: Colors.white,
+      padding: context.responsivePadding(
+        horizontal: context.responsive(
+          verySmall: 6,
+          small: 8,
+          large: 12,
+        ),
+        vertical: context.responsive(
+          verySmall: 3,
+          small: 4,
+          large: 6,
+        ),
+      ),
     );
   }
 }

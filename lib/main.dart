@@ -12,7 +12,13 @@ import 'features/authentication/presentation/bloc/auth_bloc.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    // If .env file doesn't exist, continue with empty environment
+    print('Warning: .env file not found or could not be loaded: $e');
+  }
+  
   await di.init();
   
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

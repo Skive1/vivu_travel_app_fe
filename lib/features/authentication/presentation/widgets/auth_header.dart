@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class AuthHeader extends StatelessWidget {
   final String title;
@@ -26,40 +27,70 @@ class AuthHeader extends StatelessWidget {
               child: GestureDetector(
                 onTap: onBackPressed ?? () => Navigator.pop(context),
                 child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(
-                      0xFFF5F5F5,
-                    ), // Colors.grey[100] equivalent
-                    borderRadius: BorderRadius.circular(12),
+                  width: context.responsive(
+                    verySmall: 36.0,
+                    small: 40.0,
+                    large: 44.0,
                   ),
-                  child: const Icon(
+                  height: context.responsive(
+                    verySmall: 36.0,
+                    small: 40.0,
+                    large: 44.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F5F5), // Colors.grey[100] equivalent
+                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                      verySmall: 8.0,
+                      small: 10.0,
+                      large: 12.0,
+                    )),
+                  ),
+                  child: Icon(
                     Icons.arrow_back_ios_new,
-                    color: Color(0xFF1A1A1A),
-                    size: 20,
+                    color: const Color(0xFF1A1A1A),
+                    size: context.responsiveIconSize(
+                      verySmall: 16.0,
+                      small: 18.0,
+                      large: 20.0,
+                    ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: context.responsiveSpacing(
+              verySmall: 16.0,
+              small: 20.0,
+              large: 24.0,
+            )),
           ],
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 32,
+            style: TextStyle(
+              fontSize: context.responsiveFontSize(
+                verySmall: 24.0,
+                small: 28.0,
+                large: 32.0,
+              ),
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
+              color: const Color(0xFF1A1A1A),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: context.responsiveSpacing(
+            verySmall: 6.0,
+            small: 7.0,
+            large: 8.0,
+          )),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF757575), // Colors.grey[600] equivalent
+            style: TextStyle(
+              fontSize: context.responsiveFontSize(
+                verySmall: 14.0,
+                small: 15.0,
+                large: 16.0,
+              ),
+              color: const Color(0xFF757575), // Colors.grey[600] equivalent
             ),
           ),
         ],

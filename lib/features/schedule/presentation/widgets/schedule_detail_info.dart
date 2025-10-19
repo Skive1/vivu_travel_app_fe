@@ -534,7 +534,7 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
                     children: [
                       Icon(Icons.block, color: AppColors.error, size: 16),
                       SizedBox(width: 8),
-                      Text('C    thành viên'),
+                      Text('Chặn'),
                     ],
                   ),
                 ),
@@ -564,7 +564,7 @@ class _ScheduleDetailInfoState extends State<ScheduleDetailInfo> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Chặn thành viên'),
+        title: const Text('Chặn'),
         content: Text('Bạn có chắc chắn muốn chặn ${participant.name}?'),
         actions: [
           TextButton(

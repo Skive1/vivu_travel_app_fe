@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../authentication/presentation/bloc/auth_bloc.dart';
 import '../../../authentication/presentation/bloc/auth_state.dart';
 import '../../../authentication/presentation/bloc/auth_event.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../presentation/bloc/user_bloc.dart';
 import '../../presentation/bloc/user_state.dart' as user_states;
 import '../../presentation/bloc/user_event.dart' as user_events;
@@ -60,7 +61,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.surface,
-        title: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(
+          'Edit Profile', 
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: context.responsiveFontSize(
+              verySmall: 16,
+              small: 18,
+              large: 18,
+            ),
+          ),
+        ),
       ),
       body: BlocConsumer<UserBloc, user_states.UserState>(
         listener: (context, state) {
@@ -87,7 +98,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           return Stack(
             children: [
               ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: context.responsivePadding(
+                  horizontal: context.responsive(
+                    verySmall: 16,
+                    small: 18,
+                    large: 20,
+                  ),
+                  vertical: context.responsive(
+                    verySmall: 12,
+                    small: 14,
+                    large: 16,
+                  ),
+                ),
                 children: [
                 Center(
                   child: GestureDetector(
@@ -105,37 +127,82 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     child: Column(
                       children: [
                         CircleAvatar(
-                          radius: 48,
+                          radius: context.responsive(
+                            verySmall: 40,
+                            small: 44,
+                            large: 48,
+                          ),
                           backgroundColor: AppColors.bellBackground,
                           backgroundImage: _avatarPath != null
                               ? FileImage(File(_avatarPath!))
                               : (u.hasValidAvatar ? NetworkImage(u.avatar!) as ImageProvider : null),
-                          child: _avatarPath == null && !u.hasValidAvatar ? Text(u.avatarInitials) : null,
+                          child: _avatarPath == null && !u.hasValidAvatar ? Text(
+                            u.avatarInitials,
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 20,
+                                small: 24,
+                                large: 28,
+                              ),
+                            ),
+                          ) : null,
                         ),
                         if (_isEditing) ...[
-                          const SizedBox(height: 10),
-                          const Text(
+                          SizedBox(height: context.responsiveSpacing(
+                            verySmall: 8,
+                            small: 10,
+                            large: 10,
+                          )),
+                          Text(
                             'Change Profile Picture',
-                            style: TextStyle(color: AppColors.accentOrange, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: AppColors.accentOrange, 
+                              fontWeight: FontWeight.w600,
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 12,
+                                small: 14,
+                                large: 14,
+                              ),
+                            ),
                           )
                         ]
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: context.responsiveSpacing(
+                  verySmall: 12,
+                  small: 14,
+                  large: 16,
+                )),
                 _label('Name'),
                 _filledField(controller: _nameCtrl, readOnly: !_isEditing),
-                const SizedBox(height: 12),
+                SizedBox(height: context.responsiveSpacing(
+                  verySmall: 10,
+                  small: 12,
+                  large: 12,
+                )),
                 _label('Email'),
                 _filledField(controller: TextEditingController(text: u.email), readOnly: true),
-                const SizedBox(height: 12),
+                SizedBox(height: context.responsiveSpacing(
+                  verySmall: 10,
+                  small: 12,
+                  large: 12,
+                )),
                 _label('Phone'),
                 _filledField(controller: _phoneCtrl, readOnly: !_isEditing, keyboardType: TextInputType.phone),
-                const SizedBox(height: 12),
+                SizedBox(height: context.responsiveSpacing(
+                  verySmall: 10,
+                  small: 12,
+                  large: 12,
+                )),
                 _label('Address'),
                 _filledField(controller: _addressCtrl, readOnly: !_isEditing),
-                const SizedBox(height: 12),
+                SizedBox(height: context.responsiveSpacing(
+                  verySmall: 10,
+                  small: 12,
+                  large: 12,
+                )),
                 _label('Date of Birth'),
                 TextFormField(
                   controller: _dobCtrl,
@@ -143,10 +210,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   onTap: _isEditing ? _pickDate : null,
                   decoration: _filledDecoration(hint: 'dd/MM/yyyy'),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: context.responsiveSpacing(
+                  verySmall: 10,
+                  small: 12,
+                  large: 12,
+                )),
                 _label('Gender'),
                 _genderRadios(readOnly: !_isEditing),
-                const SizedBox(height: 20),
+                SizedBox(height: context.responsiveSpacing(
+                  verySmall: 16,
+                  small: 18,
+                  large: 20,
+                )),
                 if (!_isEditing)
                   SizedBox(
                     width: double.infinity,
@@ -155,10 +230,31 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accentOrange,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(context.responsive(
+                            verySmall: 10,
+                            small: 12,
+                            large: 12,
+                          )),
+                        ),
+                        padding: context.responsivePadding(
+                          vertical: context.responsive(
+                            verySmall: 12,
+                            small: 14,
+                            large: 14,
+                          ),
+                        ),
                       ),
-                      child: const Text('Edit'),
+                      child: Text(
+                        'Edit',
+                        style: TextStyle(
+                          fontSize: context.responsiveFontSize(
+                            verySmall: 14,
+                            small: 16,
+                            large: 16,
+                          ),
+                        ),
+                      ),
                     ),
                   )
                 else
@@ -170,28 +266,78 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.accentOrange,
                             side: const BorderSide(color: AppColors.accentOrange, width: 1.4),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(context.responsive(
+                                verySmall: 10,
+                                small: 12,
+                                large: 12,
+                              )),
+                            ),
+                            padding: context.responsivePadding(
+                              vertical: context.responsive(
+                                verySmall: 12,
+                                small: 14,
+                                large: 14,
+                              ),
+                            ),
                           ),
-                          child: const Text('Cancel'),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 14,
+                                small: 16,
+                                large: 16,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: context.responsiveSpacing(
+                        verySmall: 10,
+                        small: 12,
+                        large: 12,
+                      )),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: _onSave,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.accentOrange,
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(context.responsive(
+                                verySmall: 10,
+                                small: 12,
+                                large: 12,
+                              )),
+                            ),
+                            padding: context.responsivePadding(
+                              vertical: context.responsive(
+                                verySmall: 12,
+                                small: 14,
+                                large: 14,
+                              ),
+                            ),
                           ),
-                          child: const Text('Save'),
+                          child: Text(
+                            'Save',
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 14,
+                                small: 16,
+                                large: 16,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                const SizedBox(height: 8),
+                SizedBox(height: context.responsiveSpacing(
+                  verySmall: 6,
+                  small: 8,
+                  large: 8,
+                )),
                 ],
               ),
               LoadingOverlay(isLoading: isLoading),
@@ -229,8 +375,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: const TextStyle(
-          fontSize: 13,
+        style: TextStyle(
+          fontSize: context.responsiveFontSize(
+            verySmall: 12,
+            small: 13,
+            large: 13,
+          ),
           color: Colors.grey,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.2,
@@ -241,7 +391,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   
   InputDecoration _filledDecoration({String? hint}) {
     final baseBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(context.responsive(
+        verySmall: 10,
+        small: 12,
+        large: 12,
+      )),
       borderSide: BorderSide(color: AppColors.accentOrange.withValues(alpha: 0.4), width: 1.2),
     );
     return InputDecoration(
@@ -250,11 +404,26 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       fillColor: Colors.white,
       enabledBorder: baseBorder,
       border: baseBorder,
-      focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: AppColors.accentOrange, width: 1.6),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(context.responsive(
+          verySmall: 10,
+          small: 12,
+          large: 12,
+        )),
+        borderSide: const BorderSide(color: AppColors.accentOrange, width: 1.6),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: context.responsivePadding(
+        horizontal: context.responsive(
+          verySmall: 14,
+          small: 16,
+          large: 16,
+        ),
+        vertical: context.responsive(
+          verySmall: 12,
+          small: 14,
+          large: 14,
+        ),
+      ),
     );
   }
 
@@ -331,7 +500,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return Row(
       children: [
         _genderRadio('Male', readOnly: readOnly),
-        const SizedBox(width: 12),
+        SizedBox(width: context.responsiveSpacing(
+          verySmall: 10,
+          small: 12,
+          large: 12,
+        )),
         _genderRadio('Female', readOnly: readOnly),
       ],
     );
@@ -342,10 +515,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       child: InkWell(
         onTap: readOnly ? null : () => setState(() => _gender = value),
         child: Container(
-          height: 48,
+          height: context.responsive(
+            verySmall: 44,
+            small: 48,
+            large: 48,
+          ),
           decoration: BoxDecoration(
             color: AppColors.bellBackground,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(context.responsive(
+              verySmall: 10,
+              small: 12,
+              large: 12,
+            )),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -357,7 +538,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 fillColor: WidgetStateProperty.all(AppColors.accentOrange),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              Text(value),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: context.responsiveFontSize(
+                    verySmall: 14,
+                    small: 16,
+                    large: 16,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

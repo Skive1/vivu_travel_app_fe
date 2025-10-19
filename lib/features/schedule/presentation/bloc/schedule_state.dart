@@ -3,6 +3,10 @@ import '../../domain/entities/schedule_entity.dart';
 import '../../domain/entities/activity_entity.dart';
 import '../../domain/entities/participant_entity.dart';
 import '../../domain/entities/kick_participant_result.dart';
+import '../../domain/entities/checked_item_entity.dart';
+import '../../data/models/add_checked_item_response.dart';
+import '../../domain/entities/checkin_entity.dart';
+import '../../domain/entities/media_entity.dart';
 
 abstract class ScheduleState extends Equatable {
   const ScheduleState();
@@ -325,6 +329,210 @@ class ReorderActivitySuccess extends ScheduleState {
 class ReorderActivityError extends ScheduleState {
   final String message;
   const ReorderActivityError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+// Checked items states
+class GetCheckedItemsLoading extends ScheduleState {}
+
+class GetCheckedItemsSuccess extends ScheduleState {
+  final List<CheckedItemEntity> checkedItems;
+
+  const GetCheckedItemsSuccess({required this.checkedItems});
+
+  @override
+  List<Object> get props => [checkedItems];
+}
+
+class GetCheckedItemsError extends ScheduleState {
+  final String message;
+
+  const GetCheckedItemsError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class AddCheckedItemLoading extends ScheduleState {}
+
+class AddCheckedItemSuccess extends ScheduleState {
+  final List<AddCheckedItemResponse> response;
+
+  const AddCheckedItemSuccess({required this.response});
+
+  @override
+  List<Object> get props => [response];
+}
+
+class AddCheckedItemError extends ScheduleState {
+  final String message;
+
+  const AddCheckedItemError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class ToggleCheckedItemLoading extends ScheduleState {}
+
+class ToggleCheckedItemSuccess extends ScheduleState {
+  final CheckedItemEntity checkedItem;
+
+  const ToggleCheckedItemSuccess({required this.checkedItem});
+
+  @override
+  List<Object> get props => [checkedItem];
+}
+
+class ToggleCheckedItemError extends ScheduleState {
+  final String message;
+
+  const ToggleCheckedItemError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class DeleteCheckedItemsBulkLoading extends ScheduleState {}
+
+class DeleteCheckedItemsBulkSuccess extends ScheduleState {
+  final String message;
+  final List<int> deletedItemIds;
+
+  const DeleteCheckedItemsBulkSuccess({required this.message, required this.deletedItemIds});
+
+  @override
+  List<Object> get props => [message, deletedItemIds];
+}
+
+class DeleteCheckedItemsBulkError extends ScheduleState {
+  final String message;
+
+  const DeleteCheckedItemsBulkError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class CancelScheduleLoading extends ScheduleState {}
+
+class CancelScheduleSuccess extends ScheduleState {
+  final ScheduleEntity schedule;
+
+  const CancelScheduleSuccess({required this.schedule});
+
+  @override
+  List<Object> get props => [schedule];
+}
+
+class CancelScheduleError extends ScheduleState {
+  final String message;
+
+  const CancelScheduleError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class RestoreScheduleLoading extends ScheduleState {}
+
+class RestoreScheduleSuccess extends ScheduleState {
+  final String message;
+
+  const RestoreScheduleSuccess({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class RestoreScheduleError extends ScheduleState {
+  final String message;
+
+  const RestoreScheduleError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+// Check-in/Check-out states
+class CheckInActivityLoading extends ScheduleState {}
+
+class CheckInActivitySuccess extends ScheduleState {
+  final CheckInEntity checkIn;
+
+  const CheckInActivitySuccess({required this.checkIn});
+
+  @override
+  List<Object> get props => [checkIn];
+}
+
+class CheckInActivityError extends ScheduleState {
+  final String message;
+
+  const CheckInActivityError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class CheckOutActivityLoading extends ScheduleState {}
+
+class CheckOutActivitySuccess extends ScheduleState {
+  final CheckInEntity checkOut;
+
+  const CheckOutActivitySuccess({required this.checkOut});
+
+  @override
+  List<Object> get props => [checkOut];
+}
+
+class CheckOutActivityError extends ScheduleState {
+  final String message;
+
+  const CheckOutActivityError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+// Media states
+class GetMediaByActivityLoading extends ScheduleState {}
+
+class GetMediaByActivitySuccess extends ScheduleState {
+  final List<MediaEntity> mediaList;
+
+  const GetMediaByActivitySuccess({required this.mediaList});
+
+  @override
+  List<Object> get props => [mediaList];
+}
+
+class GetMediaByActivityError extends ScheduleState {
+  final String message;
+
+  const GetMediaByActivityError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class UploadMediaLoading extends ScheduleState {}
+
+class UploadMediaSuccess extends ScheduleState {
+  final MediaEntity media;
+
+  const UploadMediaSuccess({required this.media});
+
+  @override
+  List<Object> get props => [media];
+}
+
+class UploadMediaError extends ScheduleState {
+  final String message;
+
+  const UploadMediaError({required this.message});
 
   @override
   List<Object> get props => [message];

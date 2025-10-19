@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../authentication/presentation/bloc/auth_bloc.dart';
 import '../../../authentication/presentation/bloc/auth_state.dart';
 import '../../../authentication/presentation/bloc/auth_event.dart';
@@ -68,11 +69,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         elevation: 0,
         backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+          icon: Icon(
+            Icons.arrow_back_ios_new, 
+            size: context.responsiveIconSize(
+              verySmall: 16,
+              small: 18,
+              large: 18,
+            ),
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
-        title: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(
+          'Edit Profile', 
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: context.responsiveFontSize(
+              verySmall: 16,
+              small: 18,
+              large: 18,
+            ),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -86,7 +104,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     avatarFilePath: _avatarPath,
                   ));
             },
-            child: const Text('Done', style: TextStyle(color: AppColors.accentOrange, fontWeight: FontWeight.w600)),
+            child: Text(
+              'Done', 
+              style: TextStyle(
+                color: AppColors.accentOrange, 
+                fontWeight: FontWeight.w600,
+                fontSize: context.responsiveFontSize(
+                  verySmall: 14,
+                  small: 16,
+                  large: 16,
+                ),
+              ),
+            ),
           )
         ],
       ),
@@ -103,60 +132,139 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           return Stack(
             children: [
               SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: context.responsivePadding(
+                horizontal: context.responsive(
+                  verySmall: 16,
+                  small: 18,
+                  large: 20,
+                ),
+                vertical: context.responsive(
+                  verySmall: 12,
+                  small: 14,
+                  large: 16,
+                ),
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
-                    const SizedBox(height: 8),
+                    SizedBox(height: context.responsiveSpacing(
+                      verySmall: 6,
+                      small: 8,
+                      large: 8,
+                    )),
                     GestureDetector(
                       onTap: _pickAvatar,
                       child: Column(
                         children: [
                           CircleAvatar(
-                            radius: 48,
+                            radius: context.responsive(
+                              verySmall: 40,
+                              small: 44,
+                              large: 48,
+                            ),
                             backgroundColor: AppColors.bellBackground,
                             backgroundImage: _avatarPath != null ? FileImage(File(_avatarPath!)) : null,
-                            child: _avatarPath == null ? const Icon(Icons.person, size: 40) : null,
+                            child: _avatarPath == null ? Icon(
+                              Icons.person, 
+                              size: context.responsiveIconSize(
+                                verySmall: 32,
+                                small: 36,
+                                large: 40,
+                              ),
+                            ) : null,
                           ),
-                          const SizedBox(height: 12),
-                          const Text(
+                          SizedBox(height: context.responsiveSpacing(
+                            verySmall: 8,
+                            small: 10,
+                            large: 12,
+                          )),
+                          Text(
                             'Change Profile Picture',
-                            style: TextStyle(color: AppColors.accentOrange, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: AppColors.accentOrange, 
+                              fontWeight: FontWeight.w600,
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 12,
+                                small: 14,
+                                large: 14,
+                              ),
+                            ),
                           )
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: context.responsiveSpacing(
+                      verySmall: 12,
+                      small: 14,
+                      large: 16,
+                    )),
                     _label('First Name'),
                     _filledField(
                       controller: _nameCtrl,
                       hint: 'Leonardo',
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: context.responsiveSpacing(
+                      verySmall: 10,
+                      small: 12,
+                      large: 14,
+                    )),
                     _label('Last Name'),
                     _filledField(
                       controller: TextEditingController(),
                       hint: 'Optional',
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: context.responsiveSpacing(
+                      verySmall: 10,
+                      small: 12,
+                      large: 14,
+                    )),
                     _label('Location'),
                     _filledField(
                       controller: _addressCtrl,
                       hint: 'Your address',
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: context.responsiveSpacing(
+                      verySmall: 10,
+                      small: 12,
+                      large: 14,
+                    )),
                     _label('Mobile Number'),
                     _filledField(
                       controller: _phoneCtrl,
                       hint: '+84 0123-456-789',
                       keyboardType: TextInputType.phone,
                       prefix: Padding(
-                        padding: const EdgeInsets.only(left: 12, right: 8),
-                        child: Text('+84', style: TextStyle(color: AppColors.textSecondary)),
+                        padding: context.responsivePadding(
+                          left: context.responsive(
+                            verySmall: 10,
+                            small: 12,
+                            large: 12,
+                          ),
+                          right: context.responsive(
+                            verySmall: 6,
+                            small: 8,
+                            large: 8,
+                          ),
+                        ),
+                        child: Text(
+                          '+84', 
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: context.responsiveFontSize(
+                              verySmall: 12,
+                              small: 14,
+                              large: 14,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: context.responsiveSpacing(
+                      verySmall: 10,
+                      small: 12,
+                      large: 14,
+                    )),
                     _label('Date of Birth'),
                     TextFormField(
                       controller: _dobCtrl,
@@ -165,10 +273,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       decoration: _filledDecoration(hint: 'dd/MM/yyyy'),
                       validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: context.responsiveSpacing(
+                      verySmall: 10,
+                      small: 12,
+                      large: 14,
+                    )),
                     _label('Gender'),
                     _genderRadios(),
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.responsiveSpacing(
+                      verySmall: 18,
+                      small: 20,
+                      large: 24,
+                    )),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -186,10 +302,40 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accentOrange,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                              verySmall: 8,
+                              small: 10,
+                              large: 12,
+                            )),
+                          ),
+                          padding: context.responsivePadding(
+                            vertical: context.responsive(
+                              verySmall: 10,
+                              small: 12,
+                              large: 14,
+                            ),
+                          ),
                         ),
-                        child: isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Save Changes'),
+                        child: isLoading 
+                          ? CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: context.responsive(
+                                verySmall: 2,
+                                small: 2.5,
+                                large: 3,
+                              ),
+                            ) 
+                          : Text(
+                              'Save Changes',
+                              style: TextStyle(
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 12,
+                                  small: 14,
+                                  large: 14,
+                                ),
+                              ),
+                            ),
                       ),
                     ),
                   ],
@@ -209,15 +355,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         text,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          fontSize: context.responsiveFontSize(
+            verySmall: 12,
+            small: 14,
+            large: 14,
+          ),
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
 
   InputDecoration _filledDecoration({String? hint, Widget? prefix}) {
     final baseBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: AppColors.accentOrange.withValues(alpha: 0.4), width: 1.2),
+      borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+        verySmall: 8,
+        small: 10,
+        large: 12,
+      )),
+      borderSide: BorderSide(
+        color: AppColors.accentOrange.withValues(alpha: 0.4), 
+        width: context.responsive(
+          verySmall: 1.0,
+          small: 1.1,
+          large: 1.2,
+        ),
+      ),
     );
     return InputDecoration(
       hintText: hint,
@@ -225,12 +389,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       fillColor: Colors.white,
       enabledBorder: baseBorder,
       border: baseBorder,
-      focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: AppColors.accentOrange, width: 1.6),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(context.responsiveBorderRadius(
+          verySmall: 8,
+          small: 10,
+          large: 12,
+        ))),
+        borderSide: BorderSide(
+          color: AppColors.accentOrange, 
+          width: context.responsive(
+            verySmall: 1.4,
+            small: 1.5,
+            large: 1.6,
+          ),
+        ),
       ),
       prefixIcon: prefix,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: context.responsivePadding(
+        horizontal: context.responsive(
+          verySmall: 12,
+          small: 14,
+          large: 16,
+        ),
+        vertical: context.responsive(
+          verySmall: 10,
+          small: 12,
+          large: 14,
+        ),
+      ),
     );
   }
 
@@ -276,9 +462,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Row(
       children: [
         _genderRadio('Male'),
-        const SizedBox(width: 12),
+        SizedBox(width: context.responsiveSpacing(
+          verySmall: 8,
+          small: 10,
+          large: 12,
+        )),
         _genderRadio('Female'),
-        const SizedBox(width: 12),
+        SizedBox(width: context.responsiveSpacing(
+          verySmall: 8,
+          small: 10,
+          large: 12,
+        )),
         _genderRadio('Other'),
       ],
     );
@@ -289,10 +483,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       child: InkWell(
         onTap: () => setState(() => _gender = value),
         child: Container(
-          height: 48,
+          height: context.responsive(
+            verySmall: 40,
+            small: 44,
+            large: 48,
+          ),
           decoration: BoxDecoration(
             color: AppColors.bellBackground,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+              verySmall: 8,
+              small: 10,
+              large: 12,
+            )),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -303,7 +505,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 onChanged: (v) => setState(() => _gender = v ?? _gender),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              Text(value),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: context.responsiveFontSize(
+                    verySmall: 12,
+                    small: 14,
+                    large: 14,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

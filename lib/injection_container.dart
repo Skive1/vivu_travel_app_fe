@@ -54,6 +54,16 @@ import 'features/schedule/domain/usecases/kick_participant_usecase.dart';
 import 'features/schedule/domain/usecases/leave_schedule_usecase.dart';
 import 'features/schedule/domain/usecases/change_participant_role_usecase.dart';
 import 'features/schedule/domain/usecases/reorder_activity_usecase.dart';
+import 'features/schedule/domain/usecases/get_checked_items_usecase.dart';
+import 'features/schedule/domain/usecases/add_checked_item_usecase.dart';
+import 'features/schedule/domain/usecases/toggle_checked_item_usecase.dart';
+import 'features/schedule/domain/usecases/delete_checked_item_usecase.dart';
+import 'features/schedule/domain/usecases/cancel_schedule_usecase.dart';
+import 'features/schedule/domain/usecases/restore_schedule_usecase.dart';
+import 'features/schedule/domain/usecases/checkin_activity_usecase.dart';
+import 'features/schedule/domain/usecases/checkout_activity_usecase.dart';
+import 'features/schedule/domain/usecases/get_media_by_activity_usecase.dart';
+import 'features/schedule/domain/usecases/upload_media_usecase.dart';
 
 final sl = GetIt.instance;
 
@@ -184,6 +194,16 @@ void _initSchedule() {
   sl.registerLazySingleton(() => LeaveSchedule(sl()));
   sl.registerLazySingleton(() => ChangeParticipantRole(sl()));
   sl.registerLazySingleton(() => ReorderActivity(sl()));
+  sl.registerLazySingleton(() => GetCheckedItemsUseCase(repository: sl()));
+  sl.registerLazySingleton(() => AddCheckedItemUseCase(repository: sl()));
+  sl.registerLazySingleton(() => ToggleCheckedItemUseCase(repository: sl()));
+  sl.registerLazySingleton(() => DeleteCheckedItemsBulkUseCase(repository: sl()));
+  sl.registerLazySingleton(() => CancelScheduleUseCase(repository: sl()));
+  sl.registerLazySingleton(() => RestoreScheduleUseCase(repository: sl()));
+  sl.registerLazySingleton(() => CheckInActivityUseCase(repository: sl()));
+  sl.registerLazySingleton(() => CheckOutActivityUseCase(repository: sl()));
+  sl.registerLazySingleton(() => GetMediaByActivityUseCase(repository: sl()));
+  sl.registerLazySingleton(() => UploadMediaUseCase(repository: sl()));
 
   // Bloc
   sl.registerFactory(
@@ -204,6 +224,16 @@ void _initSchedule() {
       leaveSchedule: sl(),
       changeParticipantRole: sl(),
       reorderActivity: sl(),
+      getCheckedItems: sl(),
+      addCheckedItem: sl(),
+      toggleCheckedItem: sl(),
+      deleteCheckedItemsBulk: sl(),
+      cancelSchedule: sl(),
+      restoreSchedule: sl(),
+      checkInActivity: sl(),
+      checkOutActivity: sl(),
+      getMediaByActivity: sl(),
+      uploadMedia: sl(),
     ),
   );
 }

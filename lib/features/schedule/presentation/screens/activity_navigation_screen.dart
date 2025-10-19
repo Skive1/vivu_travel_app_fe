@@ -9,6 +9,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mb;
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/mapbox_config.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../domain/entities/activity_entity.dart';
 
 class ActivityNavigationScreen extends StatefulWidget {
@@ -46,6 +47,16 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
 
   Future<void> _initFlow() async {
     try {
+      // Check Mapbox token first
+      final token = MapboxConfig.accessToken;
+      if (token.isEmpty) {
+        setState(() {
+          _error = 'Thiếu MAPBOX_PUBLIC_TOKEN trong file .env. Vui lòng kiểm tra cấu hình.';
+          _isLoading = false;
+        });
+        return;
+      }
+
       final hasLocation = await _ensureLocationPermission();
       if (!hasLocation) {
         if (mounted) {
@@ -140,32 +151,50 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
   Future<mb.Point> _geocodeAddress(String query) async {
     final token = MapboxConfig.accessToken;
     if (token.isEmpty) throw 'Thiếu MAPBOX_PUBLIC_TOKEN trong .env';
-    final url = 'https://api.mapbox.com/search/geocode/v6/forward';
-    final params = {
-      'q': query,
-      'access_token': token,
-      'limit': '1',
-      'language': 'vi',
-      if (_userPoint != null)
-        'proximity': '${_userPoint!.coordinates.lng.toStringAsFixed(6)},${_userPoint!.coordinates.lat.toStringAsFixed(6)}',
-    };
-    final res = await _dio.get(url, queryParameters: params);
-    final features = (res.data['features'] as List?) ?? [];
-    if (features.isEmpty) throw 'Không tìm thấy toạ độ cho địa chỉ';
-    final feat = features.first as Map<String, dynamic>;
-    List coords;
-    if (feat['geometry'] != null && feat['geometry']['coordinates'] is List) {
-      coords = feat['geometry']['coordinates'] as List;
-    } else if (feat['center'] is List) {
-      coords = feat['center'] as List;
-    } else if (feat['coordinates'] is List) {
-      coords = feat['coordinates'] as List;
-    } else {
-      throw 'Phản hồi geocoding không hợp lệ';
+    
+    try {
+      final url = 'https://api.mapbox.com/search/geocode/v6/forward';
+      final params = {
+        'q': query,
+        'access_token': token,
+        'limit': '1',
+        'language': 'vi',
+        if (_userPoint != null)
+          'proximity': '${_userPoint!.coordinates.lng.toStringAsFixed(6)},${_userPoint!.coordinates.lat.toStringAsFixed(6)}',
+      };
+      final res = await _dio.get(url, queryParameters: params);
+      final features = (res.data['features'] as List?) ?? [];
+      if (features.isEmpty) throw 'Không tìm thấy toạ độ cho địa chỉ "$query"';
+      final feat = features.first as Map<String, dynamic>;
+      List coords;
+      if (feat['geometry'] != null && feat['geometry']['coordinates'] is List) {
+        coords = feat['geometry']['coordinates'] as List;
+      } else if (feat['center'] is List) {
+        coords = feat['center'] as List;
+      } else if (feat['coordinates'] is List) {
+        coords = feat['coordinates'] as List;
+      } else {
+        throw 'Phản hồi geocoding không hợp lệ';
+      }
+      final lng = (coords[0] as num).toDouble();
+      final lat = (coords[1] as num).toDouble();
+      return mb.Point(coordinates: mb.Position(lng, lat));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422) {
+        throw 'Địa chỉ "$query" không hợp lệ hoặc không tìm thấy';
+      } else if (e.response?.statusCode == 401) {
+        throw 'Token Mapbox không hợp lệ. Vui lòng kiểm tra cấu hình.';
+      } else {
+        throw 'Lỗi tìm kiếm địa chỉ: ${e.message ?? 'Không xác định'}';
+      }
+    } catch (e) {
+      if (e.toString().contains('Thiếu MAPBOX_PUBLIC_TOKEN') || 
+          e.toString().contains('Địa chỉ') ||
+          e.toString().contains('Phản hồi geocoding')) {
+        rethrow;
+      }
+      throw 'Lỗi không xác định khi tìm kiếm địa chỉ: $e';
     }
-    final lng = (coords[0] as num).toDouble();
-    final lat = (coords[1] as num).toDouble();
-    return mb.Point(coordinates: mb.Position(lng, lat));
   }
 
   Future<void> _fetchEta() async {
@@ -218,7 +247,12 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
           try {
             await request('walking', 'geojson');
           } on DioException catch (_) {
-            await request('cycling', 'geojson');
+            try {
+              await request('cycling', 'geojson');
+            } catch (finalError) {
+              // If all profiles fail, show a user-friendly message
+              throw 'Không thể tính toán lộ trình. Vui lòng thử lại sau.';
+            }
           }
         }
       } else {
@@ -228,6 +262,12 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
             : e.message;
         throw 'Directions API error: ${e.response?.statusCode} ${msg ?? ''}'.trim();
       }
+    } catch (e) {
+      // Handle any other errors
+      if (e.toString().contains('DioException')) {
+        throw 'Lỗi kết nối API. Vui lòng kiểm tra kết nối mạng.';
+      }
+      rethrow;
     }
   }
 
@@ -256,7 +296,22 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.activity.placeName)),
+      appBar: AppBar(
+        title: Text(
+          widget.activity.placeName,
+          style: TextStyle(
+            fontSize: context.responsiveFontSize(
+              verySmall: 14,
+              small: 16,
+              large: 18,
+            ),
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 0,
+      ),
       body: Stack(
         children: [
           mb.MapWidget(
@@ -274,37 +329,131 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
             ),
           if (_error != null)
             Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16 + MediaQuery.of(context).padding.bottom,
+              left: context.responsive(
+                verySmall: 10,
+                small: 12,
+                large: 16,
+              ),
+              right: context.responsive(
+                verySmall: 10,
+                small: 12,
+                large: 16,
+              ),
+              bottom: context.responsive(
+                verySmall: 10,
+                small: 12,
+                large: 16,
+              ) + MediaQuery.of(context).padding.bottom,
               child: Material(
                 color: Colors.red.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                  verySmall: 6,
+                  small: 8,
+                  large: 12,
+                )),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(_error!, style: const TextStyle(color: Colors.white)),
+                  padding: context.responsivePadding(
+                    all: context.responsive(
+                      verySmall: 6,
+                      small: 8,
+                      large: 12,
+                    ),
+                  ),
+                  child: Text(
+                    _error!, 
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: context.responsiveFontSize(
+                        verySmall: 10,
+                        small: 12,
+                        large: 14,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
           if (_etaText != null)
             Positioned(
-              left: 16,
-              right: 16,
-              bottom: 88 + MediaQuery.of(context).padding.bottom,
+              left: context.responsive(
+                verySmall: 10,
+                small: 12,
+                large: 16,
+              ),
+              right: context.responsive(
+                verySmall: 10,
+                small: 12,
+                large: 16,
+              ),
+              bottom: context.responsive(
+                verySmall: 60,
+                small: 70,
+                large: 88,
+              ) + MediaQuery.of(context).padding.bottom,
               child: Material(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                  verySmall: 6,
+                  small: 8,
+                  large: 12,
+                )),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(_etaText!, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  padding: context.responsivePadding(
+                    all: context.responsive(
+                      verySmall: 6,
+                      small: 8,
+                      large: 12,
+                    ),
+                  ),
+                  child: Text(
+                    _etaText!, 
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: context.responsiveFontSize(
+                        verySmall: 10,
+                        small: 12,
+                        large: 14,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
           Positioned(
-            right: 16,
-            bottom: 16 + MediaQuery.of(context).padding.bottom,
+            right: context.responsive(
+              verySmall: 10,
+              small: 12,
+              large: 16,
+            ),
+            bottom: context.responsive(
+              verySmall: 10,
+              small: 12,
+              large: 16,
+            ) + MediaQuery.of(context).padding.bottom,
             child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary, 
+                foregroundColor: Colors.white, 
+                padding: context.responsivePadding(
+                  horizontal: context.responsive(
+                    verySmall: 10,
+                    small: 12,
+                    large: 16,
+                  ),
+                  vertical: context.responsive(
+                    verySmall: 6,
+                    small: 8,
+                    large: 12,
+                  ),
+                ), 
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                    verySmall: 6,
+                    small: 8,
+                    large: 12,
+                  )),
+                ),
+              ),
               onPressed: (_userPoint != null && _destPoint != null && !_isLoading) ? () async {
                 try {
                   setState(() { _etaText = null; _error = null; _isLoading = true; });
@@ -315,8 +464,24 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
                   setState(() { _isLoading = false; });
                 }
               } : null,
-              icon: const Icon(Icons.navigation_rounded),
-              label: const Text('Bắt đầu điều hướng'),
+              icon: Icon(
+                Icons.navigation_rounded,
+                size: context.responsiveIconSize(
+                  verySmall: 16,
+                  small: 18,
+                  large: 20,
+                ),
+              ),
+              label: Text(
+                'Bắt đầu điều hướng',
+                style: TextStyle(
+                  fontSize: context.responsiveFontSize(
+                    verySmall: 10,
+                    small: 12,
+                    large: 14,
+                  ),
+                ),
+              ),
             ),
           ),
         ],

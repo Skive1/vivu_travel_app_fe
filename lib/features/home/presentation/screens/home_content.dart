@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_body.dart';
 
@@ -51,13 +52,25 @@ class _HomeContentWidgetState extends State<HomeContentWidget>
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: context.responsive(
+              verySmall: 15,
+              small: 18,
+              large: 20,
+            ),
+            offset: context.responsive(
+              verySmall: const Offset(0, 8),
+              small: const Offset(0, 9),
+              large: const Offset(0, 10),
+            ),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+          verySmall: 20,
+          small: 25,
+          large: 30,
+        )),
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: Column(

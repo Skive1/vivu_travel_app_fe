@@ -14,6 +14,14 @@ import '../models/add_participant_by_email_request.dart';
 import '../models/add_participant_by_email_response.dart';
 import '../../domain/entities/participant_entity.dart';
 import '../../domain/entities/kick_participant_result.dart';
+import '../../domain/entities/checked_item_entity.dart';
+import '../models/add_checked_item_request.dart';
+import '../models/add_checked_item_response.dart';
+import '../models/checkin_request.dart';
+import '../models/checkout_request.dart';
+import '../models/upload_media_request.dart';
+import '../../domain/entities/checkin_entity.dart';
+import '../../domain/entities/media_entity.dart';
 import '../../../../core/utils/user_storage.dart';
 
 class ScheduleRepositoryImpl implements ScheduleRepository {
@@ -265,6 +273,173 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
     try {
       await _remoteDataSource.reorderActivity(newIndex: newIndex, activityId: activityId);
       return const Right(unit);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<CheckedItemEntity>>> getCheckedItems(String scheduleId) async {
+    try {
+      final checkedItems = await _remoteDataSource.getCheckedItems(scheduleId);
+      final entities = checkedItems
+          .where((item) => !item.isDeleted) // Filter out deleted items
+          .map((model) => CheckedItemEntity(
+                checkedItemId: model.checkedItemId,
+                checkedItemName: model.checkedItemName,
+                isChecked: model.isChecked,
+                checkedAt: model.checkedAt,
+                isDeleted: model.isDeleted,
+                scheduleParticipantId: model.scheduleParticipantId,
+              ))
+          .toList();
+      return Right(entities);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<AddCheckedItemResponse>>> addCheckedItem(List<AddCheckedItemRequest> request) async {
+    try {
+      final response = await _remoteDataSource.addCheckedItem(request);
+      return Right(response);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CheckedItemEntity>> toggleCheckedItem(int checkedItemId, bool isChecked) async {
+    try {
+      final model = await _remoteDataSource.toggleCheckedItem(checkedItemId, isChecked);
+      final entity = CheckedItemEntity(
+        checkedItemId: model.checkedItemId,
+        checkedItemName: model.checkedItemName,
+        isChecked: model.isChecked,
+        checkedAt: model.checkedAt,
+        isDeleted: model.isDeleted,
+        scheduleParticipantId: model.scheduleParticipantId,
+      );
+      return Right(entity);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> deleteCheckedItemsBulk(List<int> checkedItemIds) async {
+    try {
+      final response = await _remoteDataSource.deleteCheckedItemsBulk(checkedItemIds);
+      return Right(response['message'] as String);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ScheduleEntity>> cancelSchedule(String scheduleId) async {
+    try {
+      final schedule = await _remoteDataSource.cancelSchedule(scheduleId);
+      return Right(schedule);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> restoreSchedule(String scheduleId) async {
+    try {
+      final response = await _remoteDataSource.restoreSchedule(scheduleId);
+      return Right(response['message'] as String);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CheckInEntity>> checkInActivity(CheckInRequest request) async {
+    try {
+      final response = await _remoteDataSource.checkInActivity(request);
+      final entity = CheckInEntity(
+        id: response.id,
+        checkInTime: response.checkInTime,
+        checkOutTime: response.checkOutTime,
+        status: response.status,
+        activityId: response.activityId,
+        participantId: response.participantId,
+      );
+      return Right(entity);
+    } catch (e) {
+      // Extract meaningful error message
+      String errorMessage = e.toString();
+      if (e.toString().startsWith('Exception: ')) {
+        errorMessage = e.toString().substring(11); // Remove "Exception: " prefix
+      }
+      return Left(ServerFailure(errorMessage));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CheckInEntity>> checkOutActivity(CheckOutRequest request) async {
+    try {
+      final response = await _remoteDataSource.checkOutActivity(request);
+      final entity = CheckInEntity(
+        id: response.id,
+        checkInTime: response.checkInTime,
+        checkOutTime: response.checkOutTime,
+        status: response.status,
+        activityId: response.activityId,
+        participantId: response.participantId,
+      );
+      return Right(entity);
+    } catch (e) {
+      // Extract meaningful error message
+      String errorMessage = e.toString();
+      if (e.toString().startsWith('Exception: ')) {
+        errorMessage = e.toString().substring(11); // Remove "Exception: " prefix
+      }
+      return Left(ServerFailure(errorMessage));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<MediaEntity>>> getMediaByActivity(int activityId) async {
+    try {
+      final mediaList = await _remoteDataSource.getMediaByActivity(activityId);
+      final entities = mediaList.map((model) => MediaEntity(
+        id: model.id,
+        mediaType: model.mediaType,
+        url: model.url,
+        description: model.description,
+        uploadedAt: model.uploadedAt,
+        participantId: model.participantId,
+        uploadMethod: model.uploadMethod,
+        scheduleId: model.scheduleId,
+        activityId: model.activityId,
+      )).toList();
+      return Right(entities);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MediaEntity>> uploadMedia(UploadMediaRequest request) async {
+    try {
+      final model = await _remoteDataSource.uploadMedia(request);
+      final entity = MediaEntity(
+        id: model.id,
+        mediaType: model.mediaType,
+        url: model.url,
+        description: model.description,
+        uploadedAt: model.uploadedAt,
+        participantId: model.participantId,
+        uploadMethod: model.uploadMethod,
+        scheduleId: model.scheduleId,
+        activityId: model.activityId,
+      );
+      return Right(entity);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

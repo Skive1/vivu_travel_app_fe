@@ -20,6 +20,16 @@ import '../../domain/usecases/kick_participant_usecase.dart';
 import '../../domain/usecases/leave_schedule_usecase.dart';
 import '../../domain/usecases/change_participant_role_usecase.dart';
 import '../../domain/usecases/reorder_activity_usecase.dart';
+import '../../domain/usecases/get_checked_items_usecase.dart';
+import '../../domain/usecases/add_checked_item_usecase.dart';
+import '../../domain/usecases/toggle_checked_item_usecase.dart';
+import '../../domain/usecases/delete_checked_item_usecase.dart';
+import '../../domain/usecases/cancel_schedule_usecase.dart';
+import '../../domain/usecases/restore_schedule_usecase.dart';
+import '../../domain/usecases/checkin_activity_usecase.dart';
+import '../../domain/usecases/checkout_activity_usecase.dart';
+import '../../domain/usecases/get_media_by_activity_usecase.dart';
+import '../../domain/usecases/upload_media_usecase.dart';
 
 class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   final GetSchedulesByParticipant _getSchedulesByParticipant;
@@ -38,6 +48,16 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   final LeaveSchedule _leaveSchedule;
   final ChangeParticipantRole _changeParticipantRole;
   final ReorderActivity _reorderActivity;
+  final GetCheckedItemsUseCase _getCheckedItems;
+  final AddCheckedItemUseCase _addCheckedItem;
+  final ToggleCheckedItemUseCase _toggleCheckedItem;
+  final DeleteCheckedItemsBulkUseCase _deleteCheckedItemsBulk;
+  final CancelScheduleUseCase _cancelSchedule;
+  final RestoreScheduleUseCase _restoreSchedule;
+  final CheckInActivityUseCase _checkInActivity;
+  final CheckOutActivityUseCase _checkOutActivity;
+  final GetMediaByActivityUseCase _getMediaByActivity;
+  final UploadMediaUseCase _uploadMedia;
 
   // Enhanced cache for schedules and activities with timestamps
   List<ScheduleEntity>? _cachedSchedules;
@@ -73,6 +93,16 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     required LeaveSchedule leaveSchedule,
     required ChangeParticipantRole changeParticipantRole,
     required ReorderActivity reorderActivity,
+    required GetCheckedItemsUseCase getCheckedItems,
+    required AddCheckedItemUseCase addCheckedItem,
+    required ToggleCheckedItemUseCase toggleCheckedItem,
+    required DeleteCheckedItemsBulkUseCase deleteCheckedItemsBulk,
+    required CancelScheduleUseCase cancelSchedule,
+    required RestoreScheduleUseCase restoreSchedule,
+    required CheckInActivityUseCase checkInActivity,
+    required CheckOutActivityUseCase checkOutActivity,
+    required GetMediaByActivityUseCase getMediaByActivity,
+    required UploadMediaUseCase uploadMedia,
   }) : _getSchedulesByParticipant = getSchedulesByParticipant,
        _getScheduleById = getScheduleById,
        _getActivitiesBySchedule = getActivitiesBySchedule,
@@ -89,6 +119,16 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
        _leaveSchedule = leaveSchedule,
        _changeParticipantRole = changeParticipantRole,
        _reorderActivity = reorderActivity,
+       _getCheckedItems = getCheckedItems,
+       _addCheckedItem = addCheckedItem,
+       _toggleCheckedItem = toggleCheckedItem,
+       _deleteCheckedItemsBulk = deleteCheckedItemsBulk,
+       _cancelSchedule = cancelSchedule,
+       _restoreSchedule = restoreSchedule,
+       _checkInActivity = checkInActivity,
+       _checkOutActivity = checkOutActivity,
+       _getMediaByActivity = getMediaByActivity,
+       _uploadMedia = uploadMedia,
        super(ScheduleInitial()) {
     on<GetSchedulesByParticipantEvent>(_onGetSchedulesByParticipant);
     on<GetScheduleByIdEvent>(_onGetScheduleById);
@@ -109,6 +149,16 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     on<LeaveScheduleEvent>(_onLeaveSchedule);
     on<ChangeParticipantRoleEvent>(_onChangeParticipantRole);
     on<ReorderActivityEvent>(_onReorderActivity);
+    on<GetCheckedItemsEvent>(_onGetCheckedItems);
+    on<AddCheckedItemEvent>(_onAddCheckedItem);
+    on<ToggleCheckedItemEvent>(_onToggleCheckedItem);
+    on<DeleteCheckedItemsBulkEvent>(_onDeleteCheckedItemsBulk);
+    on<CancelScheduleEvent>(_onCancelSchedule);
+    on<RestoreScheduleEvent>(_onRestoreSchedule);
+    on<CheckInActivityEvent>(_onCheckInActivity);
+    on<CheckOutActivityEvent>(_onCheckOutActivity);
+    on<GetMediaByActivityEvent>(_onGetMediaByActivity);
+    on<UploadMediaEvent>(_onUploadMedia);
   }
 
   Future<void> _onGetScheduleById(
@@ -558,6 +608,160 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
         // Refresh activities for the given schedule and date
         add(RefreshActivitiesEvent(scheduleId: event.scheduleId, date: event.date));
       },
+    );
+  }
+
+  Future<void> _onGetCheckedItems(
+    GetCheckedItemsEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(GetCheckedItemsLoading());
+    final result = await _getCheckedItems(
+      GetCheckedItemsParams(scheduleId: event.scheduleId),
+    );
+    result.fold(
+      (failure) => emit(GetCheckedItemsError(message: failure.message)),
+      (checkedItems) => emit(GetCheckedItemsSuccess(checkedItems: checkedItems)),
+    );
+  }
+
+  Future<void> _onAddCheckedItem(
+    AddCheckedItemEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(AddCheckedItemLoading());
+    final result = await _addCheckedItem(
+      AddCheckedItemParams(request: event.request),
+    );
+    result.fold(
+      (failure) => emit(AddCheckedItemError(message: failure.message)),
+      (response) => emit(AddCheckedItemSuccess(response: response)),
+    );
+  }
+
+  Future<void> _onToggleCheckedItem(
+    ToggleCheckedItemEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(ToggleCheckedItemLoading());
+    final result = await _toggleCheckedItem(
+      ToggleCheckedItemParams(
+        checkedItemId: event.checkedItemId,
+        isChecked: event.isChecked,
+      ),
+    );
+    result.fold(
+      (failure) => emit(ToggleCheckedItemError(message: failure.message)),
+      (checkedItem) => emit(ToggleCheckedItemSuccess(checkedItem: checkedItem)),
+    );
+  }
+
+  Future<void> _onDeleteCheckedItemsBulk(
+    DeleteCheckedItemsBulkEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(DeleteCheckedItemsBulkLoading());
+    final result = await _deleteCheckedItemsBulk(
+      DeleteCheckedItemsBulkParams(checkedItemIds: event.checkedItemIds),
+    );
+    result.fold(
+      (failure) => emit(DeleteCheckedItemsBulkError(message: failure.message)),
+      (message) => emit(DeleteCheckedItemsBulkSuccess(
+        message: message,
+        deletedItemIds: event.checkedItemIds,
+      )),
+    );
+  }
+
+  Future<void> _onCancelSchedule(
+    CancelScheduleEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(CancelScheduleLoading());
+    final result = await _cancelSchedule(
+      CancelScheduleParams(scheduleId: event.scheduleId),
+    );
+    result.fold(
+      (failure) => emit(CancelScheduleError(message: failure.message)),
+      (schedule) {
+        emit(CancelScheduleSuccess(schedule: schedule));
+        // Clear cache to refresh schedules list
+        _clearAllCache();
+      },
+    );
+  }
+
+  Future<void> _onRestoreSchedule(
+    RestoreScheduleEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(RestoreScheduleLoading());
+    final result = await _restoreSchedule(
+      RestoreScheduleParams(scheduleId: event.scheduleId),
+    );
+    result.fold(
+      (failure) => emit(RestoreScheduleError(message: failure.message)),
+      (message) {
+        emit(RestoreScheduleSuccess(message: message));
+        // Clear cache to refresh schedules list
+        _clearAllCache();
+      },
+    );
+  }
+
+  Future<void> _onCheckInActivity(
+    CheckInActivityEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(CheckInActivityLoading());
+    final result = await _checkInActivity(
+      CheckInActivityParams(request: event.request),
+    );
+    result.fold(
+      (failure) => emit(CheckInActivityError(message: failure.message)),
+      (checkIn) => emit(CheckInActivitySuccess(checkIn: checkIn)),
+    );
+  }
+
+  Future<void> _onCheckOutActivity(
+    CheckOutActivityEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(CheckOutActivityLoading());
+    final result = await _checkOutActivity(
+      CheckOutActivityParams(request: event.request),
+    );
+    result.fold(
+      (failure) => emit(CheckOutActivityError(message: failure.message)),
+      (checkOut) => emit(CheckOutActivitySuccess(checkOut: checkOut)),
+    );
+  }
+
+  Future<void> _onGetMediaByActivity(
+    GetMediaByActivityEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(GetMediaByActivityLoading());
+    final result = await _getMediaByActivity(
+      GetMediaByActivityParams(activityId: event.activityId),
+    );
+    result.fold(
+      (failure) => emit(GetMediaByActivityError(message: failure.message)),
+      (mediaList) => emit(GetMediaByActivitySuccess(mediaList: mediaList)),
+    );
+  }
+
+  Future<void> _onUploadMedia(
+    UploadMediaEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(UploadMediaLoading());
+    final result = await _uploadMedia(
+      UploadMediaParams(request: event.request),
+    );
+    result.fold(
+      (failure) => emit(UploadMediaError(message: failure.message)),
+      (media) => emit(UploadMediaSuccess(media: media)),
     );
   }
 }

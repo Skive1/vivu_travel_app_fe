@@ -21,6 +21,8 @@ class Endpoints {
   static const String shareSchedule = '/api/schedule/share';
   static const String createSchedule = '/api/schedule/create';
   static const String updateSchedule = '/api/schedule/schedule';
+  static String cancelSchedule(String scheduleId) => '/api/schedule/schedule/$scheduleId/cancel';
+  static String restoreSchedule(String scheduleId) => '/api/schedule/schedule/$scheduleId/restore';
   static const String addActivity = '/api/schedule/activity/add';
   static const String activities = '/api/schedule/activities';
   static const String joinSchedule = '/api/schedule/join';
@@ -30,4 +32,18 @@ class Endpoints {
   static String leaveParticipant(String scheduleId, String userId) => '/api/schedule/$scheduleId/leave/$userId';
   static String changeParticipantRole(String scheduleId, String participantId) => '/api/schedule/$scheduleId/change-role/$participantId';
   static String reorderActivity(int newIndex, int activityId) => '/api/schedule/activities/$newIndex/$activityId';
+  
+  // Checked items endpoints
+  static String getCheckedItems(String scheduleId) => '/api/schedule/checked-items/get-by-current?scheduleId=$scheduleId';
+  static const String addCheckedItem = '/api/schedule/checked-items/add';
+  static String toggleCheckedItem(int checkedItemId, bool isChecked) => '/api/schedule/checkitems/$checkedItemId/participants/toggle?isChecked=$isChecked';
+  static const String deleteCheckedItemsBulk = '/api/schedule/checkitems/bulk';
+  
+  // Check-in/Check-out endpoints
+  static const String checkIn = '/api/schedule/activities/check-in';
+  static const String checkOut = '/api/schedule/activities/check-out';
+  
+  // Media endpoints
+  static String getMediaByActivityId(int activityId) => '/api/schedule/media/get-by-activityId?activityId=$activityId';
+  static const String uploadMedia = '/api/schedule/media/upload';
 }

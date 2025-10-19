@@ -158,4 +158,55 @@ class DialogUtils {
       builder: (BuildContext context) => dialog,
     );
   }
+
+  /// Parse and format error messages from server responses
+  static String _parseErrorMessage(String message) {
+    final lowerMessage = message.toLowerCase();
+    
+    // Handle specific business logic errors
+    if (lowerMessage.contains('just check-in') || lowerMessage.contains('already check-in')) {
+      return 'Bạn đã check-in vào hoạt động này rồi.\n\n💡 Mỗi hoạt động chỉ có thể check-in một lần.';
+    } else if (lowerMessage.contains('not check-in') || lowerMessage.contains('need check-in')) {
+      return 'Bạn cần check-in trước khi check-out.\n\n💡 Vui lòng check-in trước khi thực hiện check-out.';
+    } else if (lowerMessage.contains('already check-out') || lowerMessage.contains('just check-out')) {
+      return 'Bạn đã check-out khỏi hoạt động này rồi.\n\n💡 Mỗi hoạt động chỉ có thể check-out một lần.';
+    } else if (lowerMessage.contains('activity not found') || lowerMessage.contains('not exist')) {
+      return 'Không tìm thấy hoạt động.\n\n💡 Hoạt động có thể đã bị xóa hoặc không tồn tại.';
+    } else if (lowerMessage.contains('permission denied') || lowerMessage.contains('not allowed')) {
+      return 'Bạn không có quyền thực hiện hành động này.\n\n💡 Liên hệ quản trị viên để được cấp quyền.';
+    }
+    
+    // Handle technical errors
+    if (lowerMessage.contains('network') || lowerMessage.contains('connection')) {
+      return '$message\n\n💡 Kiểm tra kết nối internet và thử lại.';
+    } else if (lowerMessage.contains('timeout')) {
+      return '$message\n\n💡 Kết nối chậm, vui lòng thử lại sau.';
+    } else if (lowerMessage.contains('unauthorized') || lowerMessage.contains('token')) {
+      return '$message\n\n💡 Vui lòng đăng nhập lại.';
+    } else if (lowerMessage.contains('server') || lowerMessage.contains('internal')) {
+      return '$message\n\n💡 Lỗi từ server, vui lòng thử lại sau.';
+    }
+    
+    // Return original message if no specific handling
+    return message;
+  }
+
+  /// Show error dialog with smart error parsing
+  static Future<void> showServerErrorDialog({
+    required BuildContext context,
+    required String serverMessage,
+    String? title,
+    String? buttonText,
+    VoidCallback? onPressed,
+    bool useRootNavigator = true,
+  }) {
+    return showErrorDialog(
+      context: context,
+      title: title ?? 'Lỗi',
+      message: serverMessage,
+      buttonText: buttonText,
+      onPressed: onPressed,
+      useRootNavigator: useRootNavigator,
+    );
+  }
 }

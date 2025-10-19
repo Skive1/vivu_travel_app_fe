@@ -16,6 +16,14 @@ import '../models/add_participant_by_email_response.dart';
 import '../models/participant_model.dart';
 import '../models/activities_response.dart';
 import '../models/kick_participant_response.dart';
+import '../models/checked_item_model.dart';
+import '../models/add_checked_item_request.dart';
+import '../models/add_checked_item_response.dart';
+import '../models/checkin_request.dart';
+import '../models/checkout_request.dart';
+import '../models/checkin_response.dart';
+import '../models/media_model.dart';
+import '../models/upload_media_request.dart';
 
 abstract class ScheduleRemoteDataSource {
   Future<List<ScheduleModel>> getSchedulesByParticipant(String participantId);
@@ -36,6 +44,8 @@ abstract class ScheduleRemoteDataSource {
     String scheduleId,
     UpdateScheduleRequest request,
   );
+  Future<ScheduleModel> cancelSchedule(String scheduleId);
+  Future<Map<String, dynamic>> restoreSchedule(String scheduleId);
   Future<JoinScheduleResponse> joinSchedule(JoinScheduleRequest request);
   Future<List<ParticipantModel>> getScheduleParticipants(String scheduleId);
   Future<AddParticipantByEmailResponse> addParticipantByEmail(String scheduleId, AddParticipantByEmailRequest request);
@@ -43,6 +53,20 @@ abstract class ScheduleRemoteDataSource {
   Future<KickParticipantResponse> leaveSchedule(String scheduleId, String userId);
   Future<void> changeParticipantRole(String scheduleId, String participantId);
   Future<void> reorderActivity({required int newIndex, required int activityId});
+  
+  // Checked items methods
+  Future<List<CheckedItemModel>> getCheckedItems(String scheduleId);
+  Future<List<AddCheckedItemResponse>> addCheckedItem(List<AddCheckedItemRequest> request);
+  Future<CheckedItemModel> toggleCheckedItem(int checkedItemId, bool isChecked);
+  Future<Map<String, dynamic>> deleteCheckedItemsBulk(List<int> checkedItemIds);
+  
+  // Check-in/Check-out methods
+  Future<CheckInResponse> checkInActivity(CheckInRequest request);
+  Future<CheckInResponse> checkOutActivity(CheckOutRequest request);
+  
+  // Media methods
+  Future<List<MediaModel>> getMediaByActivity(int activityId);
+  Future<MediaModel> uploadMedia(UploadMediaRequest request);
 }
 
 class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
@@ -339,6 +363,222 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
       await _apiClient.put(Endpoints.reorderActivity(newIndex, activityId));
     } on DioException catch (e) {
       throw Exception('Failed to reorder activity: ${e.message}');
+    }
+  }
+
+  @override
+  Future<List<CheckedItemModel>> getCheckedItems(String scheduleId) async {
+    try {
+      final response = await _apiClient.get(
+        Endpoints.getCheckedItems(scheduleId),
+      );
+
+      if (response.data is List) {
+        final list = response.data as List;
+        return await computeMapList<CheckedItemModel>(
+          list,
+          (m) => CheckedItemModel.fromJson(m),
+        );
+      }
+
+      throw Exception('Invalid response format');
+    } on DioException catch (e) {
+      throw Exception('Failed to get checked items: ${e.message}');
+    }
+  }
+
+  @override
+  Future<List<AddCheckedItemResponse>> addCheckedItem(List<AddCheckedItemRequest> request) async {
+    try {
+      final response = await _apiClient.post(
+        Endpoints.addCheckedItem,
+        data: request.map((r) => r.toJson()).toList(),
+      );
+
+      if (response.data is List) {
+        final list = response.data as List;
+        return await computeMapList<AddCheckedItemResponse>(
+          list,
+          (m) => AddCheckedItemResponse.fromJson(m),
+        );
+      }
+
+      throw Exception('Invalid response format');
+    } on DioException catch (e) {
+      throw Exception('Failed to add checked item: ${e.message}');
+    }
+  }
+
+  @override
+  Future<CheckedItemModel> toggleCheckedItem(int checkedItemId, bool isChecked) async {
+    try {
+      final response = await _apiClient.patch(
+        Endpoints.toggleCheckedItem(checkedItemId, isChecked),
+      );
+
+      return await computeParseObject<CheckedItemModel>(
+        response.data as Map<String, dynamic>,
+        (m) => CheckedItemModel.fromJson(m),
+      );
+    } on DioException catch (e) {
+      throw Exception('Failed to toggle checked item: ${e.message}');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> deleteCheckedItemsBulk(List<int> checkedItemIds) async {
+    try {
+      final response = await _apiClient.delete(
+        Endpoints.deleteCheckedItemsBulk,
+        data: checkedItemIds,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception('Failed to delete checked items: ${e.message}');
+    }
+  }
+
+  @override
+  Future<ScheduleModel> cancelSchedule(String scheduleId) async {
+    try {
+      final response = await _apiClient.patch(
+        Endpoints.cancelSchedule(scheduleId),
+      );
+
+      return await computeParseObject<ScheduleModel>(
+        response.data as Map<String, dynamic>,
+        (m) => ScheduleModel.fromJson(m),
+      );
+    } on DioException catch (e) {
+      throw Exception('Failed to cancel schedule: ${e.message}');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> restoreSchedule(String scheduleId) async {
+    try {
+      final response = await _apiClient.patch(
+        Endpoints.restoreSchedule(scheduleId),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception('Failed to restore schedule: ${e.message}');
+    }
+  }
+
+  @override
+  Future<CheckInResponse> checkInActivity(CheckInRequest request) async {
+    try {
+      final formData = FormData.fromMap({
+        'ActivityId': request.activityId,
+        if (request.file != null) 'File': await MultipartFile.fromFile(request.file!),
+        if (request.description != null) 'Description': request.description,
+      });
+
+      final response = await _apiClient.post(
+        Endpoints.checkIn,
+        data: formData,
+      );
+
+      return await computeParseObject<CheckInResponse>(
+        response.data as Map<String, dynamic>,
+        (m) => CheckInResponse.fromJson(m),
+      );
+    } on DioException catch (e) {
+      // Extract error message from server response
+      String errorMessage = 'Failed to check in';
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map<String, dynamic> && data.containsKey('message')) {
+          errorMessage = data['message'].toString();
+        } else if (data is String) {
+          errorMessage = data;
+        }
+      } else if (e.message != null) {
+        errorMessage = e.message!;
+      }
+      throw Exception(errorMessage);
+    }
+  }
+
+  @override
+  Future<CheckInResponse> checkOutActivity(CheckOutRequest request) async {
+    try {
+      final formData = FormData.fromMap({
+        'ActivityId': request.activityId,
+        if (request.file != null) 'File': await MultipartFile.fromFile(request.file!),
+        if (request.description != null) 'Description': request.description,
+      });
+
+      final response = await _apiClient.post(
+        Endpoints.checkOut,
+        data: formData,
+      );
+
+      return await computeParseObject<CheckInResponse>(
+        response.data as Map<String, dynamic>,
+        (m) => CheckInResponse.fromJson(m),
+      );
+    } on DioException catch (e) {
+      // Extract error message from server response
+      String errorMessage = 'Failed to check out';
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map<String, dynamic> && data.containsKey('message')) {
+          errorMessage = data['message'].toString();
+        } else if (data is String) {
+          errorMessage = data;
+        }
+      } else if (e.message != null) {
+        errorMessage = e.message!;
+      }
+      throw Exception(errorMessage);
+    }
+  }
+
+  @override
+  Future<List<MediaModel>> getMediaByActivity(int activityId) async {
+    try {
+      final response = await _apiClient.get(
+        Endpoints.getMediaByActivityId(activityId),
+      );
+
+      if (response.data is List) {
+        final list = response.data as List;
+        return await computeMapList<MediaModel>(
+          list,
+          (m) => MediaModel.fromJson(m),
+        );
+      }
+
+      throw Exception('Invalid response format');
+    } on DioException catch (e) {
+      throw Exception('Failed to get media: ${e.message}');
+    }
+  }
+
+  @override
+  Future<MediaModel> uploadMedia(UploadMediaRequest request) async {
+    try {
+      final formData = FormData.fromMap({
+        if (request.file != null) 'File': await MultipartFile.fromFile(request.file!),
+        if (request.description != null) 'Description': request.description,
+        'UploadMethod': request.uploadMethod,
+        if (request.scheduleId != null) 'ScheduleId': request.scheduleId,
+        'ActivityId': request.activityId,
+      });
+
+      final response = await _apiClient.post(
+        Endpoints.uploadMedia,
+        data: formData,
+      );
+
+      return await computeParseObject<MediaModel>(
+        response.data as Map<String, dynamic>,
+        (m) => MediaModel.fromJson(m),
+      );
+    } on DioException catch (e) {
+      throw Exception('Failed to upload media: ${e.message}');
     }
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../routes.dart';
 import '../../../../core/utils/dialog_utils.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../widgets/auth_container.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_text_field.dart';
@@ -74,10 +75,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   builder: (context, constraints) {
                     return SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      padding: EdgeInsets.only(
-                        left: 24.0,
-                        right: 24.0,
-                        bottom: keyboardHeight + 40,
+                      padding: context.responsivePadding(
+                        horizontal: 16,
+                        vertical: 0,
+                        bottom: keyboardHeight + context.responsiveSpacing(
+                          verySmall: 24,
+                          small: 32,
+                          large: 40,
+                        ),
                       ),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
@@ -90,7 +95,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Dynamic top spacing based on screen height
-                                SizedBox(height: screenSize.height * 0.12),
+                                SizedBox(height: context.responsiveHeightPercentage(
+                                  verySmall: 0.08,
+                                  small: 0.10,
+                                  large: 0.12,
+                                )),
 
                                 // Header Section
                                 const AuthHeader(
@@ -98,7 +107,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   subtitle: 'Sign in to continue your journey',
                                 ),
 
-                                SizedBox(height: screenSize.height * 0.05),
+                                SizedBox(height: context.responsiveHeightPercentage(
+                                  verySmall: 0.03,
+                                  small: 0.04,
+                                  large: 0.05,
+                                )),
 
                                 // Email Field
                                 AuthTextField(
@@ -108,7 +121,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   validator: _loginController.validateEmail,
                                 ),
 
-                                const SizedBox(height: 16),
+                                SizedBox(height: context.responsiveSpacing(
+                                  verySmall: 12,
+                                  small: 14,
+                                  large: 16,
+                                )),
 
                                 // Password Field
                                 StatefulBuilder(
@@ -128,7 +145,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   },
                                 ),
 
-                                const SizedBox(height: 16),
+                                SizedBox(height: context.responsiveSpacing(
+                                  verySmall: 12,
+                                  small: 14,
+                                  large: 16,
+                                )),
 
                                 // Remember Me & Forgot Password
                                 StatefulBuilder(
@@ -144,7 +165,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   },
                                 ),
 
-                                SizedBox(height: screenSize.height * 0.04),
+                                SizedBox(height: context.responsiveHeightPercentage(
+                                  verySmall: 0.03,
+                                  small: 0.035,
+                                  large: 0.04,
+                                )),
 
                                 // Login Button
                                 BlocBuilder<AuthBloc, AuthState>(
@@ -160,23 +185,39 @@ class _LoginScreenState extends State<LoginScreen> {
                                   },
                                 ),
 
-                                const SizedBox(height: 24),
+                                SizedBox(height: context.responsiveSpacing(
+                                  verySmall: 20,
+                                  small: 24,
+                                  large: 32,
+                                )),
 
                                 // Divider
                                 const AuthDivider(),
 
-                                const SizedBox(height: 24),
+                                SizedBox(height: context.responsiveSpacing(
+                                  verySmall: 20,
+                                  small: 24,
+                                  large: 32,
+                                )),
 
                                 // Social Login Buttons
                                 const SocialAuthSection(),
 
-                                SizedBox(height: screenSize.height * 0.04),
+                                SizedBox(height: context.responsiveHeightPercentage(
+                                  verySmall: 0.03,
+                                  small: 0.035,
+                                  large: 0.04,
+                                )),
 
                                 // Sign Up Link
                                 const SignUpLink(),
 
                                 // Extra bottom spacing
-                                const SizedBox(height: 40),
+                                SizedBox(height: context.responsiveSpacing(
+                                  verySmall: 24,
+                                  small: 32,
+                                  large: 40,
+                                )),
                               ],
                             ),
                           ),

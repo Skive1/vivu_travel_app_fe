@@ -53,6 +53,9 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+    
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.white,
@@ -63,6 +66,7 @@ class _MainLayoutState extends State<MainLayout> {
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
         onTap: _onBottomNavTap,
+        isSmallScreen: isSmallScreen,
       ),
     );
   }
