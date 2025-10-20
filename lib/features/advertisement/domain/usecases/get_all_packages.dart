@@ -14,3 +14,14 @@ class GetAllPackages implements UseCase<List<PackageEntity>, NoParams> {
     return await repository.getAllPackages();
   }
 }
+
+class GetPurchasedPackagesByPartner implements UseCase<List<PackageEntity>, String> {
+  final AdvertisementRepository repository;
+
+  GetPurchasedPackagesByPartner(this.repository);
+
+  @override
+  Future<Either<Failure, List<PackageEntity>>> call(String partnerId) async {
+    return await repository.getPurchasedPackagesByPartner(partnerId);
+  }
+}

@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../domain/entities/package_entity.dart';
 import 'package_card_widget.dart';
+import 'purchased_package_card_widget.dart';
 import 'empty_state_widget.dart';
 import '../screens/payment_screen.dart';
+import '../bloc/advertisement_bloc.dart';
 
 class PackageListWidget extends StatelessWidget {
   final List<PackageEntity> packages;
   final bool isLoading;
+  final bool showPurchaseButton;
+  final VoidCallback? onPurchaseSuccess;
 
   const PackageListWidget({
     super.key,
     required this.packages,
     this.isLoading = false,
+    this.showPurchaseButton = true,
+    this.onPurchaseSuccess,
   });
 
   @override
@@ -28,9 +35,11 @@ class PackageListWidget extends StatelessWidget {
 
     if (packages.isEmpty) {
       return EmptyStateWidget(
-        icon: Icons.card_giftcard_outlined,
-        title: 'Chưa có gói dịch vụ nào',
-        subtitle: 'Các gói dịch vụ quảng cáo sẽ hiển thị tại đây',
+        icon: showPurchaseButton ? Icons.card_giftcard_outlined : Icons.history_outlined,
+        title: showPurchaseButton ? 'Chưa có gói dịch vụ nào' : 'Chưa có gói đã mua',
+        subtitle: showPurchaseButton 
+            ? 'Các gói dịch vụ quảng cáo sẽ hiển thị tại đây'
+            : 'Lịch sử mua gói dịch vụ sẽ hiển thị tại đây',
         actionText: 'Làm mới',
         onAction: () {
           // Refresh will be handled by parent
@@ -72,31 +81,53 @@ class PackageListWidget extends StatelessWidget {
               large: 20.0,
             ),
           ),
-          child: PackageCardWidget(
-            package: package,
-            onTap: () => _navigateToPackageDetail(context, package),
-            onPurchase: () => _showPurchaseDialog(context, package),
-          ),
+          child: showPurchaseButton 
+              ? PackageCardWidget(
+                  package: package,
+                  onTap: () => _navigateToPackageDetail(context, package),
+                  onPurchase: () => _showPurchaseDialog(context, package),
+                )
+              : PurchasedPackageCardWidget(
+                  package: package,
+                  onTap: () => _navigateToPackageDetail(context, package),
+                ),
         );
       },
     );
   }
 
   void _navigateToPackageDetail(BuildContext context, PackageEntity package) {
-    // TODO: Navigate to package detail screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Xem chi tiết gói: ${package.name}'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    if (showPurchaseButton) {
+      // For available packages - show purchase info
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Xem chi tiết gói: ${package.name}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      // For purchased packages - show transaction details
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Xem chi tiết giao dịch: ${package.name}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
-  void _showPurchaseDialog(BuildContext context, PackageEntity package) {
-    Navigator.of(context).push(
+  void _showPurchaseDialog(BuildContext context, PackageEntity package) async {
+    final bloc = context.read<AdvertisementBloc>();
+    final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PaymentScreen(package: package),
+        builder: (_) => BlocProvider.value(
+          value: bloc,
+          child: PaymentScreen(package: package),
+        ),
       ),
     );
+    if (result == true && onPurchaseSuccess != null) {
+      onPurchaseSuccess!();
+    }
   }
 }

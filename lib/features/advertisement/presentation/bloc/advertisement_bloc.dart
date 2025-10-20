@@ -16,6 +16,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   final create_post_usecase.CreatePost createPost;
   final create_payment_usecase.CreatePayment createPayment;
   final GetPaymentStatus getPaymentStatus;
+  final GetPurchasedPackagesByPartner getPurchasedPackagesByPartner;
 
   AdvertisementBloc({
     required this.getAllPackages,
@@ -24,6 +25,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     required this.createPost,
     required this.createPayment,
     required this.getPaymentStatus,
+    required this.getPurchasedPackagesByPartner,
   }) : super(const AdvertisementInitial()) {
     on<LoadAllPackages>(_onLoadAllPackages);
     on<LoadAllPosts>(_onLoadAllPosts);
@@ -33,6 +35,8 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     on<CheckPaymentStatus>(_onCheckPaymentStatus);
     on<RefreshPosts>(_onRefreshPosts);
     on<RefreshPackages>(_onRefreshPackages);
+    on<LoadPurchasedPackages>(_onLoadPurchasedPackages);
+    on<RefreshPurchasedPackages>(_onRefreshPurchasedPackages);
   }
 
   Future<void> _onLoadAllPackages(
@@ -135,5 +139,25 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     Emitter<AdvertisementState> emit,
   ) async {
     add(const LoadAllPackages());
+  }
+
+  Future<void> _onLoadPurchasedPackages(
+    LoadPurchasedPackages event,
+    Emitter<AdvertisementState> emit,
+  ) async {
+    emit(const AdvertisementLoading());
+
+    final result = await getPurchasedPackagesByPartner(event.partnerId);
+    result.fold(
+      (failure) => emit(AdvertisementError(message: failure.message)),
+      (packages) => emit(PurchasedPackagesLoaded(packages: packages)),
+    );
+  }
+
+  Future<void> _onRefreshPurchasedPackages(
+    RefreshPurchasedPackages event,
+    Emitter<AdvertisementState> emit,
+  ) async {
+    add(LoadPurchasedPackages(event.partnerId));
   }
 }

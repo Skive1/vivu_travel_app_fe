@@ -83,10 +83,16 @@ class ExploreAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 fontWeight: FontWeight.w500,
               ),
-              tabs: const [
-                Tab(text: 'Bài đăng'),
-                Tab(text: 'Gói dịch vụ'),
-              ],
+              tabs: tabController.length == 3
+                  ? const [
+                      Tab(text: 'Bài đăng'),
+                      Tab(text: 'Gói dịch vụ'),
+                      Tab(text: 'Gói của bạn'),
+                    ]
+                  : const [
+                      Tab(text: 'Bài đăng'),
+                      Tab(text: 'Gói dịch vụ'),
+                    ],
             ),
           ],
         ),

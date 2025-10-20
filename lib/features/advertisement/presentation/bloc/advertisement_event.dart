@@ -72,3 +72,21 @@ class RefreshPosts extends AdvertisementEvent {
 class RefreshPackages extends AdvertisementEvent {
   const RefreshPackages();
 }
+
+class LoadPurchasedPackages extends AdvertisementEvent {
+  final String partnerId;
+
+  const LoadPurchasedPackages(this.partnerId);
+
+  @override
+  List<Object?> get props => [partnerId];
+}
+
+class RefreshPurchasedPackages extends AdvertisementEvent {
+  final String partnerId;
+
+  const RefreshPurchasedPackages(this.partnerId);
+
+  @override
+  List<Object?> get props => [partnerId];
+}

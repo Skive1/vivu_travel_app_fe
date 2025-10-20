@@ -4,7 +4,6 @@ import 'dart:io';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/loading_overlay.dart';
 import '../bloc/advertisement_bloc.dart';
 import '../bloc/advertisement_event.dart';
 import '../bloc/advertisement_state.dart';
@@ -35,7 +34,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -122,17 +121,35 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Title field
-                      Text(
-                        'Tiêu đề',
-                        style: TextStyle(
-                          fontSize: context.responsiveFontSize(
-                            verySmall: 14.0,
-                            small: 15.0,
-                            large: 16.0,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6366F1).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.title_outlined,
+                              color: Color(0xFF6366F1),
+                              size: 20,
+                            ),
                           ),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Tiêu đề',
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 16.0,
+                                small: 18.0,
+                                large: 20.0,
+                              ),
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(
                         height: context.responsive(
@@ -146,37 +163,38 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         decoration: InputDecoration(
                           hintText: 'Nhập tiêu đề bài đăng...',
                           hintStyle: TextStyle(
-                            color: Colors.grey[400],
+                            color: const Color(0xFF94A3B8),
                             fontSize: context.responsiveFontSize(
-                              verySmall: 14.0,
-                              small: 15.0,
-                              large: 16.0,
+                              verySmall: 15.0,
+                              small: 16.0,
+                              large: 17.0,
                             ),
+                            fontWeight: FontWeight.w500,
                           ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(16.0),
+                            borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(16.0),
+                            borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: BorderSide(color: AppColors.primary, width: 2.0),
+                            borderRadius: BorderRadius.circular(16.0),
+                            borderSide: BorderSide(color: const Color(0xFF6366F1), width: 2.0),
                           ),
                           filled: true,
                           fillColor: Colors.white,
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: context.responsive(
+                              verySmall: 20.0,
+                              small: 24.0,
+                              large: 28.0,
+                            ),
+                            vertical: context.responsive(
                               verySmall: 16.0,
                               small: 18.0,
                               large: 20.0,
-                            ),
-                            vertical: context.responsive(
-                              verySmall: 12.0,
-                              small: 14.0,
-                              large: 16.0,
                             ),
                           ),
                         ),
@@ -198,17 +216,35 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         ),
                       ),
                       // Description field
-                      Text(
-                        'Nội dung',
-                        style: TextStyle(
-                          fontSize: context.responsiveFontSize(
-                            verySmall: 14.0,
-                            small: 15.0,
-                            large: 16.0,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.description_outlined,
+                              color: Color(0xFF8B5CF6),
+                              size: 20,
+                            ),
                           ),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Nội dung',
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 16.0,
+                                small: 18.0,
+                                large: 20.0,
+                              ),
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(
                         height: context.responsive(
@@ -223,37 +259,38 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         decoration: InputDecoration(
                           hintText: 'Nhập nội dung bài đăng...',
                           hintStyle: TextStyle(
-                            color: Colors.grey[400],
+                            color: const Color(0xFF94A3B8),
                             fontSize: context.responsiveFontSize(
-                              verySmall: 14.0,
-                              small: 15.0,
-                              large: 16.0,
+                              verySmall: 15.0,
+                              small: 16.0,
+                              large: 17.0,
                             ),
+                            fontWeight: FontWeight.w500,
                           ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(16.0),
+                            borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: BorderSide(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(16.0),
+                            borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: BorderSide(color: AppColors.primary, width: 2.0),
+                            borderRadius: BorderRadius.circular(16.0),
+                            borderSide: BorderSide(color: const Color(0xFF8B5CF6), width: 2.0),
                           ),
                           filled: true,
                           fillColor: Colors.white,
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: context.responsive(
+                              verySmall: 20.0,
+                              small: 24.0,
+                              large: 28.0,
+                            ),
+                            vertical: context.responsive(
                               verySmall: 16.0,
                               small: 18.0,
                               large: 20.0,
-                            ),
-                            vertical: context.responsive(
-                              verySmall: 12.0,
-                              small: 14.0,
-                              large: 16.0,
                             ),
                           ),
                         ),
@@ -275,17 +312,35 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         ),
                       ),
                       // Media picker
-                      Text(
-                        'Hình ảnh/Video',
-                        style: TextStyle(
-                          fontSize: context.responsiveFontSize(
-                            verySmall: 14.0,
-                            small: 15.0,
-                            large: 16.0,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.photo_library_outlined,
+                              color: Color(0xFF10B981),
+                              size: 20,
+                            ),
                           ),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Hình ảnh/Video',
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 16.0,
+                                small: 18.0,
+                                large: 20.0,
+                              ),
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF1E293B),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(
                         height: context.responsive(
@@ -319,19 +374,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _submitPost,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: const Color(0xFF6366F1),
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(
                               vertical: context.responsive(
-                                verySmall: 14.0,
-                                small: 16.0,
-                                large: 18.0,
+                                verySmall: 18.0,
+                                small: 20.0,
+                                large: 22.0,
                               ),
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
+                              borderRadius: BorderRadius.circular(16.0),
                             ),
                             elevation: 0,
+                            shadowColor: const Color(0xFF6366F1).withOpacity(0.3),
                           ),
                           child: _isLoading
                               ? SizedBox(
@@ -354,11 +410,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   'Tạo bài đăng',
                                   style: TextStyle(
                                     fontSize: context.responsiveFontSize(
-                                      verySmall: 14.0,
-                                      small: 15.0,
-                                      large: 16.0,
+                                      verySmall: 16.0,
+                                      small: 17.0,
+                                      large: 18.0,
                                     ),
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.5,
                                   ),
                                 ),
                         ),
@@ -374,7 +431,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   ),
                 ),
               ),
-              LoadingOverlay(isLoading: _isLoading),
             ],
           );
         },

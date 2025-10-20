@@ -40,6 +40,15 @@ class PackagesLoaded extends AdvertisementState {
   List<Object?> get props => [packages];
 }
 
+class PurchasedPackagesLoaded extends AdvertisementState {
+  final List<PackageEntity> packages;
+
+  const PurchasedPackagesLoaded({required this.packages});
+
+  @override
+  List<Object?> get props => [packages];
+}
+
 class PostsLoaded extends AdvertisementState {
   final List<PostEntity> posts;
 

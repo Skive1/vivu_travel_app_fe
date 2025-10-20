@@ -268,6 +268,7 @@ void _initAdvertisement() {
 
   // Use cases
   sl.registerLazySingleton(() => GetAllPackages(sl()));
+  sl.registerLazySingleton(() => GetPurchasedPackagesByPartner(sl()));
   sl.registerLazySingleton(() => GetAllPosts(sl()));
   sl.registerLazySingleton(() => GetPostById(sl()));
   sl.registerLazySingleton(() => CreatePost(sl()));
@@ -283,6 +284,7 @@ void _initAdvertisement() {
       createPost: sl(),
       createPayment: sl(),
       getPaymentStatus: sl(),
+      getPurchasedPackagesByPartner: sl(),
     ),
   );
 }

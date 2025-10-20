@@ -6,6 +6,7 @@ import '../entities/payment_entity.dart';
 
 abstract class AdvertisementRepository {
   Future<Either<Failure, List<PackageEntity>>> getAllPackages();
+  Future<Either<Failure, List<PackageEntity>>> getPurchasedPackagesByPartner(String partnerId);
   Future<Either<Failure, List<PostEntity>>> getAllPosts();
   Future<Either<Failure, PostEntity>> getPostById(String postId);
   Future<Either<Failure, PostEntity>> createPost({

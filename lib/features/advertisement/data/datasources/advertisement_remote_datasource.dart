@@ -7,6 +7,7 @@ import '../models/payment_model.dart';
 
 abstract class AdvertisementRemoteDataSource {
   Future<List<PackageModel>> getAllPackages();
+  Future<List<PackageModel>> getPurchasedPackagesByPartner(String partnerId);
   Future<List<PostModel>> getAllPosts();
   Future<PostModel> getPostById(String postId);
   Future<PostModel> createPost({
@@ -31,6 +32,15 @@ class AdvertisementRemoteDataSourceImpl implements AdvertisementRemoteDataSource
   @override
   Future<List<PackageModel>> getAllPackages() async {
     final response = await apiClient.get(Endpoints.getAllPackages);
+    return await computeMapList(
+      response.data as List,
+      (json) => PackageModel.fromJson(json),
+    );
+  }
+
+  @override
+  Future<List<PackageModel>> getPurchasedPackagesByPartner(String partnerId) async {
+    final response = await apiClient.get(Endpoints.getPurchasedPackagesByPartner(partnerId));
     return await computeMapList(
       response.data as List,
       (json) => PackageModel.fromJson(json),

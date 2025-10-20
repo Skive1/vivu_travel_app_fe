@@ -50,6 +50,7 @@ class Endpoints {
   // Advertisement endpoints
   static const String getAllPackages = '/api/advertisement/package/get-all';
   static const String getAllPosts = '/api/advertisement/post/all';
+  static String getPurchasedPackagesByPartner(String partnerId) => '/api/advertisement/partner/purchase/get-by-partnerId/$partnerId';
   static String getPostById(String postId) => '/api/advertisement/partner/post/get-by-id/$postId';
   static const String createPost = '/api/advertisement/partner/post/create';
   static const String createPayment = '/api/payment/create';

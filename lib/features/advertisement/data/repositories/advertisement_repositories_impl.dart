@@ -24,6 +24,16 @@ class AdvertisementRepositoryImpl implements AdvertisementRepository {
   }
 
   @override
+  Future<Either<Failure, List<PackageEntity>>> getPurchasedPackagesByPartner(String partnerId) async {
+    try {
+      final packages = await remoteDataSource.getPurchasedPackagesByPartner(partnerId);
+      return Right(packages.map((model) => model.toEntity()).toList());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<PostEntity>>> getAllPosts() async {
     try {
       final posts = await remoteDataSource.getAllPosts();
