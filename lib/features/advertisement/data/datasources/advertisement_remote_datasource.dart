@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/endpoints.dart';
 import '../../../../core/utils/compute_utils.dart';
@@ -22,6 +23,7 @@ abstract class AdvertisementRemoteDataSource {
     required int amount,
   });
   Future<PaymentStatusModel> getPaymentStatus(String transactionId);
+  Future<PaymentStatusModel> cancelPayment(String transactionId);
 }
 
 class AdvertisementRemoteDataSourceImpl implements AdvertisementRemoteDataSource {
@@ -73,18 +75,32 @@ class AdvertisementRemoteDataSourceImpl implements AdvertisementRemoteDataSource
     required List<String> mediaFiles,
     required List<int> mediaTypes,
   }) async {
-    final formData = {
-      'Title': title,
-      'Description': description,
-      'PackagePurchaseId': packagePurchaseId,
-      'MediaFiles': mediaFiles,
-      'MediaTypes': mediaTypes,
-    };
+    // Build multipart/form-data with files and types as arrays
+    final formData = FormData();
 
-    final response = await apiClient.post(
-      Endpoints.createPost,
-      data: formData,
-    );
+    formData.fields.add(MapEntry('Title', title));
+    formData.fields.add(MapEntry('Description', description));
+    formData.fields.add(MapEntry('PackagePurchaseId', packagePurchaseId));
+
+    // Attach files (repeat key 'MediaFiles' for arrays)
+    for (final filePath in mediaFiles) {
+      formData.files.add(
+        MapEntry(
+          'MediaFiles',
+          await MultipartFile.fromFile(
+            filePath,
+            filename: filePath.split('/').last.split('\\').last,
+          ),
+        ),
+      );
+    }
+
+    // Attach media types (repeat key 'MediaTypes' for arrays)
+    for (final t in mediaTypes) {
+      formData.fields.add(MapEntry('MediaTypes', t.toString()));
+    }
+
+    final response = await apiClient.post(Endpoints.createPost, data: formData);
     return await computeParseObject(
       response.data as Map<String, dynamic>,
       (json) => PostModel.fromJson(json),
@@ -113,6 +129,17 @@ class AdvertisementRemoteDataSourceImpl implements AdvertisementRemoteDataSource
   Future<PaymentStatusModel> getPaymentStatus(String transactionId) async {
     final response = await apiClient.get(
       '${Endpoints.getPaymentStatus}?transactionId=$transactionId',
+    );
+    return await computeParseObject(
+      response.data as Map<String, dynamic>,
+      (json) => PaymentStatusModel.fromJson(json),
+    );
+  }
+
+  @override
+  Future<PaymentStatusModel> cancelPayment(String transactionId) async {
+    final response = await apiClient.patch(
+      '${Endpoints.cancelPayment}?transactionId=$transactionId',
     );
     return await computeParseObject(
       response.data as Map<String, dynamic>,

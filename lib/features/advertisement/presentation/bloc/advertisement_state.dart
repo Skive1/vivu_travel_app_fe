@@ -94,6 +94,15 @@ class PaymentStatusChecked extends AdvertisementState {
   List<Object?> get props => [status];
 }
 
+class PaymentCancelled extends AdvertisementState {
+  final PaymentStatusEntity status;
+
+  const PaymentCancelled({required this.status});
+
+  @override
+  List<Object?> get props => [status];
+}
+
 class AdvertisementError extends AdvertisementState {
   final String message;
 

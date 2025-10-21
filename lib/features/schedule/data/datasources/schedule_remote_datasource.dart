@@ -24,6 +24,8 @@ import '../models/checkout_request.dart';
 import '../models/checkin_response.dart';
 import '../models/media_model.dart';
 import '../models/upload_media_request.dart';
+import 'mapbox_geocoding_datasource.dart';
+import '../models/mapbox_geocoding_response.dart';
 
 abstract class ScheduleRemoteDataSource {
   Future<List<ScheduleModel>> getSchedulesByParticipant(String participantId);
@@ -67,13 +69,27 @@ abstract class ScheduleRemoteDataSource {
   // Media methods
   Future<List<MediaModel>> getMediaByActivity(int activityId);
   Future<MediaModel> uploadMedia(UploadMediaRequest request);
+  
+  // Mapbox geocoding methods
+  Future<MapboxGeocodingResponse> searchAddress(String query);
+  Future<MapboxGeocodingResponse> searchAddressStructured({
+    String? addressNumber,
+    String? street,
+    String? locality,
+    String? region,
+    String? country,
+  });
 }
 
 class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
   final ApiClient _apiClient;
+  final MapboxGeocodingDataSource _mapboxDataSource;
 
-  ScheduleRemoteDataSourceImpl({required ApiClient apiClient})
-    : _apiClient = apiClient;
+  ScheduleRemoteDataSourceImpl({
+    required ApiClient apiClient,
+    required MapboxGeocodingDataSource mapboxDataSource,
+  }) : _apiClient = apiClient,
+       _mapboxDataSource = mapboxDataSource;
 
   @override
   Future<List<ScheduleModel>> getSchedulesByParticipant(
@@ -580,5 +596,27 @@ class ScheduleRemoteDataSourceImpl implements ScheduleRemoteDataSource {
     } on DioException catch (e) {
       throw Exception('Failed to upload media: ${e.message}');
     }
+  }
+
+  @override
+  Future<MapboxGeocodingResponse> searchAddress(String query) async {
+    return await _mapboxDataSource.searchAddress(query);
+  }
+
+  @override
+  Future<MapboxGeocodingResponse> searchAddressStructured({
+    String? addressNumber,
+    String? street,
+    String? locality,
+    String? region,
+    String? country,
+  }) async {
+    return await _mapboxDataSource.searchAddressStructured(
+      addressNumber: addressNumber,
+      street: street,
+      locality: locality,
+      region: region,
+      country: country,
+    );
   }
 }

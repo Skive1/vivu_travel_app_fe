@@ -6,6 +6,7 @@ import '../../domain/usecases/get_post_by_id.dart';
 import '../../domain/usecases/create_post.dart' as create_post_usecase;
 import '../../domain/usecases/create_payment.dart' as create_payment_usecase;
 import '../../domain/usecases/get_payment_status.dart';
+import '../../domain/usecases/cancel_payment.dart' as cancel_payment_usecase;
 import 'advertisement_event.dart';
 import 'advertisement_state.dart';
 
@@ -16,6 +17,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
   final create_post_usecase.CreatePost createPost;
   final create_payment_usecase.CreatePayment createPayment;
   final GetPaymentStatus getPaymentStatus;
+  final cancel_payment_usecase.CancelPayment cancelPayment;
   final GetPurchasedPackagesByPartner getPurchasedPackagesByPartner;
 
   AdvertisementBloc({
@@ -25,6 +27,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     required this.createPost,
     required this.createPayment,
     required this.getPaymentStatus,
+    required this.cancelPayment,
     required this.getPurchasedPackagesByPartner,
   }) : super(const AdvertisementInitial()) {
     on<LoadAllPackages>(_onLoadAllPackages);
@@ -33,6 +36,7 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     on<CreatePost>(_onCreatePost);
     on<CreatePayment>(_onCreatePayment);
     on<CheckPaymentStatus>(_onCheckPaymentStatus);
+    on<CancelPayment>(_onCancelPayment);
     on<RefreshPosts>(_onRefreshPosts);
     on<RefreshPackages>(_onRefreshPackages);
     on<LoadPurchasedPackages>(_onLoadPurchasedPackages);
@@ -127,11 +131,36 @@ class AdvertisementBloc extends Bloc<AdvertisementEvent, AdvertisementState> {
     );
   }
 
+  Future<void> _onCancelPayment(
+    CancelPayment event,
+    Emitter<AdvertisementState> emit,
+  ) async {
+    final result = await cancelPayment(cancel_payment_usecase.CancelPaymentParams(
+      transactionId: event.transactionId,
+    ));
+    
+    result.fold(
+      (failure) => emit(AdvertisementError(message: failure.message)),
+      (status) => emit(PaymentCancelled(status: status)),
+    );
+  }
+
   Future<void> _onRefreshPosts(
     RefreshPosts event,
     Emitter<AdvertisementState> emit,
   ) async {
-    add(const LoadAllPosts());
+    // Don't emit loading state if we already have posts loaded
+    // This prevents the UI from showing blank screen during refresh
+    final currentState = state;
+    if (currentState is! PostsLoaded) {
+      emit(const AdvertisementLoading());
+    }
+    
+    final result = await getAllPosts(NoParams());
+    result.fold(
+      (failure) => emit(AdvertisementError(message: failure.message)),
+      (posts) => emit(PostsLoaded(posts: posts)),
+    );
   }
 
   Future<void> _onRefreshPackages(

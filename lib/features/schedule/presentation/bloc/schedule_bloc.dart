@@ -30,6 +30,7 @@ import '../../domain/usecases/checkin_activity_usecase.dart';
 import '../../domain/usecases/checkout_activity_usecase.dart';
 import '../../domain/usecases/get_media_by_activity_usecase.dart';
 import '../../domain/usecases/upload_media_usecase.dart';
+import '../../domain/usecases/search_address_usecase.dart';
 
 class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   final GetSchedulesByParticipant _getSchedulesByParticipant;
@@ -58,6 +59,8 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   final CheckOutActivityUseCase _checkOutActivity;
   final GetMediaByActivityUseCase _getMediaByActivity;
   final UploadMediaUseCase _uploadMedia;
+  final SearchAddressUseCase _searchAddress;
+  final SearchAddressStructuredUseCase _searchAddressStructured;
 
   // Enhanced cache for schedules and activities with timestamps
   List<ScheduleEntity>? _cachedSchedules;
@@ -103,6 +106,8 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     required CheckOutActivityUseCase checkOutActivity,
     required GetMediaByActivityUseCase getMediaByActivity,
     required UploadMediaUseCase uploadMedia,
+    required SearchAddressUseCase searchAddress,
+    required SearchAddressStructuredUseCase searchAddressStructured,
   }) : _getSchedulesByParticipant = getSchedulesByParticipant,
        _getScheduleById = getScheduleById,
        _getActivitiesBySchedule = getActivitiesBySchedule,
@@ -129,6 +134,8 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
        _checkOutActivity = checkOutActivity,
        _getMediaByActivity = getMediaByActivity,
        _uploadMedia = uploadMedia,
+       _searchAddress = searchAddress,
+       _searchAddressStructured = searchAddressStructured,
        super(ScheduleInitial()) {
     on<GetSchedulesByParticipantEvent>(_onGetSchedulesByParticipant);
     on<GetScheduleByIdEvent>(_onGetScheduleById);
@@ -159,6 +166,8 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     on<CheckOutActivityEvent>(_onCheckOutActivity);
     on<GetMediaByActivityEvent>(_onGetMediaByActivity);
     on<UploadMediaEvent>(_onUploadMedia);
+    on<SearchAddressEvent>(_onSearchAddress);
+    on<SearchAddressStructuredEvent>(_onSearchAddressStructured);
   }
 
   Future<void> _onGetScheduleById(
@@ -762,6 +771,38 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     result.fold(
       (failure) => emit(UploadMediaError(message: failure.message)),
       (media) => emit(UploadMediaSuccess(media: media)),
+    );
+  }
+
+  Future<void> _onSearchAddress(
+    SearchAddressEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(SearchAddressLoading());
+    final result = await _searchAddress(event.query);
+    result.fold(
+      (failure) => emit(SearchAddressFailure(message: failure.message)),
+      (response) => emit(SearchAddressSuccess(response: response)),
+    );
+  }
+
+  Future<void> _onSearchAddressStructured(
+    SearchAddressStructuredEvent event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    emit(SearchAddressLoading());
+    final result = await _searchAddressStructured(
+      SearchAddressStructuredParams(
+        addressNumber: event.addressNumber,
+        street: event.street,
+        locality: event.locality,
+        region: event.region,
+        country: event.country,
+      ),
+    );
+    result.fold(
+      (failure) => emit(SearchAddressFailure(message: failure.message)),
+      (response) => emit(SearchAddressSuccess(response: response)),
     );
   }
 }

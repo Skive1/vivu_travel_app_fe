@@ -68,9 +68,22 @@ class _ActivityNavigationScreenState extends State<ActivityNavigationScreen> {
       final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
       _userPoint = mb.Point(coordinates: mb.Position(pos.longitude, pos.latitude));
 
-      if (widget.destinationLat != null && widget.destinationLng != null) {
+      // Try to use latitude and longitude from activity first
+      if (widget.activity.latitude != null && widget.activity.longitude != null) {
+        final lat = double.tryParse(widget.activity.latitude!);
+        final lng = double.tryParse(widget.activity.longitude!);
+        if (lat != null && lng != null) {
+          _destPoint = mb.Point(coordinates: mb.Position(lng, lat));
+        }
+      }
+      
+      // Fallback to destinationLat/Lng parameters
+      if (_destPoint == null && widget.destinationLat != null && widget.destinationLng != null) {
         _destPoint = mb.Point(coordinates: mb.Position(widget.destinationLng!, widget.destinationLat!));
-      } else {
+      }
+      
+      // Last fallback: geocode the address
+      if (_destPoint == null) {
         _destPoint = await _geocodeAddress(widget.activity.location);
       }
 

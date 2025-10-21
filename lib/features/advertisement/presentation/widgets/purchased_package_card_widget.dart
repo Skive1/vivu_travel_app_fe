@@ -23,13 +23,13 @@ class PurchasedPackageCardWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
           ],
           border: Border.all(
-            color: const Color(0xFFE2E8F0).withOpacity(0.5),
+            color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
             width: 1,
           ),
         ),
@@ -54,12 +54,12 @@ class PurchasedPackageCardWidget extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: package.isActive 
                       ? [
-                          const Color(0xFF6366F1).withOpacity(0.1),
-                          const Color(0xFF8B5CF6).withOpacity(0.05),
+                          const Color(0xFF6366F1).withValues(alpha: 0.1),
+                          const Color(0xFF8B5CF6).withValues(alpha: 0.05),
                         ]
                       : [
-                          Colors.grey.withOpacity(0.1),
-                          Colors.grey.withOpacity(0.05),
+                          Colors.grey.withValues(alpha: 0.1),
+                          Colors.grey.withValues(alpha: 0.05),
                         ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -74,8 +74,8 @@ class PurchasedPackageCardWidget extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: package.isActive 
-                          ? const Color(0xFF6366F1).withOpacity(0.2)
-                          : Colors.grey.withOpacity(0.2),
+                          ? const Color(0xFF6366F1).withValues(alpha: 0.2)
+                          : Colors.grey.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -169,8 +169,8 @@ class PurchasedPackageCardWidget extends StatelessWidget {
                       boxShadow: [
                         BoxShadow(
                           color: package.isActive 
-                              ? const Color(0xFF10B981).withOpacity(0.3)
-                              : Colors.grey.withOpacity(0.3),
+                              ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                              : Colors.grey.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -254,124 +254,59 @@ class PurchasedPackageCardWidget extends StatelessWidget {
                     ),
                   ),
                   
-                  // Price info
-                  Container(
-                    padding: context.responsivePadding(
-                      all: context.responsive(
-                        verySmall: 16.0,
-                        small: 18.0,
-                        large: 20.0,
-                      ),
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF6366F1).withOpacity(0.1),
-                          const Color(0xFF8B5CF6).withOpacity(0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFF6366F1).withOpacity(0.2),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF6366F1).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.payment_outlined,
-                            color: Color(0xFF6366F1),
-                            size: 20,
-                          ),
-                        ),
-                        SizedBox(
-                          width: context.responsiveSpacing(
+                  // Action button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: onTap,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: package.isActive 
+                            ? const Color(0xFF6366F1) 
+                            : Colors.grey,
+                        foregroundColor: Colors.white,
+                        padding: context.responsivePadding(
+                          vertical: context.responsive(
                             verySmall: 12.0,
                             small: 14.0,
                             large: 16.0,
                           ),
                         ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Đã thanh toán',
-                                style: TextStyle(
-                                  fontSize: context.responsiveFontSize(
-                                    verySmall: 12.0,
-                                    small: 13.0,
-                                    large: 14.0,
-                                  ),
-                                  color: const Color(0xFF64748B),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(
-                                height: context.responsiveSpacing(
-                                  verySmall: 4.0,
-                                  small: 6.0,
-                                  large: 8.0,
-                                ),
-                              ),
-                              Text(
-                                NumberFormat.currency(
-                                  locale: 'vi_VN',
-                                  symbol: '₫',
-                                ).format(package.price),
-                                style: TextStyle(
-                                  fontSize: context.responsiveFontSize(
-                                    verySmall: 18.0,
-                                    small: 20.0,
-                                    large: 22.0,
-                                  ),
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF6366F1),
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                            ],
-                          ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        Container(
-                          padding: context.responsivePadding(
-                            horizontal: context.responsive(
-                              verySmall: 12.0,
-                              small: 14.0,
-                              large: 16.0,
+                        elevation: 0,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.visibility_outlined,
+                            size: context.responsiveIconSize(
+                              verySmall: 16.0,
+                              small: 18.0,
+                              large: 20.0,
                             ),
-                            vertical: context.responsive(
+                          ),
+                          SizedBox(
+                            width: context.responsiveSpacing(
                               verySmall: 8.0,
                               small: 10.0,
                               large: 12.0,
                             ),
                           ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF6366F1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'Chi tiết',
+                          Text(
+                            'Xem chi tiết',
                             style: TextStyle(
                               fontSize: context.responsiveFontSize(
-                                verySmall: 12.0,
-                                small: 13.0,
-                                large: 14.0,
+                                verySmall: 14.0,
+                                small: 15.0,
+                                large: 16.0,
                               ),
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -395,7 +330,7 @@ class PurchasedPackageCardWidget extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(

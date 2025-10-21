@@ -22,7 +22,7 @@ class ExploreAppBar extends StatelessWidget implements PreferredSizeWidget {
           children: [
             // AppBar content
             Container(
-              height: 56.0,
+              height: 50.0,
               padding: EdgeInsets.symmetric(
                 horizontal: context.responsive(
                   verySmall: 16.0,

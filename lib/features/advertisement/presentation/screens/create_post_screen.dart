@@ -7,7 +7,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../bloc/advertisement_bloc.dart';
 import '../bloc/advertisement_event.dart';
 import '../bloc/advertisement_state.dart';
-import '../widgets/image_picker_widget.dart';
+import '../widgets/rich_text_editor.dart';
+import '../widgets/package_selector_widget.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -19,15 +20,15 @@ class CreatePostScreen extends StatefulWidget {
 class _CreatePostScreenState extends State<CreatePostScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
   final List<File> _selectedImages = [];
   final List<int> _mediaTypes = []; // 0 for image, 1 for video
+  String _content = '';
+  String? _selectedPackageId;
   bool _isLoading = false;
 
   @override
   void dispose() {
     _titleController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -52,7 +53,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           ),
         ),
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            // Trigger refresh before navigating back
+            context.read<AdvertisementBloc>().add(const RefreshPosts());
+            Navigator.of(context).pop();
+          },
           icon: Icon(
             Icons.arrow_back_ios,
             color: AppColors.textPrimary,
@@ -63,23 +68,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _submitPost,
-            child: Text(
-              'Đăng',
-              style: TextStyle(
-                fontSize: context.responsiveFontSize(
-                  verySmall: 14.0,
-                  small: 15.0,
-                  large: 16.0,
-                ),
-                fontWeight: FontWeight.w600,
-                color: _isLoading ? Colors.grey : AppColors.primary,
-              ),
-            ),
-          ),
-        ],
       ),
       body: BlocConsumer<AdvertisementBloc, AdvertisementState>(
         listener: (context, state) {
@@ -90,8 +78,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               message: 'Bài đăng đã được tạo thành công và đang chờ duyệt.',
               buttonText: 'Đóng',
               onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop(); // Go back to explore screen
+                Navigator.of(context).pop(); // close dialog
+                // Trigger refresh before navigating back
+                context.read<AdvertisementBloc>().add(const RefreshPosts());
+                Navigator.of(context).pop(true); // return to explore and request refresh
               },
             );
           } else if (state is AdvertisementError) {
@@ -121,253 +111,63 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Title field
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6366F1).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.title_outlined,
-                              color: Color(0xFF6366F1),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Tiêu đề',
-                            style: TextStyle(
-                              fontSize: context.responsiveFontSize(
-                                verySmall: 16.0,
-                                small: 18.0,
-                                large: 20.0,
-                              ),
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF1E293B),
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
+                      _buildSectionHeader(
+                        context,
+                        Icons.title_outlined,
+                        'Tiêu đề',
+                        const Color(0xFF6366F1),
                       ),
-                      SizedBox(
-                        height: context.responsive(
-                          verySmall: 8.0,
-                          small: 10.0,
-                          large: 12.0,
-                        ),
-                      ),
-                      TextFormField(
-                        controller: _titleController,
-                        decoration: InputDecoration(
-                          hintText: 'Nhập tiêu đề bài đăng...',
-                          hintStyle: TextStyle(
-                            color: const Color(0xFF94A3B8),
-                            fontSize: context.responsiveFontSize(
-                              verySmall: 15.0,
-                              small: 16.0,
-                              large: 17.0,
-                            ),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16.0),
-                            borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16.0),
-                            borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16.0),
-                            borderSide: BorderSide(color: const Color(0xFF6366F1), width: 2.0),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: context.responsive(
-                              verySmall: 20.0,
-                              small: 24.0,
-                              large: 28.0,
-                            ),
-                            vertical: context.responsive(
-                              verySmall: 16.0,
-                              small: 18.0,
-                              large: 20.0,
-                            ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Vui lòng nhập tiêu đề';
-                          }
-                          if (value.trim().length < 5) {
-                            return 'Tiêu đề phải có ít nhất 5 ký tự';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(
-                        height: context.responsive(
-                          verySmall: 20.0,
-                          small: 24.0,
-                          large: 28.0,
-                        ),
-                      ),
-                      // Description field
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.description_outlined,
-                              color: Color(0xFF8B5CF6),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Nội dung',
-                            style: TextStyle(
-                              fontSize: context.responsiveFontSize(
-                                verySmall: 16.0,
-                                small: 18.0,
-                                large: 20.0,
-                              ),
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF1E293B),
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: context.responsive(
-                          verySmall: 8.0,
-                          small: 10.0,
-                          large: 12.0,
-                        ),
-                      ),
-                      TextFormField(
-                        controller: _descriptionController,
-                        maxLines: 6,
-                        decoration: InputDecoration(
-                          hintText: 'Nhập nội dung bài đăng...',
-                          hintStyle: TextStyle(
-                            color: const Color(0xFF94A3B8),
-                            fontSize: context.responsiveFontSize(
-                              verySmall: 15.0,
-                              small: 16.0,
-                              large: 17.0,
-                            ),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16.0),
-                            borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16.0),
-                            borderSide: BorderSide(color: const Color(0xFFE2E8F0)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16.0),
-                            borderSide: BorderSide(color: const Color(0xFF8B5CF6), width: 2.0),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: context.responsive(
-                              verySmall: 20.0,
-                              small: 24.0,
-                              large: 28.0,
-                            ),
-                            vertical: context.responsive(
-                              verySmall: 16.0,
-                              small: 18.0,
-                              large: 20.0,
-                            ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Vui lòng nhập nội dung';
-                          }
-                          if (value.trim().length < 20) {
-                            return 'Nội dung phải có ít nhất 20 ký tự';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(
-                        height: context.responsive(
-                          verySmall: 20.0,
-                          small: 24.0,
-                          large: 28.0,
-                        ),
-                      ),
-                      // Media picker
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF10B981).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.photo_library_outlined,
-                              color: Color(0xFF10B981),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Hình ảnh/Video',
-                            style: TextStyle(
-                              fontSize: context.responsiveFontSize(
-                                verySmall: 16.0,
-                                small: 18.0,
-                                large: 20.0,
-                              ),
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF1E293B),
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: context.responsive(
-                          verySmall: 8.0,
-                          small: 10.0,
-                          large: 12.0,
-                        ),
-                      ),
-                      ImagePickerWidget(
-                        selectedImages: _selectedImages,
-                        mediaTypes: _mediaTypes,
-                        onImagesChanged: (images, types) {
+                      SizedBox(height: context.responsiveSpacing(verySmall: 8.0, small: 10.0, large: 12.0)),
+                      _buildTitleField(context),
+                      SizedBox(height: context.responsiveSpacing(verySmall: 20.0, small: 24.0, large: 28.0)),
+                      
+                      // Package selector
+                      PackageSelectorWidget(
+                        key: const ValueKey('package_selector'),
+                        selectedPackageId: _selectedPackageId,
+                        onPackageSelected: (packageId) {
                           setState(() {
-                            _selectedImages.clear();
-                            _mediaTypes.clear();
-                            _selectedImages.addAll(images);
-                            _mediaTypes.addAll(types);
+                            _selectedPackageId = packageId;
                           });
                         },
                       ),
+                      SizedBox(height: context.responsiveSpacing(verySmall: 20.0, small: 24.0, large: 28.0)),
+                      
+                      // Rich text editor
+                      _buildSectionHeader(
+                        context,
+                        Icons.edit_outlined,
+                        'Nội dung bài viết',
+                        const Color(0xFF8B5CF6),
+                      ),
+                      SizedBox(height: context.responsiveSpacing(verySmall: 8.0, small: 10.0, large: 12.0)),
                       SizedBox(
-                        height: context.responsive(
-                          verySmall: 20.0,
-                          small: 24.0,
-                          large: 28.0,
+                        height: 300,
+                        child: RichTextEditor(
+                          key: const ValueKey('rich_text_editor'),
+                          initialText: _content,
+                          onTextChanged: (text) {
+                            setState(() {
+                              _content = text;
+                            });
+                          },
+                          selectedImages: _selectedImages,
+                          onImagesChanged: (images) {
+                            setState(() {
+                              _selectedImages.clear();
+                              _selectedImages.addAll(images);
+                            });
+                          },
+                          mediaTypes: _mediaTypes,
+                          onMediaTypesChanged: (types) {
+                            setState(() {
+                              _mediaTypes.clear();
+                              _mediaTypes.addAll(types);
+                            });
+                          },
                         ),
                       ),
+                      SizedBox(height: context.responsiveSpacing(verySmall: 20.0, small: 24.0, large: 28.0)),
                       // Submit button
                       SizedBox(
                         width: double.infinity,
@@ -438,8 +238,102 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
   }
 
+  Widget _buildSectionHeader(BuildContext context, IconData icon, String title, Color color) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: context.responsiveIconSize(verySmall: 18.0, small: 20.0, large: 22.0),
+          ),
+        ),
+        SizedBox(width: context.responsiveSpacing(verySmall: 12.0, small: 14.0, large: 16.0)),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: context.responsiveFontSize(verySmall: 16.0, small: 18.0, large: 20.0),
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTitleField(BuildContext context) {
+    return TextFormField(
+      controller: _titleController,
+      decoration: InputDecoration(
+        hintText: 'Nhập tiêu đề bài đăng...',
+        hintStyle: TextStyle(
+          color: const Color(0xFF94A3B8),
+          fontSize: context.responsiveFontSize(verySmall: 15.0, small: 16.0, large: 17.0),
+          fontWeight: FontWeight.w500,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.0),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: context.responsive(verySmall: 20.0, small: 24.0, large: 28.0),
+          vertical: context.responsive(verySmall: 16.0, small: 18.0, large: 20.0),
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Vui lòng nhập tiêu đề';
+        }
+        if (value.trim().length < 5) {
+          return 'Tiêu đề phải có ít nhất 5 ký tự';
+        }
+        return null;
+      },
+    );
+  }
+
   void _submitPost() {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_selectedPackageId == null) {
+      DialogUtils.showErrorDialog(
+        context: context,
+        message: 'Vui lòng chọn gói dịch vụ để đăng bài',
+      );
+      return;
+    }
+
+    if (_content.trim().isEmpty) {
+      DialogUtils.showErrorDialog(
+        context: context,
+        message: 'Vui lòng nhập nội dung bài đăng',
+      );
+      return;
+    }
+
+    if (_content.trim().length < 20) {
+      DialogUtils.showErrorDialog(
+        context: context,
+        message: 'Nội dung phải có ít nhất 20 ký tự',
+      );
       return;
     }
 
@@ -451,17 +345,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       return;
     }
 
-    // TODO: Get packagePurchaseId from user's purchased packages
-    // For now, using a placeholder - in real app, this should come from user's purchased packages
-    const packagePurchaseId = 'placeholder-package-id';
-
     final mediaFiles = _selectedImages.map((file) => file.path).toList();
 
     context.read<AdvertisementBloc>().add(
           CreatePost(
             title: _titleController.text.trim(),
-            description: _descriptionController.text.trim(),
-            packagePurchaseId: packagePurchaseId,
+            description: _content.trim(),
+            packagePurchaseId: _selectedPackageId!,
             mediaFiles: mediaFiles,
             mediaTypes: _mediaTypes,
           ),

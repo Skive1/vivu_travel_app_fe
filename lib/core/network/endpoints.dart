@@ -55,4 +55,8 @@ class Endpoints {
   static const String createPost = '/api/advertisement/partner/post/create';
   static const String createPayment = '/api/payment/create';
   static const String getPaymentStatus = '/api/payment/transaction/status/by-id';
+  static const String cancelPayment = '/api/payment/transaction/cancel';
+  
+  // Mapbox endpoints
+  static const String mapboxGeocoding = 'https://api.mapbox.com/search/geocode/v6/forward';
 }

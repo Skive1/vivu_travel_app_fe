@@ -21,4 +21,5 @@ abstract class AdvertisementRepository {
     required int amount,
   });
   Future<Either<Failure, PaymentStatusEntity>> getPaymentStatus(String transactionId);
+  Future<Either<Failure, PaymentStatusEntity>> cancelPayment(String transactionId);
 }

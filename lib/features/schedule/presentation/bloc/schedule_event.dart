@@ -299,3 +299,37 @@ class UploadMediaEvent extends ScheduleEvent {
   @override
   List<Object> get props => [request];
 }
+
+class SearchAddressEvent extends ScheduleEvent {
+  final String query;
+
+  const SearchAddressEvent({required this.query});
+
+  @override
+  List<Object> get props => [query];
+}
+
+class SearchAddressStructuredEvent extends ScheduleEvent {
+  final String? addressNumber;
+  final String? street;
+  final String? locality;
+  final String? region;
+  final String? country;
+
+  const SearchAddressStructuredEvent({
+    this.addressNumber,
+    this.street,
+    this.locality,
+    this.region,
+    this.country,
+  });
+
+  @override
+  List<Object> get props => [
+    addressNumber ?? '',
+    street ?? '',
+    locality ?? '',
+    region ?? '',
+    country ?? '',
+  ];
+}

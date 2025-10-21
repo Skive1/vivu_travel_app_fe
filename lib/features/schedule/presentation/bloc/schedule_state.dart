@@ -7,6 +7,7 @@ import '../../domain/entities/checked_item_entity.dart';
 import '../../data/models/add_checked_item_response.dart';
 import '../../domain/entities/checkin_entity.dart';
 import '../../domain/entities/media_entity.dart';
+import '../../data/models/mapbox_geocoding_response.dart';
 
 abstract class ScheduleState extends Equatable {
   const ScheduleState();
@@ -533,6 +534,26 @@ class UploadMediaError extends ScheduleState {
   final String message;
 
   const UploadMediaError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class SearchAddressLoading extends ScheduleState {}
+
+class SearchAddressSuccess extends ScheduleState {
+  final MapboxGeocodingResponse response;
+
+  const SearchAddressSuccess({required this.response});
+
+  @override
+  List<Object> get props => [response];
+}
+
+class SearchAddressFailure extends ScheduleState {
+  final String message;
+
+  const SearchAddressFailure({required this.message});
 
   @override
   List<Object> get props => [message];

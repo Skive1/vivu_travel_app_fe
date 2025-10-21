@@ -2,7 +2,8 @@ enum PaymentStatus {
   pending('Pending'),
   success('Success'),
   failed('Failed'),
-  cancelled('Cancelled');
+  cancelled('Cancelled'),
+  cancel('Cancel');
 
   const PaymentStatus(this.displayName);
   final String displayName;
@@ -17,6 +18,8 @@ enum PaymentStatus {
         return PaymentStatus.failed;
       case 'cancelled':
         return PaymentStatus.cancelled;
+      case 'cancel':
+        return PaymentStatus.cancel;
       default:
         return PaymentStatus.pending;
     }

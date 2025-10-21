@@ -14,25 +14,59 @@ import '../widgets/explore_app_bar.dart';
 import 'create_post_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
-  const ExploreScreen({super.key});
+  final int? initialTabIndex; // 0: Bài đăng, 1: Gói dịch vụ, 2: Gói của bạn
+
+  const ExploreScreen({super.key, this.initialTabIndex});
 
   @override
   State<ExploreScreen> createState() => _ExploreScreenState();
 }
 
 class _ExploreScreenState extends State<ExploreScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
+  bool _isPartner = false;
+  bool _controllerInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    // 3 tabs for Partner (Posts, Packages, Your Packages). For other roles, still 2.
-    final isPartner = context.read<AuthBloc>().state is AuthAuthenticated &&
-        (context.read<AuthBloc>().state as AuthAuthenticated).userEntity?.roleName == 'Partner';
-    _tabController = TabController(length: isPartner ? 3 : 2, vsync: this);
+    // Initialize with default length, will be updated in didChangeDependencies
+    _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
+    WidgetsBinding.instance.addObserver(this);
     _loadInitialData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check auth state and initialize/update controller
+    final authState = context.read<AuthBloc>().state;
+    final isPartner = authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner';
+    _ensureControllerInitialized(isPartner);
+    
+    // Reload data when returning to this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _reloadCurrentTabData();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Reload data when app comes back to foreground
+      _reloadCurrentTabData();
+    }
   }
 
   void _onTabChanged() {
@@ -66,17 +100,35 @@ class _ExploreScreenState extends State<ExploreScreen>
     }
   }
 
-  @override
-  void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
-    super.dispose();
-  }
 
   void _loadInitialData() {
     final currentState = context.read<AdvertisementBloc>().state;
     if (currentState is! PostsLoaded && !(currentState is AdvertisementLoading)) {
       context.read<AdvertisementBloc>().add(const LoadAllPosts());
+    }
+  }
+
+  void _ensureControllerInitialized(bool isPartner) {
+    final requiredLength = isPartner ? 3 : 2;
+    
+    // Only update if partner status changed or controller not initialized
+    if (!_controllerInitialized || _isPartner != isPartner) {
+      _isPartner = isPartner;
+      
+      // Dispose existing controller if it exists
+      if (_controllerInitialized) {
+        _tabController.removeListener(_onTabChanged);
+        _tabController.dispose();
+      }
+      
+      // Create new controller with correct length
+      _tabController = TabController(length: requiredLength, vsync: this);
+      _tabController.addListener(_onTabChanged);
+      _controllerInitialized = true;
+
+      // Jump to initial tab if provided and valid
+      final desired = (widget.initialTabIndex ?? 0).clamp(0, requiredLength - 1);
+      _tabController.index = desired;
     }
   }
 
@@ -89,6 +141,43 @@ class _ExploreScreenState extends State<ExploreScreen>
       final authState = context.read<AuthBloc>().state;
       if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
         context.read<AdvertisementBloc>().add(const RefreshPackages());
+      }
+    } else if (_tabController.index == 2) {
+      // Your Packages tab
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
+        context.read<AdvertisementBloc>().add(LoadPurchasedPackages(authState.userEntity!.id));
+      }
+    }
+  }
+
+  void _reloadCurrentTabData() {
+    final currentState = context.read<AdvertisementBloc>().state;
+    
+    if (_tabController.index == 0) {
+      // Posts tab - always reload posts when returning to this tab
+      // Only reload if not already loading or if no posts are loaded
+      if (currentState is! AdvertisementLoading && currentState is! PostsLoaded) {
+        context.read<AdvertisementBloc>().add(const LoadAllPosts());
+      } else if (currentState is PostsLoaded) {
+        // If posts are already loaded, do a silent refresh
+        context.read<AdvertisementBloc>().add(const RefreshPosts());
+      }
+    } else if (_tabController.index == 1) {
+      // Packages tab
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
+        if (currentState is! AdvertisementLoading && currentState is! PackagesLoaded) {
+          context.read<AdvertisementBloc>().add(const LoadAllPackages());
+        }
+      }
+    } else if (_tabController.index == 2) {
+      // Your Packages tab
+      final authState = context.read<AuthBloc>().state;
+      if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
+        if (currentState is! AdvertisementLoading && currentState is! PurchasedPackagesLoaded) {
+          context.read<AdvertisementBloc>().add(LoadPurchasedPackages(authState.userEntity!.id));
+        }
       }
     }
   }
@@ -115,6 +204,13 @@ class _ExploreScreenState extends State<ExploreScreen>
           final authState = context.read<AuthBloc>().state;
           final isPartner = authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner';
 
+          // Ensure controller is initialized before building
+          if (!_controllerInitialized) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
           // Build TabBarView children to match TabController length
           final List<Widget> tabChildren = [
                         // Posts Tab
@@ -123,6 +219,7 @@ class _ExploreScreenState extends State<ExploreScreen>
                           child: PostListWidget(
                             posts: state is PostsLoaded ? state.posts : [],
                             isLoading: state is AdvertisementLoading,
+                            hasLoaded: state is PostsLoaded || state is AdvertisementError,
                           ),
                         ),
                         // Packages Tab (only for Partners)
@@ -137,11 +234,11 @@ class _ExploreScreenState extends State<ExploreScreen>
                                       ? state.packages
                                       : [],
                                   isLoading: state is AdvertisementLoading,
+                                  hasLoaded: state is PackagesLoaded || state is AdvertisementError,
                                   onPurchaseSuccess: () {
-                                    final auth = context.read<AuthBloc>().state as AuthAuthenticated;
-                                    final partnerId = auth.userEntity!.id;
-                                    _tabController.animateTo(2);
-                                    context.read<AdvertisementBloc>().add(LoadPurchasedPackages(partnerId));
+                                    // Jump to "Gói dịch vụ" tab and reload packages
+                                    _tabController.animateTo(1);
+                                    context.read<AdvertisementBloc>().add(const LoadAllPackages());
                                   },
                                 ),
                               );
@@ -226,11 +323,19 @@ class _ExploreScreenState extends State<ExploreScreen>
                     child: PackageListWidget(
                       packages: state is PurchasedPackagesLoaded ? state.packages : [],
                       isLoading: state is AdvertisementLoading,
+                      hasLoaded: state is PurchasedPackagesLoaded || state is AdvertisementError,
                       showPurchaseButton: false,
                     ),
                   );
                 },
               ),
+            );
+          }
+
+          // Ensure tabChildren length matches TabController length
+          if (tabChildren.length != _tabController.length) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
             );
           }
 
@@ -294,6 +399,12 @@ class _ExploreScreenState extends State<ExploreScreen>
           child: const CreatePostScreen(),
         ),
       ),
-    );
+    ).then((result) {
+      // Always refresh posts tab when returning from create post screen
+      // This ensures data is fresh regardless of whether post was created
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<AdvertisementBloc>().add(const RefreshPosts());
+      });
+    });
   }
 }

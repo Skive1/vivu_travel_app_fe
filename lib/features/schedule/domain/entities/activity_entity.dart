@@ -4,6 +4,8 @@ class ActivityEntity extends Equatable {
   final int id;
   final String placeName;
   final String location;
+  final String? latitude;
+  final String? longitude;
   final String description;
   final DateTime checkInTime;
   final DateTime checkOutTime;
@@ -16,6 +18,8 @@ class ActivityEntity extends Equatable {
     required this.id,
     required this.placeName,
     required this.location,
+    this.latitude,
+    this.longitude,
     required this.description,
     required this.checkInTime,
     required this.checkOutTime,
@@ -30,6 +34,8 @@ class ActivityEntity extends Equatable {
         id,
         placeName,
         location,
+        latitude,
+        longitude,
         description,
         checkInTime,
         checkOutTime,

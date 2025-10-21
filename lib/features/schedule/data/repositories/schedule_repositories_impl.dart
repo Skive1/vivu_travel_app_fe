@@ -23,6 +23,7 @@ import '../models/upload_media_request.dart';
 import '../../domain/entities/checkin_entity.dart';
 import '../../domain/entities/media_entity.dart';
 import '../../../../core/utils/user_storage.dart';
+import '../models/mapbox_geocoding_response.dart';
 
 class ScheduleRepositoryImpl implements ScheduleRepository {
   final ScheduleRemoteDataSource _remoteDataSource;
@@ -444,6 +445,38 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
         participantAvatar: model.participantAvatar,
       );
       return Right(entity);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MapboxGeocodingResponse>> searchAddress(String query) async {
+    try {
+      final response = await _remoteDataSource.searchAddress(query);
+      return Right(response);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MapboxGeocodingResponse>> searchAddressStructured({
+    String? addressNumber,
+    String? street,
+    String? locality,
+    String? region,
+    String? country,
+  }) async {
+    try {
+      final response = await _remoteDataSource.searchAddressStructured(
+        addressNumber: addressNumber,
+        street: street,
+        locality: locality,
+        region: region,
+        country: country,
+      );
+      return Right(response);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

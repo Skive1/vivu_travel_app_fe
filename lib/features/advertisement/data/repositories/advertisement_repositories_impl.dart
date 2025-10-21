@@ -100,4 +100,14 @@ class AdvertisementRepositoryImpl implements AdvertisementRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, PaymentStatusEntity>> cancelPayment(String transactionId) async {
+    try {
+      final status = await remoteDataSource.cancelPayment(transactionId);
+      return Right(status.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

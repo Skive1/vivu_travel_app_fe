@@ -12,6 +12,7 @@ import '../bloc/advertisement_bloc.dart';
 class PackageListWidget extends StatelessWidget {
   final List<PackageEntity> packages;
   final bool isLoading;
+  final bool hasLoaded;
   final bool showPurchaseButton;
   final VoidCallback? onPurchaseSuccess;
 
@@ -19,13 +20,15 @@ class PackageListWidget extends StatelessWidget {
     super.key,
     required this.packages,
     this.isLoading = false,
+    this.hasLoaded = false,
     this.showPurchaseButton = true,
     this.onPurchaseSuccess,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading && packages.isEmpty) {
+    // Show loading indicator when loading and no data yet
+    if (isLoading && !hasLoaded) {
       return const Center(
         child: CircularProgressIndicator(
           color: AppColors.primary,
@@ -33,7 +36,8 @@ class PackageListWidget extends StatelessWidget {
       );
     }
 
-    if (packages.isEmpty) {
+    // Show empty state only when data has been loaded and is actually empty
+    if (hasLoaded && packages.isEmpty) {
       return EmptyStateWidget(
         icon: showPurchaseButton ? Icons.card_giftcard_outlined : Icons.history_outlined,
         title: showPurchaseButton ? 'Chưa có gói dịch vụ nào' : 'Chưa có gói đã mua',
@@ -118,7 +122,7 @@ class PackageListWidget extends StatelessWidget {
 
   void _showPurchaseDialog(BuildContext context, PackageEntity package) async {
     final bloc = context.read<AdvertisementBloc>();
-    final result = await Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
           value: bloc,
@@ -126,8 +130,7 @@ class PackageListWidget extends StatelessWidget {
         ),
       ),
     );
-    if (result == true && onPurchaseSuccess != null) {
-      onPurchaseSuccess!();
-    }
+    // Always force parent to switch to Packages tab and reload
+    if (onPurchaseSuccess != null) onPurchaseSuccess!();
   }
 }

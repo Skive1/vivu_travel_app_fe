@@ -35,6 +35,7 @@ import 'features/authentication/domain/usecases/change_password_usecase.dart';
 
 // Schedule feature
 import 'features/schedule/data/datasources/schedule_remote_datasource.dart';
+import 'features/schedule/data/datasources/mapbox_geocoding_datasource.dart';
 import 'features/schedule/data/repositories/schedule_repositories_impl.dart';
 import 'features/schedule/domain/repositories/schedule_repository.dart';
 import 'features/schedule/domain/usecases/get_schedules_by_participant_usecase.dart';
@@ -64,6 +65,7 @@ import 'features/schedule/domain/usecases/checkin_activity_usecase.dart';
 import 'features/schedule/domain/usecases/checkout_activity_usecase.dart';
 import 'features/schedule/domain/usecases/get_media_by_activity_usecase.dart';
 import 'features/schedule/domain/usecases/upload_media_usecase.dart';
+import 'features/schedule/domain/usecases/search_address_usecase.dart';
 
 // Advertisement feature
 import 'features/advertisement/data/datasources/advertisement_remote_datasource.dart';
@@ -75,6 +77,7 @@ import 'features/advertisement/domain/usecases/get_post_by_id.dart';
 import 'features/advertisement/domain/usecases/create_post.dart';
 import 'features/advertisement/domain/usecases/create_payment.dart';
 import 'features/advertisement/domain/usecases/get_payment_status.dart';
+import 'features/advertisement/domain/usecases/cancel_payment.dart';
 import 'features/advertisement/presentation/bloc/advertisement_bloc.dart';
 
 final sl = GetIt.instance;
@@ -181,8 +184,15 @@ void _initUser() {
 
 void _initSchedule() {
   // Data sources
+  sl.registerLazySingleton<MapboxGeocodingDataSource>(
+    () => MapboxGeocodingDataSourceImpl(dio: sl()),
+  );
+  
   sl.registerLazySingleton<ScheduleRemoteDataSource>(
-    () => ScheduleRemoteDataSourceImpl(apiClient: sl()),
+    () => ScheduleRemoteDataSourceImpl(
+      apiClient: sl(),
+      mapboxDataSource: sl(),
+    ),
   );
 
   // Repository
@@ -219,6 +229,8 @@ void _initSchedule() {
   sl.registerLazySingleton(() => CheckOutActivityUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetMediaByActivityUseCase(repository: sl()));
   sl.registerLazySingleton(() => UploadMediaUseCase(repository: sl()));
+  sl.registerLazySingleton(() => SearchAddressUseCase(sl()));
+  sl.registerLazySingleton(() => SearchAddressStructuredUseCase(sl()));
 
   // Bloc
   sl.registerFactory(
@@ -249,6 +261,8 @@ void _initSchedule() {
       checkOutActivity: sl(),
       getMediaByActivity: sl(),
       uploadMedia: sl(),
+      searchAddress: sl(),
+      searchAddressStructured: sl(),
     ),
   );
 }
@@ -274,6 +288,7 @@ void _initAdvertisement() {
   sl.registerLazySingleton(() => CreatePost(sl()));
   sl.registerLazySingleton(() => CreatePayment(sl()));
   sl.registerLazySingleton(() => GetPaymentStatus(sl()));
+  sl.registerLazySingleton(() => CancelPayment(sl()));
 
   // Bloc
   sl.registerLazySingleton(
@@ -284,6 +299,7 @@ void _initAdvertisement() {
       createPost: sl(),
       createPayment: sl(),
       getPaymentStatus: sl(),
+      cancelPayment: sl(),
       getPurchasedPackagesByPartner: sl(),
     ),
   );

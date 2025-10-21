@@ -34,6 +34,7 @@ class PostEntity {
   final String packagePurchaseId;
   final List<String> mediaIds;
   final List<String> mediaUrls;
+  final List<int>? mediaTypes;
 
   const PostEntity({
     required this.id,
@@ -49,6 +50,7 @@ class PostEntity {
     required this.packagePurchaseId,
     required this.mediaIds,
     required this.mediaUrls,
+    this.mediaTypes,
   });
 
   @override
@@ -67,7 +69,8 @@ class PostEntity {
         other.createdAt == createdAt &&
         other.packagePurchaseId == packagePurchaseId &&
         other.mediaIds == mediaIds &&
-        other.mediaUrls == mediaUrls;
+        other.mediaUrls == mediaUrls &&
+        other.mediaTypes == mediaTypes;
   }
 
   @override
@@ -84,11 +87,12 @@ class PostEntity {
         createdAt.hashCode ^
         packagePurchaseId.hashCode ^
         mediaIds.hashCode ^
-        mediaUrls.hashCode;
+        mediaUrls.hashCode ^
+        mediaTypes.hashCode;
   }
 
   @override
   String toString() {
-    return 'PostEntity(id: $id, partnerId: $partnerId, title: $title, description: $description, postedAt: $postedAt, approvedBy: $approvedBy, approvedAt: $approvedAt, status: $status, statusDisplay: $statusDisplay, createdAt: $createdAt, packagePurchaseId: $packagePurchaseId, mediaIds: $mediaIds, mediaUrls: $mediaUrls)';
+    return 'PostEntity(id: $id, partnerId: $partnerId, title: $title, description: $description, postedAt: $postedAt, approvedBy: $approvedBy, approvedAt: $approvedAt, status: $status, statusDisplay: $statusDisplay, createdAt: $createdAt, packagePurchaseId: $packagePurchaseId, mediaIds: $mediaIds, mediaUrls: $mediaUrls, mediaTypes: $mediaTypes)';
   }
 }

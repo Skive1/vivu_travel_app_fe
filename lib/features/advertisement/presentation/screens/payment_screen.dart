@@ -27,6 +27,10 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   PaymentEntity? _payment;
   Timer? _statusTimer;
+  Timer? _cancelTimer;
+  Timer? _countdownTimer;
+  PaymentStatus? _currentStatus;
+  int _remainingSeconds = 0; // countdown mm:ss
 
   @override
   void initState() {
@@ -37,6 +41,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   void dispose() {
     _statusTimer?.cancel();
+    _cancelTimer?.cancel();
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -57,16 +63,57 @@ class _PaymentScreenState extends State<PaymentScreen> {
         );
       }
     });
+
+    // Start cancel timer after 5 minutes
+    _cancelTimer = Timer(const Duration(minutes: 5), () {
+      if (mounted && _currentStatus == PaymentStatus.pending) {
+        context.read<AdvertisementBloc>().add(
+          CancelPayment(transactionId),
+        );
+      }
+    });
+
+    // Start visible countdown (5 minutes)
+    setState(() {
+      _remainingSeconds = 5 * 60;
+    });
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
+      if (_remainingSeconds <= 0) {
+        t.cancel();
+        return;
+      }
+      setState(() {
+        _remainingSeconds -= 1;
+      });
+    });
   }
 
   void _stopStatusChecking() {
     _statusTimer?.cancel();
     _statusTimer = null;
+    _cancelTimer?.cancel();
+    _cancelTimer = null;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        // Cancel pending transaction before leaving
+        if (_payment != null && _currentStatus == PaymentStatus.pending) {
+          context.read<AdvertisementBloc>().add(CancelPayment(_payment!.transactionId));
+          // Wait for cancellation result (handled in listener)
+          return false;
+        }
+        // Not pending: simply close
+        Navigator.of(context).pop(false);
+        return false;
+      },
+      child: Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -85,7 +132,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
         ),
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            if (_payment != null && _currentStatus == PaymentStatus.pending) {
+              context.read<AdvertisementBloc>().add(CancelPayment(_payment!.transactionId));
+              // Wait for PaymentCancelled listener to handle pop + reload
+              return;
+            }
+            Navigator.of(context).pop(false);
+          },
           icon: const Icon(Icons.arrow_back_ios),
         ),
       ),
@@ -94,9 +148,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
           if (state is PaymentCreated) {
             setState(() {
               _payment = state.payment;
+              _currentStatus = PaymentStatus.pending;
             });
             _startStatusChecking(state.payment.transactionId);
           } else if (state is PaymentStatusChecked) {
+            setState(() {
+              _currentStatus = state.status.status;
+            });
             if (state.status.status.name == 'success') {
               _stopStatusChecking();
               _showSuccessDialog();
@@ -104,6 +162,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
               _stopStatusChecking();
               _showFailureDialog();
             }
+          } else if (state is PaymentCancelled) {
+            setState(() {
+              _currentStatus = state.status.status;
+            });
+            _stopStatusChecking();
+            _showCancelledDialog();
           } else if (state is AdvertisementError) {
             DialogUtils.showErrorDialog(
               context: context,
@@ -126,6 +190,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ],
           );
         },
+      ),
       ),
     );
   }
@@ -163,8 +228,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
           ),
           
-          // QR Code
+          // QR Code (only show while pending)
+          if (_currentStatus == PaymentStatus.pending)
           _buildQRCode(),
+          
+          // Show cancelled status if payment is cancelled
+          if (_currentStatus == PaymentStatus.cancel)
+            _buildCancelledStatus(),
+
+          // Show success status if payment succeeded
+          if (_currentStatus == PaymentStatus.success)
+            _buildSuccessStatus(),
           
           SizedBox(
             height: context.responsiveSpacing(
@@ -174,7 +248,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
           ),
           
-          // Instructions
+          // Instructions (only show while pending)
+          if (_currentStatus == PaymentStatus.pending)
           _buildInstructions(),
         ],
       ),
@@ -195,13 +270,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: const Color(0xFFE2E8F0).withOpacity(0.5),
+          color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -213,7 +288,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -300,13 +375,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: const Color(0xFFE2E8F0).withOpacity(0.5),
+          color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -318,7 +393,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -423,13 +498,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: const Color(0xFFE2E8F0).withOpacity(0.5),
+          color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -441,7 +516,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -451,8 +526,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                'Quét mã QR để thanh toán',
+              Expanded(
+                child: Text(
+                  'Quét mã QR',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: context.responsiveFontSize(
                     verySmall: 18.0,
@@ -464,6 +542,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   letterSpacing: -0.5,
                 ),
               ),
+              ),
+              const SizedBox(width: 8),
+              if (_currentStatus == PaymentStatus.pending)
+                _buildCountdownChip(),
             ],
           ),
           
@@ -546,15 +628,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF6366F1).withOpacity(0.1),
-                  const Color(0xFF8B5CF6).withOpacity(0.05),
+                  const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  const Color(0xFF8B5CF6).withValues(alpha: 0.05),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFF6366F1).withOpacity(0.2),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -563,7 +645,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6366F1).withOpacity(0.2),
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -583,20 +665,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     large: 12.0,
                   ),
                 ),
-                Expanded(
-                  child: Text(
-                    'Đang kiểm tra trạng thái thanh toán...',
-                    style: TextStyle(
-                      fontSize: context.responsiveFontSize(
-                        verySmall: 13.0,
-                        small: 14.0,
-                        large: 15.0,
-                      ),
-                      color: const Color(0xFF6366F1),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildStatusAndCountdownText()),
                 SizedBox(
                   width: context.responsive(
                     verySmall: 16.0,
@@ -621,6 +690,57 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  // Small chip with remaining time mm:ss
+  Widget _buildCountdownChip() {
+    final minutes = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (_remainingSeconds % 60).toString().padLeft(2, '0');
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B).withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFF94A3B8).withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.timer_outlined, size: 14, color: Color(0xFF334155)),
+          const SizedBox(width: 6),
+          Text(
+            '$minutes:$seconds',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF334155),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Status text with countdown details
+  Widget _buildStatusAndCountdownText() {
+    String text = 'Đang kiểm tra trạng thái thanh toán...';
+    if (_currentStatus == PaymentStatus.pending && _remainingSeconds > 0) {
+      final m = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
+      final s = (_remainingSeconds % 60).toString().padLeft(2, '0');
+      text = 'Vui lòng thanh toán trong $m:$s';
+    }
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: context.responsiveFontSize(
+          verySmall: 13.0,
+          small: 14.0,
+          large: 15.0,
+        ),
+        color: const Color(0xFF6366F1),
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
   Widget _buildInstructions() {
     return Container(
       padding: context.responsivePadding(
@@ -633,15 +753,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF3B82F6).withOpacity(0.08),
-            const Color(0xFF1D4ED8).withOpacity(0.05),
+            const Color(0xFF3B82F6).withValues(alpha: 0.08),
+            const Color(0xFF1D4ED8).withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFF3B82F6).withOpacity(0.2),
+          color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
           width: 1.0,
         ),
       ),
@@ -653,7 +773,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withOpacity(0.2),
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -756,7 +876,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF3B82F6).withOpacity(0.3),
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -878,15 +998,304 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   void _showFailureDialog() {
+    if (!mounted) return;
     DialogUtils.showErrorDialog(
       context: context,
       title: 'Thanh toán thất bại',
-      message: 'Giao dịch thanh toán không thành công. Vui lòng thử lại.',
-      buttonText: 'Thử lại',
-      onPressed: () {
-        Navigator.of(context).pop();
-        _createPayment();
-      },
+      message: 'Giao dịch thanh toán không thành công.',
+      buttonText: 'Đóng',
+    ).whenComplete(() {
+      if (!mounted) return;
+      // Ensure packages list refreshes when returning
+      context.read<AdvertisementBloc>().add(const RefreshPackages());
+      Navigator.of(context).pop(false);
+    });
+  }
+
+  void _showCancelledDialog() {
+    if (!mounted) return;
+    DialogUtils.showErrorDialog(
+      context: context,
+      title: 'Giao dịch đã hủy',
+      message: 'Giao dịch thanh toán đã được hủy do quá thời gian chờ (5 phút).',
+      buttonText: 'Đóng',
+    ).whenComplete(() {
+      if (!mounted) return;
+      // Ensure packages list refreshes when returning (force GetAll)
+      context.read<AdvertisementBloc>().add(const LoadAllPackages());
+      Navigator.of(context).pop(false);
+    });
+  }
+
+  Widget _buildCancelledStatus() {
+    return Container(
+      padding: context.responsivePadding(
+        all: context.responsive(
+          verySmall: 24.0,
+          small: 28.0,
+          large: 32.0,
+        ),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.cancel_outlined,
+                  color: Color(0xFFEF4444),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Giao dịch đã hủy',
+                style: TextStyle(
+                  fontSize: context.responsiveFontSize(
+                    verySmall: 18.0,
+                    small: 20.0,
+                    large: 22.0,
+                  ),
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFEF4444),
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
+          ),
+          
+          SizedBox(
+            height: context.responsiveSpacing(
+              verySmall: 16.0,
+              small: 20.0,
+              large: 24.0,
+            ),
+          ),
+          
+          Container(
+            padding: context.responsivePadding(
+              all: context.responsive(
+                verySmall: 16.0,
+                small: 18.0,
+                large: 20.0,
+              ),
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFFEF4444).withValues(alpha: 0.1),
+                  const Color(0xFFDC2626).withValues(alpha: 0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.access_time_outlined,
+                    size: context.responsiveIconSize(
+                      verySmall: 16.0,
+                      small: 18.0,
+                      large: 20.0,
+                    ),
+                    color: const Color(0xFFEF4444),
+                  ),
+                ),
+                SizedBox(
+                  width: context.responsiveSpacing(
+                    verySmall: 8.0,
+                    small: 10.0,
+                    large: 12.0,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Giao dịch đã được hủy do quá thời gian chờ (5 phút)',
+                    style: TextStyle(
+                      fontSize: context.responsiveFontSize(
+                        verySmall: 13.0,
+                        small: 14.0,
+                        large: 15.0,
+                      ),
+                      color: const Color(0xFFEF4444),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuccessStatus() {
+    return Container(
+      padding: context.responsivePadding(
+        all: context.responsive(
+          verySmall: 24.0,
+          small: 28.0,
+          large: 32.0,
+        ),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.check_circle_outline,
+                  color: Color(0xFF10B981),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Thanh toán thành công',
+                style: TextStyle(
+                  fontSize: context.responsiveFontSize(
+                    verySmall: 18.0,
+                    small: 20.0,
+                    large: 22.0,
+                  ),
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF10B981),
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
+          ),
+          
+          SizedBox(
+            height: context.responsiveSpacing(
+              verySmall: 16.0,
+              small: 20.0,
+              large: 24.0,
+            ),
+          ),
+          
+          Container(
+            padding: context.responsivePadding(
+              all: context.responsive(
+                verySmall: 16.0,
+                small: 18.0,
+                large: 20.0,
+              ),
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF10B981).withValues(alpha: 0.1),
+                  const Color(0xFF34D399).withValues(alpha: 0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.celebration_outlined,
+                    size: context.responsiveIconSize(
+                      verySmall: 16.0,
+                      small: 18.0,
+                      large: 20.0,
+                    ),
+                    color: const Color(0xFF10B981),
+                  ),
+                ),
+                SizedBox(
+                  width: context.responsiveSpacing(
+                    verySmall: 8.0,
+                    small: 10.0,
+                    large: 12.0,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Cảm ơn bạn! Gói dịch vụ đã được kích hoạt.',
+                    style: TextStyle(
+                      fontSize: context.responsiveFontSize(
+                        verySmall: 13.0,
+                        small: 14.0,
+                        large: 15.0,
+                      ),
+                      color: const Color(0xFF10B981),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

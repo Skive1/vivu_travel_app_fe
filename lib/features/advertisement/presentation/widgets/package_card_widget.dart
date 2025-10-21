@@ -49,20 +49,30 @@ class PackageCardWidget extends StatelessWidget {
             Container(
               padding: context.responsivePadding(
                 horizontal: context.responsive(
-                  verySmall: 12.0,
-                  small: 14.0,
-                  large: 16.0,
+                  verySmall: 20.0,
+                  small: 24.0,
+                  large: 28.0,
                 ),
                 vertical: context.responsive(
-                  verySmall: 8.0,
-                  small: 10.0,
-                  large: 12.0,
+                  verySmall: 16.0,
+                  small: 18.0,
+                  large: 20.0,
                 ),
               ),
               decoration: BoxDecoration(
-                color: package.isActive 
-                    ? AppColors.primary.withValues(alpha: 0.1)
-                    : Colors.grey.withValues(alpha: 0.1),
+                gradient: LinearGradient(
+                  colors: package.isActive 
+                      ? [
+                          AppColors.primary.withValues(alpha: 0.1),
+                          AppColors.primary.withValues(alpha: 0.05),
+                        ]
+                      : [
+                          Colors.grey.withValues(alpha: 0.1),
+                          Colors.grey.withValues(alpha: 0.05),
+                        ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(
                     context.responsiveBorderRadius(
@@ -75,72 +85,119 @@ class PackageCardWidget extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.card_giftcard,
-                    size: context.responsiveIconSize(
-                      verySmall: 16.0,
-                      small: 18.0,
-                      large: 20.0,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: package.isActive 
+                          ? AppColors.primary.withValues(alpha: 0.2)
+                          : Colors.grey.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    color: package.isActive ? AppColors.primary : Colors.grey,
+                    child: Icon(
+                      Icons.card_giftcard,
+                      size: context.responsiveIconSize(
+                        verySmall: 18.0,
+                        small: 20.0,
+                        large: 22.0,
+                      ),
+                      color: package.isActive ? AppColors.primary : Colors.grey,
+                    ),
                   ),
                   SizedBox(
                     width: context.responsiveSpacing(
-                      verySmall: 8.0,
-                      small: 10.0,
-                      large: 12.0,
+                      verySmall: 12.0,
+                      small: 14.0,
+                      large: 16.0,
                     ),
                   ),
                   Expanded(
-                    child: Text(
-                      package.name,
-                      style: TextStyle(
-                        fontSize: context.responsiveFontSize(
-                          verySmall: 16.0,
-                          small: 17.0,
-                          large: 18.0,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          package.name,
+                          style: TextStyle(
+                            fontSize: context.responsiveFontSize(
+                              verySmall: 18.0,
+                              small: 20.0,
+                              large: 22.0,
+                            ),
+                            fontWeight: FontWeight.w700,
+                            color: package.isActive 
+                                ? AppColors.textPrimary 
+                                : Colors.grey,
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                        fontWeight: FontWeight.w600,
-                        color: package.isActive 
-                            ? AppColors.primary 
-                            : Colors.grey,
-                      ),
+                        SizedBox(
+                          height: context.responsiveSpacing(
+                            verySmall: 4.0,
+                            small: 6.0,
+                            large: 8.0,
+                          ),
+                        ),
+                        Text(
+                          'Gói dịch vụ',
+                          style: TextStyle(
+                            fontSize: context.responsiveFontSize(
+                              verySmall: 12.0,
+                              small: 13.0,
+                              large: 14.0,
+                            ),
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Container(
                     padding: context.responsivePadding(
                       horizontal: context.responsive(
+                        verySmall: 12.0,
+                        small: 14.0,
+                        large: 16.0,
+                      ),
+                      vertical: context.responsive(
                         verySmall: 6.0,
                         small: 8.0,
                         large: 10.0,
                       ),
-                      vertical: context.responsive(
-                        verySmall: 2.0,
-                        small: 3.0,
-                        large: 4.0,
-                      ),
                     ),
                     decoration: BoxDecoration(
-                      color: package.isActive 
-                          ? AppColors.primary 
-                          : Colors.grey,
-                      borderRadius: BorderRadius.circular(
-                        context.responsiveBorderRadius(
-                          verySmall: 8.0,
-                          small: 10.0,
-                          large: 12.0,
+                      gradient: package.isActive 
+                          ? const LinearGradient(
+                              colors: [
+                                Color(0xFF10B981),
+                                Color(0xFF059669),
+                              ],
+                            )
+                          : const LinearGradient(
+                              colors: [
+                                Colors.grey,
+                                Color(0xFF6B7280),
+                              ],
+                            ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: package.isActive 
+                              ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                              : Colors.grey.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
+                      ],
                     ),
                     child: Text(
                       package.isActive ? 'Hoạt động' : 'Tạm dừng',
                       style: TextStyle(
                         fontSize: context.responsiveFontSize(
-                          verySmall: 10.0,
-                          small: 11.0,
-                          large: 12.0,
+                          verySmall: 12.0,
+                          small: 13.0,
+                          large: 14.0,
                         ),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
@@ -153,9 +210,9 @@ class PackageCardWidget extends StatelessWidget {
             Padding(
               padding: context.responsivePadding(
                 all: context.responsive(
-                  verySmall: 12.0,
-                  small: 14.0,
-                  large: 16.0,
+                  verySmall: 20.0,
+                  small: 24.0,
+                  large: 28.0,
                 ),
               ),
               child: Column(
@@ -166,20 +223,20 @@ class PackageCardWidget extends StatelessWidget {
                     package.description,
                     style: TextStyle(
                       fontSize: context.responsiveFontSize(
-                        verySmall: 13.0,
-                        small: 14.0,
-                        large: 15.0,
+                        verySmall: 14.0,
+                        small: 15.0,
+                        large: 16.0,
                       ),
                       color: AppColors.textSecondary,
-                      height: 1.4,
+                      height: 1.5,
                     ),
                   ),
                   
                   SizedBox(
                     height: context.responsiveSpacing(
-                      verySmall: 12.0,
-                      small: 14.0,
-                      large: 16.0,
+                      verySmall: 16.0,
+                      small: 18.0,
+                      large: 20.0,
                     ),
                   ),
                   
@@ -193,9 +250,9 @@ class PackageCardWidget extends StatelessWidget {
                   
                   SizedBox(
                     height: context.responsiveSpacing(
-                      verySmall: 6.0,
-                      small: 8.0,
-                      large: 10.0,
+                      verySmall: 12.0,
+                      small: 14.0,
+                      large: 16.0,
                     ),
                   ),
                   
@@ -208,9 +265,9 @@ class PackageCardWidget extends StatelessWidget {
                   
                   SizedBox(
                     height: context.responsiveSpacing(
-                      verySmall: 12.0,
-                      small: 14.0,
-                      large: 16.0,
+                      verySmall: 16.0,
+                      small: 20.0,
+                      large: 24.0,
                     ),
                   ),
                   
@@ -230,13 +287,14 @@ class PackageCardWidget extends StatelessWidget {
                                   large: 14.0,
                                 ),
                                 color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             SizedBox(
                               height: context.responsiveSpacing(
-                                verySmall: 2.0,
-                                small: 4.0,
-                                large: 6.0,
+                                verySmall: 4.0,
+                                small: 6.0,
+                                large: 8.0,
                               ),
                             ),
                             Text(
@@ -246,54 +304,79 @@ class PackageCardWidget extends StatelessWidget {
                               ).format(package.price),
                               style: TextStyle(
                                 fontSize: context.responsiveFontSize(
-                                  verySmall: 18.0,
-                                  small: 20.0,
-                                  large: 22.0,
+                                  verySmall: 20.0,
+                                  small: 22.0,
+                                  large: 24.0,
                                 ),
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w800,
                                 color: AppColors.primary,
+                                letterSpacing: -0.5,
                               ),
                             ),
                           ],
                         ),
                       ),
+                      SizedBox(
+                        width: context.responsiveSpacing(
+                          verySmall: 12.0,
+                          small: 14.0,
+                          large: 16.0,
+                        ),
+                      ),
                       ElevatedButton(
                         onPressed: package.isActive ? onPurchase : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
+                          backgroundColor: package.isActive 
+                              ? AppColors.primary 
+                              : Colors.grey,
                           foregroundColor: Colors.white,
                           padding: context.responsivePadding(
                             horizontal: context.responsive(
-                              verySmall: 16.0,
-                              small: 20.0,
-                              large: 24.0,
+                              verySmall: 20.0,
+                              small: 24.0,
+                              large: 28.0,
                             ),
                             vertical: context.responsive(
-                              verySmall: 8.0,
-                              small: 10.0,
-                              large: 12.0,
+                              verySmall: 12.0,
+                              small: 14.0,
+                              large: 16.0,
                             ),
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              context.responsiveBorderRadius(
-                                verySmall: 8.0,
-                                small: 10.0,
-                                large: 12.0,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.shopping_cart_outlined,
+                              size: context.responsiveIconSize(
+                                verySmall: 16.0,
+                                small: 18.0,
+                                large: 20.0,
                               ),
                             ),
-                          ),
-                        ),
-                        child: Text(
-                          package.isActive ? 'Mua ngay' : 'Tạm dừng',
-                          style: TextStyle(
-                            fontSize: context.responsiveFontSize(
-                              verySmall: 12.0,
-                              small: 13.0,
-                              large: 14.0,
+                            SizedBox(
+                              width: context.responsiveSpacing(
+                                verySmall: 6.0,
+                                small: 8.0,
+                                large: 10.0,
+                              ),
                             ),
-                            fontWeight: FontWeight.w600,
-                          ),
+                            Text(
+                              package.isActive ? 'Mua ngay' : 'Tạm dừng',
+                              style: TextStyle(
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 14.0,
+                                  small: 15.0,
+                                  large: 16.0,
+                                ),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -315,43 +398,52 @@ class PackageCardWidget extends StatelessWidget {
   ) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: context.responsiveIconSize(
-            verySmall: 14.0,
-            small: 16.0,
-            large: 18.0,
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          color: AppColors.textSecondary,
+          child: Icon(
+            icon,
+            size: context.responsiveIconSize(
+              verySmall: 16.0,
+              small: 18.0,
+              large: 20.0,
+            ),
+            color: AppColors.primary,
+          ),
         ),
         SizedBox(
           width: context.responsiveSpacing(
-            verySmall: 8.0,
-            small: 10.0,
-            large: 12.0,
+            verySmall: 12.0,
+            small: 14.0,
+            large: 16.0,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: context.responsiveFontSize(
-              verySmall: 12.0,
-              small: 13.0,
-              large: 14.0,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: context.responsiveFontSize(
+                verySmall: 14.0,
+                small: 15.0,
+                large: 16.0,
+              ),
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
-            color: AppColors.textSecondary,
           ),
         ),
-        const Spacer(),
         Text(
           value,
           style: TextStyle(
             fontSize: context.responsiveFontSize(
-              verySmall: 12.0,
-              small: 13.0,
-              large: 14.0,
+              verySmall: 14.0,
+              small: 15.0,
+              large: 16.0,
             ),
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
         ),

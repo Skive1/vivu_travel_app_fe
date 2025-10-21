@@ -7,24 +7,29 @@ import 'post_card_widget.dart';
 import 'empty_state_widget.dart';
 import '../screens/post_detail_screen.dart';
 import '../bloc/advertisement_bloc.dart';
+import '../bloc/advertisement_event.dart';
 
 class PostListWidget extends StatelessWidget {
   final List<PostEntity> posts;
   final bool isLoading;
+  final bool hasLoaded;
 
   const PostListWidget({
     super.key,
     required this.posts,
     this.isLoading = false,
+    this.hasLoaded = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading && posts.isEmpty) {
+    // Show skeleton loading when loading and no data yet
+    if (isLoading && !hasLoaded && posts.isEmpty) {
       return _buildSkeletonList(context);
     }
 
-    if (posts.isEmpty) {
+    // Show empty state only when data has been loaded and is actually empty
+    if (hasLoaded && posts.isEmpty) {
       return EmptyStateWidget(
         icon: Icons.article_outlined,
         title: 'Chưa có bài đăng nào',
@@ -89,7 +94,10 @@ class PostListWidget extends StatelessWidget {
           child: PostDetailScreen(postId: post.id),
         ),
       ),
-    );
+    ).then((_) {
+      // Refresh posts when returning from detail to reflect any changes
+      context.read<AdvertisementBloc>().add(const RefreshPosts());
+    });
   }
 
   Widget _buildSkeletonList(BuildContext context) {

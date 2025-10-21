@@ -7,6 +7,7 @@ import '../../../../core/utils/dialog_utils.dart';
 import '../bloc/schedule_bloc.dart';
 import '../bloc/schedule_event.dart';
 import '../bloc/schedule_state.dart';
+import 'address_search_widget.dart';
 
 class AddActivityForm extends StatefulWidget {
   final String scheduleId;
@@ -26,6 +27,8 @@ class _AddActivityFormState extends State<AddActivityForm> {
   TimeOfDay? _checkIn;
   TimeOfDay? _checkOut;
   int? _orderIndex;
+  String? _latitude;
+  String? _longitude;
 
   @override
   void dispose() {
@@ -101,8 +104,15 @@ class _AddActivityFormState extends State<AddActivityForm> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _locationCtrl,
-                    decoration: _inputDecoration('Địa chỉ', Icons.location_on_outlined),
+                    readOnly: true,
+                    decoration: _inputDecoration('Địa chỉ', Icons.location_on_outlined).copyWith(
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.search, color: AppColors.primary),
+                        onPressed: () => _openAddressSearch(),
+                      ),
+                    ),
                     validator: (v) => (v == null || v.trim().isEmpty) ? 'Nhập địa chỉ' : null,
+                    onTap: () => _openAddressSearch(),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -217,6 +227,8 @@ class _AddActivityFormState extends State<AddActivityForm> {
     final request = CreateActivityRequest(
       placeName: _placeNameCtrl.text.trim(),
       location: _locationCtrl.text.trim(),
+      latitude: _latitude,
+      longitude: _longitude,
       description: _descriptionCtrl.text.trim(),
       checkInTime: checkIn,
       checkOutTime: checkOut,
@@ -225,6 +237,30 @@ class _AddActivityFormState extends State<AddActivityForm> {
     );
 
     context.read<ScheduleBloc>().add(CreateActivityEvent(request: request));
+  }
+
+  void _openAddressSearch() {
+    final scheduleBloc = context.read<ScheduleBloc>();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: scheduleBloc,
+          child: AddressSearchWidget(
+            initialLocation: _locationCtrl.text,
+            onAddressSelected: (placeName, location, latitude, longitude) {
+              setState(() {
+                if (_placeNameCtrl.text.isEmpty) {
+                  _placeNameCtrl.text = placeName;
+                }
+                _locationCtrl.text = location;
+                _latitude = latitude;
+                _longitude = longitude;
+              });
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildOrderIndexPicker() {

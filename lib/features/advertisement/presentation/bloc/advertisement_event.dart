@@ -65,6 +65,15 @@ class CheckPaymentStatus extends AdvertisementEvent {
   List<Object?> get props => [transactionId];
 }
 
+class CancelPayment extends AdvertisementEvent {
+  final String transactionId;
+
+  const CancelPayment(this.transactionId);
+
+  @override
+  List<Object?> get props => [transactionId];
+}
+
 class RefreshPosts extends AdvertisementEvent {
   const RefreshPosts();
 }

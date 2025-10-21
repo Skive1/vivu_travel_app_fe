@@ -20,6 +20,7 @@ import '../entities/media_entity.dart';
 import '../../data/models/checkin_request.dart';
 import '../../data/models/checkout_request.dart';
 import '../../data/models/upload_media_request.dart';
+import '../../data/models/mapbox_geocoding_response.dart';
 
 abstract class ScheduleRepository {
   Future<List<ScheduleEntity>> getSchedulesByParticipant(String participantId);
@@ -63,4 +64,14 @@ abstract class ScheduleRepository {
   // Media methods
   Future<Either<Failure, List<MediaEntity>>> getMediaByActivity(int activityId);
   Future<Either<Failure, MediaEntity>> uploadMedia(UploadMediaRequest request);
+  
+  // Mapbox geocoding methods
+  Future<Either<Failure, MapboxGeocodingResponse>> searchAddress(String query);
+  Future<Either<Failure, MapboxGeocodingResponse>> searchAddressStructured({
+    String? addressNumber,
+    String? street,
+    String? locality,
+    String? region,
+    String? country,
+  });
 }

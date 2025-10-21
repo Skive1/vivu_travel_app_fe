@@ -6,9 +6,8 @@ import '../../domain/entities/post_entity.dart';
 import '../bloc/advertisement_bloc.dart';
 import '../bloc/advertisement_event.dart';
 import '../bloc/advertisement_state.dart';
-import '../widgets/post_media_widget.dart';
 import '../widgets/post_status_chip.dart';
-import 'image_viewer_screen.dart';
+import '../widgets/rich_text_renderer.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final String postId;
@@ -65,7 +64,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              // TODO: Implement share functionality
             },
             icon: Icon(
               Icons.share,
@@ -126,13 +124,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   ],
                   border: Border.all(
-                    color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                    color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -222,13 +220,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   ],
                   border: Border.all(
-                    color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                    color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -339,13 +337,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   ],
                   border: Border.all(
-                    color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                    color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -417,13 +415,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   ],
                   border: Border.all(
-                    color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                    color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -435,7 +433,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF6366F1).withOpacity(0.1),
+                            color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -467,111 +465,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         large: 12.0,
                       ),
                     ),
-                    Text(
-                      post.description,
-                      style: TextStyle(
-                        fontSize: context.responsiveFontSize(
-                          verySmall: 15.0,
-                          small: 16.0,
-                          large: 17.0,
-                        ),
-                        color: const Color(0xFF64748B),
-                        height: 1.6,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    RichTextRenderer(
+                      content: post.description,
+                      mediaUrls: post.mediaUrls,
+                      mediaTypes: post.mediaTypes ?? [],
                     ),
                   ],
                 ),
               ),
-              SizedBox(
-                height: context.responsive(
-                  verySmall: 16.0,
-                  small: 20.0,
-                  large: 24.0,
-                ),
-              ),
-              // Media
-              if (post.mediaUrls.isNotEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(
-                    context.responsive(
-                      verySmall: 20.0,
-                      small: 24.0,
-                      large: 28.0,
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                    border: Border.all(
-                      color: const Color(0xFFE2E8F0).withOpacity(0.5),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.photo_library_outlined,
-                              color: Color(0xFF8B5CF6),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Hình ảnh/Video',
-                            style: TextStyle(
-                              fontSize: context.responsiveFontSize(
-                                verySmall: 16.0,
-                                small: 18.0,
-                                large: 20.0,
-                              ),
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF1E293B),
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: context.responsive(
-                          verySmall: 12.0,
-                          small: 14.0,
-                          large: 16.0,
-                        ),
-                      ),
-                      PostMediaWidget(
-                        mediaUrls: post.mediaUrls,
-                        onImageTap: (index) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => ImageViewerScreen(
-                                images: post.mediaUrls,
-                                initialIndex: index,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
               SizedBox(
                 height: context.responsive(
                   verySmall: 16.0,
@@ -594,13 +495,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   ],
                   border: Border.all(
-                    color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                    color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -612,7 +513,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withOpacity(0.1),
+                            color: const Color(0xFF10B981).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
