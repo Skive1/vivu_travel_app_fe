@@ -45,12 +45,7 @@ class _NotificationBellState extends State<NotificationBell>
       onTapUp: (_) => _animationController.reverse(),
       onTapCancel: () => _animationController.reverse(),
       onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bạn có 3 thông báo mới'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        Scaffold.of(context).openDrawer();
       },
       child: AnimatedBuilder(
         animation: _animationController,

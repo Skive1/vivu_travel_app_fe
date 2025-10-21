@@ -80,6 +80,14 @@ import 'features/advertisement/domain/usecases/get_payment_status.dart';
 import 'features/advertisement/domain/usecases/cancel_payment.dart';
 import 'features/advertisement/presentation/bloc/advertisement_bloc.dart';
 
+// Notification feature
+import 'features/notification/data/datasources/notification_remote_datasource.dart';
+import 'features/notification/data/repositories/notification_repository_impl.dart';
+import 'features/notification/domain/repositories/notification_repository.dart';
+import 'features/notification/domain/usecases/get_notifications_usecase.dart';
+import 'features/notification/domain/usecases/mark_notification_as_read_usecase.dart';
+import 'features/notification/presentation/bloc/notification_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -110,6 +118,9 @@ Future<void> init() async {
 
   // Features - Advertisement
   _initAdvertisement();
+
+  // Features - Notification
+  _initNotification();
 }
 
 void _initAuth() {
@@ -301,6 +312,32 @@ void _initAdvertisement() {
       getPaymentStatus: sl(),
       cancelPayment: sl(),
       getPurchasedPackagesByPartner: sl(),
+    ),
+  );
+}
+
+void _initNotification() {
+  // Data sources
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(apiClient: sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetNotificationsUseCase(repository: sl()));
+  sl.registerLazySingleton(() => MarkNotificationAsReadUseCase(repository: sl()));
+
+  // Bloc
+  sl.registerFactory(
+    () => NotificationBloc(
+      getNotificationsUseCase: sl(),
+      markNotificationAsReadUseCase: sl(),
     ),
   );
 }

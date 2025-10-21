@@ -23,17 +23,20 @@ void main() async {
   
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
+  
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   
   @override
   Widget build(BuildContext context) {
     return BlocProvider<AuthBloc>(
       create: (context) => di.sl<AuthBloc>(),
       child: MaterialApp(
+        navigatorKey: _navigatorKey,
         title: 'Vivu Travel',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(

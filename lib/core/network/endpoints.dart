@@ -59,4 +59,8 @@ class Endpoints {
   
   // Mapbox endpoints
   static const String mapboxGeocoding = 'https://api.mapbox.com/search/geocode/v6/forward';
+  
+  // Notification endpoints
+  static const String getNotifications = '/api/schedule/notification/recipients';
+  static const String markNotificationAsRead = '/api/schedule/notification/recipients/read';
 }

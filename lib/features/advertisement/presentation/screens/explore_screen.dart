@@ -31,11 +31,15 @@ class _ExploreScreenState extends State<ExploreScreen>
   @override
   void initState() {
     super.initState();
-    // Initialize with default length, will be updated in didChangeDependencies
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addObserver(this);
     _loadInitialData();
+    
+    // Initialize controller immediately based on current auth state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _initializeControllerFromAuthState();
+      }
+    });
   }
 
   @override
@@ -49,15 +53,38 @@ class _ExploreScreenState extends State<ExploreScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Check auth state and initialize/update controller
-    final authState = context.read<AuthBloc>().state;
-    final isPartner = authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner';
-    _ensureControllerInitialized(isPartner);
+    
+    // Always ensure controller is properly initialized
+    if (!_controllerInitialized) {
+      _initializeControllerFromAuthState();
+    } else {
+      // Check if partner status changed and update controller
+      final authState = context.read<AuthBloc>().state;
+      final isPartner = authState is AuthAuthenticated && 
+                       authState.userEntity?.roleName.trim().toLowerCase() == 'partner';
+      _ensureControllerInitialized(isPartner);
+    }
     
     // Reload data when returning to this screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _reloadCurrentTabData();
+      if (mounted) {
+        _reloadCurrentTabData();
+      }
     });
+  }
+
+  void _initializeControllerFromAuthState() {
+    try {
+      final authState = context.read<AuthBloc>().state;
+      final isPartner = authState is AuthAuthenticated && 
+                       authState.userEntity?.roleName.trim().toLowerCase() == 'partner';
+      
+      // Initialize controller with correct length immediately
+      _ensureControllerInitialized(isPartner);
+    } catch (e) {
+      // If auth state is not available, initialize with default (non-partner)
+      _ensureControllerInitialized(false);
+    }
   }
 
   @override
@@ -72,10 +99,14 @@ class _ExploreScreenState extends State<ExploreScreen>
   void _onTabChanged() {
     // Avoid triggering during animation; only act when tab has settled
     if (_tabController.indexIsChanging) return;
+    
+    if (!mounted) return;
+    
     if (_tabController.index == 1) {
       // Packages tab selected, load packages if not already loaded
       final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
+      if (authState is AuthAuthenticated && 
+          authState.userEntity?.roleName.trim().toLowerCase() == 'partner') {
         final currentState = context.read<AdvertisementBloc>().state;
         if (currentState is! PackagesLoaded && !(currentState is AdvertisementLoading)) {
           context.read<AdvertisementBloc>().add(const LoadAllPackages());
@@ -84,7 +115,8 @@ class _ExploreScreenState extends State<ExploreScreen>
     } else if (_tabController.index == 2) {
       // Your Packages tab
       final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
+      if (authState is AuthAuthenticated && 
+          authState.userEntity?.roleName.trim().toLowerCase() == 'partner') {
         final currentState = context.read<AdvertisementBloc>().state;
         if (currentState is! PurchasedPackagesLoaded && !(currentState is AdvertisementLoading)) {
           final partnerId = authState.userEntity!.id;
@@ -111,8 +143,8 @@ class _ExploreScreenState extends State<ExploreScreen>
   void _ensureControllerInitialized(bool isPartner) {
     final requiredLength = isPartner ? 3 : 2;
     
-    // Only update if partner status changed or controller not initialized
-    if (!_controllerInitialized || _isPartner != isPartner) {
+    // Always check if we need to update the controller
+    if (!_controllerInitialized || _isPartner != isPartner || _tabController.length != requiredLength) {
       _isPartner = isPartner;
       
       // Dispose existing controller if it exists
@@ -128,7 +160,14 @@ class _ExploreScreenState extends State<ExploreScreen>
 
       // Jump to initial tab if provided and valid
       final desired = (widget.initialTabIndex ?? 0).clamp(0, requiredLength - 1);
-      _tabController.index = desired;
+      if (desired < _tabController.length) {
+        _tabController.index = desired;
+      }
+      
+      // Force rebuild immediately if we're not in build phase
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 
@@ -139,19 +178,23 @@ class _ExploreScreenState extends State<ExploreScreen>
     } else if (_tabController.index == 1) {
       // Packages tab
       final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
+      if (authState is AuthAuthenticated && 
+          authState.userEntity?.roleName.trim().toLowerCase() == 'partner') {
         context.read<AdvertisementBloc>().add(const RefreshPackages());
       }
     } else if (_tabController.index == 2) {
       // Your Packages tab
       final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
+      if (authState is AuthAuthenticated && 
+          authState.userEntity?.roleName.trim().toLowerCase() == 'partner') {
         context.read<AdvertisementBloc>().add(LoadPurchasedPackages(authState.userEntity!.id));
       }
     }
   }
 
   void _reloadCurrentTabData() {
+    if (!mounted) return;
+    
     final currentState = context.read<AdvertisementBloc>().state;
     
     if (_tabController.index == 0) {
@@ -166,7 +209,8 @@ class _ExploreScreenState extends State<ExploreScreen>
     } else if (_tabController.index == 1) {
       // Packages tab
       final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
+      if (authState is AuthAuthenticated && 
+          authState.userEntity?.roleName.trim().toLowerCase() == 'partner') {
         if (currentState is! AdvertisementLoading && currentState is! PackagesLoaded) {
           context.read<AdvertisementBloc>().add(const LoadAllPackages());
         }
@@ -174,7 +218,8 @@ class _ExploreScreenState extends State<ExploreScreen>
     } else if (_tabController.index == 2) {
       // Your Packages tab
       final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner') {
+      if (authState is AuthAuthenticated && 
+          authState.userEntity?.roleName.trim().toLowerCase() == 'partner') {
         if (currentState is! AdvertisementLoading && currentState is! PurchasedPackagesLoaded) {
           context.read<AdvertisementBloc>().add(LoadPurchasedPackages(authState.userEntity!.id));
         }
@@ -184,205 +229,275 @@ class _ExploreScreenState extends State<ExploreScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: ExploreAppBar(
-        tabController: _tabController,
-        onRefresh: _onRefresh,
-      ),
-      body: BlocConsumer<AdvertisementBloc, AdvertisementState>(
-        listener: (context, state) {
-          if (state is AdvertisementError) {
-            DialogUtils.showErrorDialog(
-              context: context,
-              message: state.message,
-            );
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, authState) {
+        // Listen for auth state changes and update controller
+        if (authState is AuthAuthenticated) {
+          final isPartner = authState.userEntity?.roleName.trim().toLowerCase() == 'partner';
+          if (_isPartner != isPartner) {
+            _ensureControllerInitialized(isPartner);
           }
-          // Handle state changes if needed
-        },
-        builder: (context, state) {
-          final authState = context.read<AuthBloc>().state;
-          final isPartner = authState is AuthAuthenticated && authState.userEntity?.roleName == 'Partner';
-
-          // Ensure controller is initialized before building
+        }
+      },
+      child: Builder(
+        builder: (context) {
+          // If controller is not initialized, show loading
           if (!_controllerInitialized) {
             return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
+              backgroundColor: Color(0xFFF8FAFC),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Đang khởi tạo giao diện...'),
+                  ],
+                ),
+              ),
             );
           }
 
-          // Build TabBarView children to match TabController length
-          final List<Widget> tabChildren = [
-                        // Posts Tab
-                        RefreshIndicator(
-                          onRefresh: () async => _onRefresh(),
-                          child: PostListWidget(
-                            posts: state is PostsLoaded ? state.posts : [],
-                            isLoading: state is AdvertisementLoading,
-                            hasLoaded: state is PostsLoaded || state is AdvertisementError,
-                          ),
-                        ),
-                        // Packages Tab (only for Partners)
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, authState) {
-                            if (authState is AuthAuthenticated &&
-                                authState.userEntity?.roleName == 'Partner') {
-                              return RefreshIndicator(
-                                onRefresh: () async => _onRefresh(),
-                                child: PackageListWidget(
-                                  packages: state is PackagesLoaded
-                                      ? state.packages
-                                      : [],
-                                  isLoading: state is AdvertisementLoading,
-                                  hasLoaded: state is PackagesLoaded || state is AdvertisementError,
-                                  onPurchaseSuccess: () {
-                                    // Jump to "Gói dịch vụ" tab and reload packages
-                                    _tabController.animateTo(1);
-                                    context.read<AdvertisementBloc>().add(const LoadAllPackages());
-                                  },
-                                ),
-                              );
-                            } else {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      const Color(0xFFF8FAFC),
-                                      const Color(0xFFE2E8F0).withOpacity(0.3),
-                                    ],
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Container(
-                                    margin: const EdgeInsets.all(24),
-                                    padding: const EdgeInsets.all(32),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.08),
-                                          blurRadius: 20,
-                                          offset: const Offset(0, 8),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF6366F1).withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(16),
-                                          ),
-                                          child: const Icon(
-                                            Icons.verified_user_outlined,
-                                            size: 48,
-                                            color: Color(0xFF6366F1),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 24),
-                                        Text(
-                                          'Chỉ dành cho đối tác',
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF1E293B),
-                                            letterSpacing: -0.5,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          'Bạn cần có tài khoản đối tác để xem các gói dịch vụ quảng cáo',
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            color: const Color(0xFF64748B),
-                                            height: 1.5,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      ];
+          return Scaffold(
+            backgroundColor: const Color(0xFFF8FAFC),
+            appBar: ExploreAppBar(
+              tabController: _tabController,
+              onRefresh: _onRefresh,
+            ),
+            body: BlocConsumer<AdvertisementBloc, AdvertisementState>(
+              listener: (context, state) {
+                if (state is AdvertisementError) {
+                  DialogUtils.showErrorDialog(
+                    context: context,
+                    message: state.message,
+                  );
+                }
+                // Handle state changes if needed
+              },
+              builder: (context, state) {
+                final authState = context.read<AuthBloc>().state;
+                final isPartner = authState is AuthAuthenticated && 
+                                 authState.userEntity?.roleName.trim().toLowerCase() == 'partner';
 
-          if (isPartner) {
-            tabChildren.add(
-              BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, authState) {
-                  return RefreshIndicator(
-                    onRefresh: () async => _onRefresh(),
-                    child: PackageListWidget(
-                      packages: state is PurchasedPackagesLoaded ? state.packages : [],
-                      isLoading: state is AdvertisementLoading,
-                      hasLoaded: state is PurchasedPackagesLoaded || state is AdvertisementError,
-                      showPurchaseButton: false,
+                // Check if controller needs to be updated
+                final requiredLength = isPartner ? 3 : 2;
+                if (!_controllerInitialized || _isPartner != isPartner || _tabController.length != requiredLength) {
+                  // Schedule controller update after build
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      _ensureControllerInitialized(isPartner);
+                    }
+                  });
+                }
+
+                // If controller is still not initialized, show loading
+                if (!_controllerInitialized) {
+                  return const Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang tải...'),
+                        ],
+                      ),
                     ),
                   );
-                },
-              ),
-            );
-          }
+                }
 
-          // Ensure tabChildren length matches TabController length
-          if (tabChildren.length != _tabController.length) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          return Stack(
-            children: [
-              TabBarView(
-                controller: _tabController,
-                children: tabChildren,
-              ),
-              // Floating Action Button for Partners
-              BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, authState) {
-                  if (authState is AuthAuthenticated &&
-                      authState.userEntity?.roleName == 'Partner' &&
-                      _tabController.index == 0) {
-                    return Positioned(
-                      top: context.responsive(
-                        verySmall: 16.0,
-                        small: 20.0,
-                        large: 24.0,
-                      ),
-                      right: context.responsive(
-                        verySmall: 16.0,
-                        small: 20.0,
-                        large: 24.0,
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF6366F1).withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                // Build TabBarView children to match TabController length
+                final List<Widget> tabChildren = [
+                  // Posts Tab
+                  RefreshIndicator(
+                    onRefresh: () async => _onRefresh(),
+                    child: PostListWidget(
+                      posts: state is PostsLoaded ? state.posts : [],
+                      isLoading: state is AdvertisementLoading,
+                      hasLoaded: state is PostsLoaded || state is AdvertisementError,
+                    ),
+                  ),
+                  // Packages Tab (only for Partners)
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, authState) {
+                      if (authState is AuthAuthenticated &&
+                          authState.userEntity?.roleName.trim().toLowerCase() == 'partner') {
+                        return RefreshIndicator(
+                          onRefresh: () async => _onRefresh(),
+                          child: PackageListWidget(
+                            packages: state is PackagesLoaded
+                                ? state.packages
+                                : [],
+                            isLoading: state is AdvertisementLoading,
+                            hasLoaded: state is PackagesLoaded || state is AdvertisementError,
+                            onPurchaseSuccess: () {
+                              // Jump to "Gói dịch vụ" tab and reload packages
+                              _tabController.animateTo(1);
+                              context.read<AdvertisementBloc>().add(const LoadAllPackages());
+                            },
+                          ),
+                        );
+                      } else {
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                const Color(0xFFF8FAFC),
+                                const Color(0xFFE2E8F0).withOpacity(0.3),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: CreatePostButton(
-                          onTap: () => _showCreatePostDialog(),
-                        ),
+                          ),
+                          child: Center(
+                            child: Container(
+                              margin: const EdgeInsets.all(24),
+                              padding: const EdgeInsets.all(32),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: const Icon(
+                                      Icons.verified_user_outlined,
+                                      size: 48,
+                                      color: Color(0xFF6366F1),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Text(
+                                    'Chỉ dành cho đối tác',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF1E293B),
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Bạn cần có tài khoản đối tác để xem các gói dịch vụ quảng cáo',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: const Color(0xFF64748B),
+                                      height: 1.5,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ];
+
+                if (isPartner) {
+                  tabChildren.add(
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, authState) {
+                        return RefreshIndicator(
+                          onRefresh: () async => _onRefresh(),
+                          child: PackageListWidget(
+                            packages: state is PurchasedPackagesLoaded ? state.packages : [],
+                            isLoading: state is AdvertisementLoading,
+                            hasLoaded: state is PurchasedPackagesLoaded || state is AdvertisementError,
+                            showPurchaseButton: false,
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }
+
+                // Ensure tabChildren length matches TabController length
+                if (tabChildren.length != _tabController.length) {
+                  // Schedule controller reinitialization after build
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      _controllerInitialized = false;
+                      _ensureControllerInitialized(isPartner);
+                    }
+                  });
+                  
+                  return const Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Đang khởi tạo giao diện...'),
+                        ],
                       ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-            ],
+                    ),
+                  );
+                }
+
+                return Stack(
+                  children: [
+                    TabBarView(
+                      controller: _tabController,
+                      children: tabChildren,
+                    ),
+                    // Floating Action Button for Partners
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, authState) {
+                        if (authState is AuthAuthenticated &&
+                            authState.userEntity?.roleName.trim().toLowerCase() == 'partner' &&
+                            _tabController.index == 0) {
+                          return Positioned(
+                            top: context.responsive(
+                              verySmall: 16.0,
+                              small: 20.0,
+                              large: 24.0,
+                            ),
+                            right: context.responsive(
+                              verySmall: 16.0,
+                              small: 20.0,
+                              large: 24.0,
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF6366F1).withOpacity(0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: CreatePostButton(
+                                onTap: () => _showCreatePostDialog(),
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
           );
         },
       ),

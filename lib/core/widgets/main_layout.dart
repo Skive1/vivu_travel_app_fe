@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import './app_bottom_nav.dart';
 import 'page_manager.dart';
+import '../../injection_container.dart';
+import '../../features/notification/presentation/bloc/notification_bloc.dart';
+import '../../features/notification/presentation/widgets/notification_drawer.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -59,6 +63,10 @@ class _MainLayoutState extends State<MainLayout> {
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.white,
+      drawer: BlocProvider(
+        create: (context) => sl<NotificationBloc>(),
+        child: const NotificationDrawer(),
+      ),
       body: IndexedStack(
         index: _currentIndex,
         children: _pageManager.getPages(context),
