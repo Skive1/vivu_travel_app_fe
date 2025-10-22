@@ -1,5 +1,11 @@
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppConfig {
+  // Base URL Configuration
+  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://143.198.203.34:5120';
+  static String get signalRUrl => '$baseUrl/notificationHub';
+  
   // API Configuration
   static const int apiConnectTimeout = 5000; // 5 seconds
   static const int apiReceiveTimeout = 12000; // 12 seconds (mobile-friendly)

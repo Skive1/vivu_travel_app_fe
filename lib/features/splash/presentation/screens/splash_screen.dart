@@ -12,6 +12,8 @@ import '../widgets/animated_title.dart';
 import '../../../authentication/presentation/bloc/auth_bloc.dart';
 import '../../../authentication/presentation/bloc/auth_event.dart';
 import '../../../authentication/presentation/bloc/auth_state.dart';
+import '../../../notification/presentation/bloc/notification_bloc.dart';
+import '../../../notification/presentation/bloc/notification_event.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -56,9 +58,32 @@ class _SplashScreenState extends State<SplashScreen>
     // Animations and auth check can run in parallel for better UX
     await Future.delayed(const Duration(milliseconds: 800)); // Minimal delay for smooth logo appearance
     
+    // Initialize SignalR for real-time notifications
+    _initializeSignalR();
+    
     // Check auth status using global AuthBloc
     if (mounted) {
       context.read<AuthBloc>().add(AuthStatusChecked());
+    }
+  }
+
+  void _initializeSignalR() {
+    try {
+      print('🔌 Starting SignalR initialization...');
+      
+      // Initialize SignalR service
+      final notificationBloc = di.sl<NotificationBloc>();
+      print('📱 NotificationBloc created successfully');
+      
+      notificationBloc.add(const InitializeSignalREvent());
+      print('✅ InitializeSignalREvent added');
+      
+      // Start SignalR connection
+      notificationBloc.add(const StartSignalREvent());
+      print('✅ StartSignalREvent added');
+      
+    } catch (e) {
+      print('❌ Failed to initialize SignalR: $e');
     }
   }
 
@@ -66,6 +91,11 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     
     if (state is AuthAuthenticated) {
+      // Join user group for personal notifications
+      if (state.userEntity != null) {
+        _joinUserGroup(state.userEntity!.id);
+      }
+      
       // Token còn hạn → đi đến Home
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } else {
@@ -79,6 +109,15 @@ class _SplashScreenState extends State<SplashScreen>
       } else {
         Navigator.of(context).pushReplacementNamed(AppRoutes.login);
       }
+    }
+  }
+
+  void _joinUserGroup(String userId) {
+    try {
+      final notificationBloc = di.sl<NotificationBloc>();
+      notificationBloc.add(JoinUserGroupEvent(userId: userId));
+    } catch (e) {
+      print('Failed to join user group: $e');
     }
   }
 

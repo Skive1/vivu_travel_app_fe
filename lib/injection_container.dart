@@ -8,6 +8,7 @@ import 'core/network/api_client.dart';
 import 'core/network/dio_factory.dart';
 import 'core/network/network_info.dart';
 import 'core/utils/token_storage.dart';
+import 'core/services/signalr_service.dart';
 
 // Authentication
 import 'features/authentication/data/datasources/auth_remote_datasource.dart';
@@ -103,6 +104,9 @@ Future<void> init() async {
   await TokenStorage.init();
   sl.registerLazySingleton<Dio>(() => DioFactory.create());
   sl.registerLazySingleton<ApiClient>(() => ApiClientImpl(sl()));
+  
+  // SignalR Service
+  sl.registerLazySingleton<SignalRService>(() => SignalRService());
  
   // Features - Authentication
   _initAuth();
@@ -338,6 +342,7 @@ void _initNotification() {
     () => NotificationBloc(
       getNotificationsUseCase: sl(),
       markNotificationAsReadUseCase: sl(),
+      signalRService: sl(),
     ),
   );
 }
