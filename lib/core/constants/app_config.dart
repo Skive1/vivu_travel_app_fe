@@ -4,7 +4,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class AppConfig {
   // Base URL Configuration
   static String get baseUrl => dotenv.env['BASE_URL'] ?? 'http://143.198.203.34:5120';
-  static String get signalRUrl => '$baseUrl/notificationHub';
+  static String get signalR => dotenv.env['WEBSOCKET_URL'] ?? 'http://143.198.203.34:5003';
+  static String get signalRUrl => '$signalR/notificationHub';
   
   // API Configuration
   static const int apiConnectTimeout = 5000; // 5 seconds

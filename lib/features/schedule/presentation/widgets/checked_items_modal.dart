@@ -99,6 +99,9 @@ class _CheckedItemsModalState extends State<CheckedItemsModal> {
     final selectedItems = _checkedItems
         .where((item) => _selectedItemIds.contains(item.checkedItemId))
         .toList();
+    
+    // Capture the ScheduleBloc instance before showing the dialog
+    final scheduleBloc = context.read<ScheduleBloc>();
 
     showDialog(
       context: context,
@@ -305,7 +308,7 @@ class _CheckedItemsModalState extends State<CheckedItemsModal> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        context.read<ScheduleBloc>().add(
+                        scheduleBloc.add(
                           DeleteCheckedItemsBulkEvent(checkedItemIds: _selectedItemIds.toList()),
                         );
                         setState(() {

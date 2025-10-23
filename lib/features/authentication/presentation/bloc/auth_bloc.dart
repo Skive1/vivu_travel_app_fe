@@ -14,6 +14,8 @@ import '../../domain/usecases/resend_register_otp_usecase.dart';
 import '../../domain/usecases/get_user_profile_usecase.dart';
 import '../../domain/usecases/change_password_usecase.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../../notification/presentation/bloc/notification_bloc.dart';
+import '../../../notification/presentation/bloc/notification_event.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -31,6 +33,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetUserProfileUseCase getUserProfileUseCase;
   final ChangePasswordUseCase changePasswordUseCase;
   final AuthRepository authRepository;
+  final NotificationBloc? notificationBloc;
 
   bool _isFetchingProfile = false; // prevent duplicate /auth/me calls
 
@@ -48,6 +51,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.getUserProfileUseCase,
     required this.changePasswordUseCase,
     required this.authRepository,
+    this.notificationBloc,
   }) : super(AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<LogoutRequested>(_onLogoutRequested);
@@ -87,7 +91,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           emit(AuthAuthenticated(authEntity, userEntity: cachedUser));
         }
 
-        // 2) Then trigger fresh user profile load in background to update UI
+        // 2) Initialize SignalR for real-time notifications
+        _initializeSignalRForAuthenticatedUser(cachedUser);
+
+        // 3) Then trigger fresh user profile load in background to update UI
         if (!isClosed) {
           add(GetUserProfileRequested());
         }
@@ -124,6 +131,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           if (!emit.isDone) {
             emit(currentState.copyWith(userEntity: userEntity));
           }
+          
+          // Trigger SignalR initialization now that we have userEntity
+          print('🔄 AuthBloc: User profile loaded, triggering SignalR initialization...');
+          _initializeSignalRForAuthenticatedUser(userEntity);
         },
       );
     } finally {
@@ -148,6 +159,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (_) async {
         // Clear user profile from storage
         await UserStorage.clearUserProfile();
+        
+        // Stop SignalR connection when user logs out
+        _stopSignalRConnection();
         
         // Check if emit is still available before calling
         if (!emit.isDone) {
@@ -179,6 +193,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (!emit.isDone) {
           emit(AuthAuthenticated(authEntity, userEntity: cachedUser));
         }
+        
+        // Initialize SignalR for real-time notifications
+        _initializeSignalRForAuthenticatedUser(cachedUser);
         
         // Then get fresh user profile from API
         if (!isClosed) {
@@ -397,6 +414,66 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
       },
     );
+  }
+
+  // SignalR helper methods
+  void _initializeSignalRForAuthenticatedUser(dynamic userEntity) {
+    if (notificationBloc == null) return;
+    
+    try {
+      print('🔌 AuthBloc: Starting SignalR initialization for authenticated user...');
+      
+      // Get userId from current AuthBloc state (same as Header avatar)
+      final currentState = state;
+      String? userId;
+      
+      if (currentState is AuthAuthenticated) {
+        // Get userId from state.userEntity (same source as Header avatar)
+        if (currentState.hasUserProfile && currentState.userEntity != null) {
+          userId = currentState.userEntity!.id;
+          print('🔍 AuthBloc: Got userId from state.userEntity: $userId');
+        }
+        
+        // Fallback to parameter userEntity if state doesn't have userEntity yet
+        if (userId == null && userEntity != null && userEntity.id != null) {
+          userId = userEntity.id;
+          print('🔍 AuthBloc: Got userId from parameter userEntity (fallback): $userId');
+        }
+      }
+      
+      // Join user group FIRST to set pending userId
+      if (userId != null && userId.isNotEmpty) {
+        notificationBloc!.add(JoinUserGroupEvent(userId: userId));
+        print('✅ AuthBloc: JoinUserGroupEvent added for user: $userId');
+        
+        // Initialize SignalR
+        notificationBloc!.add(const InitializeSignalREvent());
+        print('✅ AuthBloc: InitializeSignalREvent added');
+        
+        // Start SignalR connection
+        notificationBloc!.add(const StartSignalREvent());
+        print('✅ AuthBloc: StartSignalREvent added');
+      } else {
+        print('❌ AuthBloc: No valid userId found for SignalR initialization');
+        print('⏳ AuthBloc: Waiting for user profile to load before SignalR initialization...');
+        return;
+      }
+      
+    } catch (e) {
+      print('❌ AuthBloc: Failed to initialize SignalR: $e');
+    }
+  }
+
+  void _stopSignalRConnection() {
+    if (notificationBloc == null) return;
+    
+    try {
+      print('🛑 AuthBloc: Stopping SignalR connection...');
+      notificationBloc!.add(const StopSignalREvent());
+      print('✅ AuthBloc: StopSignalREvent added');
+    } catch (e) {
+      print('❌ AuthBloc: Failed to stop SignalR: $e');
+    }
   }
 
   // (No longer used) Background loader removed in favor of event-based refresh
