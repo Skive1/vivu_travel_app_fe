@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'injection_container.dart' as di;
 import 'routes.dart';
 import 'core/constants/app_colors.dart';
+import 'core/services/local_notification_service.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/authentication/presentation/bloc/auth_bloc.dart';
 
@@ -20,6 +21,9 @@ void main() async {
   }
   
   await di.init();
+  
+  // Initialize local notification service
+  await di.sl<LocalNotificationService>().initialize();
   
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   

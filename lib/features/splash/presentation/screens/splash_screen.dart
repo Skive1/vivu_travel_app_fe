@@ -62,11 +62,13 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
+
   void _navigateBasedOnAuthState(AuthState state) async {
     if (!mounted) return;
     
     if (state is AuthAuthenticated) {
       // Token còn hạn → đi đến Home
+      // SignalR will be initialized by AuthBloc
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     } else {
       // Token hết hạn hoặc không có token → check first time user
@@ -81,6 +83,7 @@ class _SplashScreenState extends State<SplashScreen>
       }
     }
   }
+
 
   @override
   void dispose() {
