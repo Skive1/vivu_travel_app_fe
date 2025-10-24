@@ -62,111 +62,124 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           },
           child: AuthContainer(
             child: SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.only(
-                      left: 24.0,
-                      right: 24.0,
-                      bottom: keyboardHeight + 40,
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: Column(
-                        children: [
-                          SizedBox(height: screenSize.height * 0.08),
-                          
-                          // Back Button
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: GestureDetector(
-                              onTap: () => Navigator.of(context).pop(),
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF5F5F5),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_back_ios_new,
-                                  color: Color(0xFF1A1A1A),
-                                  size: 20,
-                                ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 24.0,
+                  right: 24.0,
+                  bottom: keyboardHeight + 40,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Top Section
+                    Column(
+                      children: [
+                        // Back Button
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5F5F5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new,
+                                color: Color(0xFF1A1A1A),
+                                size: 20,
                               ),
                             ),
                           ),
-                          
-                          SizedBox(height: screenSize.height * 0.04),
-                          
-                          // Header
-                          Column(
-                            children: [
-                              const Text(
-                                'Forgot password',
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1A1A1A),
-                                ),
+                        ),
+                        
+                        SizedBox(height: screenSize.height * 0.02),
+                        
+                        // Vivu Travel Logo
+                        Container(
+                          width: 240.0,
+                          height: 240.0,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(90.0),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(90.0),
+                            child: Image.asset(
+                              'assets/images/vivu_logo.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        
+                        SizedBox(height: screenSize.height * 0.02),
+                        
+                        // Header
+                        Column(
+                          children: [
+                            const Text(
+                              'Forgot password',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1A1A1A),
                               ),
-                              
-                              const SizedBox(height: 16),
-                              
-                              const Text(
-                                'Enter your email account to reset\nyour password',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF757575),
-                                  height: 1.5,
-                                ),
+                            ),
+                            
+                            const SizedBox(height: 12),
+                            
+                            const Text(
+                              'Enter your email account to reset\nyour password',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF757575),
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    
+                    // Form Section
+                    Column(
+                      children: [
+                        // Form
+                        Form(
+                          key: _passwordResetController.forgotPasswordFormKey,
+                          child: Column(
+                            children: [
+                              AuthTextField(
+                                controller: _passwordResetController.forgotPasswordEmailController,
+                                placeholder: 'vivutravel@gmail.com',
+                                keyboardType: TextInputType.emailAddress,
+                                validator: _passwordResetController.validateEmail,
                               ),
                             ],
                           ),
-                          
-                          SizedBox(height: screenSize.height * 0.06),
-                          
-                          // Form
-                          Form(
-                            key: _passwordResetController.forgotPasswordFormKey,
-                            child: Column(
-                              children: [
-                                AuthTextField(
-                                  controller: _passwordResetController.forgotPasswordEmailController,
-                                  placeholder: 'www.uihut@gmail.com',
-                                  keyboardType: TextInputType.emailAddress,
-                                  validator: _passwordResetController.validateEmail,
-                                ),
-                              ],
-                            ),
-                          ),
-                          
-                          SizedBox(height: screenSize.height * 0.06),
-                          
-                          // Reset Password Button
-                          BlocBuilder<AuthBloc, AuthState>(
-                            builder: (context, state) {
-                              return SizedBox(
-                                width: double.infinity,
-                                child: AuthButton(
-                                  text: 'Reset Password',
-                                  isLoading: state is AuthLoading,
-                                  onPressed: () => _passwordResetController.handleForgotPassword(context),
-                                ),
-                              );
-                            },
-                          ),
-                          
-                          const SizedBox(height: 40),
-                        ],
-                      ),
+                        ),
+                        
+                        SizedBox(height: screenSize.height * 0.03),
+                        
+                        // Reset Password Button
+                        BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) {
+                            return SizedBox(
+                              width: double.infinity,
+                              child: AuthButton(
+                                text: 'Reset Password',
+                                isLoading: state is AuthLoading,
+                                onPressed: () => _passwordResetController.handleForgotPassword(context),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
             ),
           ),

@@ -12,9 +12,6 @@ class ValidationConstants {
   static const String passwordPattern = 
       r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]';
   
-  // Name validation (letters, spaces, and common characters)
-  static const String namePattern = 
-      r'^[a-zA-Z\s\-]+$';
   
   // Address validation (letters, numbers, spaces, and common punctuation)
   static const String addressPattern = 

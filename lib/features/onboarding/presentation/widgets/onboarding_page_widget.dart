@@ -13,27 +13,40 @@ class OnboardingPageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+    
     return Column(
       children: [
         // Background image - tràn viền trên và bo góc dưới
         Container(
           width: double.infinity,
-          height: 510,
+          height: 510 + statusBarHeight,
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
           ),
           clipBehavior: Clip.hardEdge,
-          child: Image.asset(
-            onboardData.imagePath,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+          child: Stack(
+            children: [
+              // Background image tràn lên status bar
+              Positioned(
+                top: -statusBarHeight,
+                left: 0,
+                right: 0,
+                height: 510 + statusBarHeight,
+                child: Image.asset(
+                  onboardData.imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ],
           ),
         ),
         
@@ -72,7 +85,7 @@ class OnboardingPageWidget extends StatelessWidget {
                     ),
                   ),
                   
-                  const SizedBox(height: 40),
+                  const Spacer(),
                 ],
               ),
             ),

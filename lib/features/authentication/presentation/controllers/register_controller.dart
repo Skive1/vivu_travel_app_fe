@@ -91,10 +91,6 @@ class RegisterController {
       return ValidationMessages.nameTooLong;
     }
     
-    if (!RegExp(ValidationConstants.namePattern).hasMatch(value)) {
-      return ValidationMessages.nameInvalid;
-    }
-    
     return null;
   }
 

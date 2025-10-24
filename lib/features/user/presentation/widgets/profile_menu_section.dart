@@ -6,10 +6,18 @@ import '../../../../injection_container.dart' as di;
 import '../../../authentication/presentation/bloc/auth_bloc.dart';
 import '../../../authentication/presentation/bloc/auth_state.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
+import '../../../transaction/presentation/bloc/transaction_bloc.dart';
+import '../../../transaction/presentation/screens/transaction_list_screen.dart';
 import '../../../../routes.dart';
+import '../../../../core/widgets/page_manager.dart';
 
 class ProfileMenuSection extends StatefulWidget {
-  const ProfileMenuSection({super.key});
+  final PageManager? pageManager;
+  
+  const ProfileMenuSection({
+    super.key,
+    this.pageManager,
+  });
 
   @override
   State<ProfileMenuSection> createState() => _ProfileMenuSectionState();
@@ -65,9 +73,24 @@ class _ProfileMenuSectionState extends State<ProfileMenuSection> {
                   Navigator.of(context).pushNamed(AppRoutes.profileDetail);
                 },
               ),
-              const MenuRow(
-                icon: Icons.bookmark_outline,
-                title: 'Bookmarked',
+              MenuRow(
+                icon: Icons.receipt_long_outlined,
+                title: 'Lịch sử giao dịch',
+                onTap: () {
+                  if (widget.pageManager != null) {
+                    widget.pageManager!.showTransactionList();
+                  } else {
+                    // Fallback to Navigator if PageManager is not available
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => BlocProvider(
+                          create: (context) => di.sl<TransactionBloc>(),
+                          child: const TransactionListScreen(),
+                        ),
+                      ),
+                    );
+                  }
+                },
               ),
               const MenuRow(
                 icon: Icons.travel_explore_outlined,

@@ -251,10 +251,10 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         return;
       }
       
-      // Check if SignalR is connected
-      if (!signalRService.isConnected) {
-        print('❌ Cannot join schedule group: SignalR is not connected');
-        emit(SignalRError(message: 'SignalR connection required'));
+      // Check if SignalR is ready for operations
+      if (!signalRService.isReady) {
+        print('❌ Cannot join schedule group: SignalR is not ready (connected: ${signalRService.isConnected}, state: ${signalRService.getConnectionDiagnostics()['connectionState']})');
+        emit(SignalRError(message: 'SignalR is not ready for operations'));
         return;
       }
       
@@ -406,15 +406,36 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
         final List<dynamic> schedules = response.data;
         print('✅ Loaded ${schedules.length} schedules for user $userId');
         
-        // Validate and join each schedule group
+        // Wait for SignalR to be ready before joining groups
+        await _waitForSignalRReady();
+        
+        // Validate and join each schedule group sequentially
         int joinedCount = 0;
+        int failedCount = 0;
+        
         for (final schedule in schedules) {
           if (schedule is Map<String, dynamic> && schedule['id'] != null) {
             final scheduleId = schedule['id'].toString();
             if (scheduleId.isNotEmpty) {
-              print('🔄 Joining schedule group: $scheduleId');
-              add(JoinScheduleGroupEvent(scheduleId: scheduleId));
-              joinedCount++;
+              try {
+                print('🔄 Joining schedule group: $scheduleId');
+                await signalRService.joinScheduleGroup(scheduleId);
+                joinedCount++;
+                print('✅ Successfully joined schedule group: $scheduleId');
+                
+                // Verify the schedule ID was added to joinedGroups
+                if (signalRService.joinedGroups.contains(scheduleId)) {
+                  print('✅ Schedule group $scheduleId confirmed in joinedGroups');
+                } else {
+                  print('⚠️ Schedule group $scheduleId not found in joinedGroups after joining');
+                }
+                
+                // Small delay between joins
+                await Future.delayed(const Duration(milliseconds: 50));
+              } catch (e) {
+                failedCount++;
+                print('❌ Error joining schedule group $scheduleId: $e');
+              }
             } else {
               print('⚠️ Skipping empty scheduleId');
             }
@@ -423,13 +444,39 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
           }
         }
         
-        print('✅ Successfully joined $joinedCount schedule groups');
+        print('✅ Successfully joined $joinedCount schedule groups, $failedCount failed');
+        print('📋 Final joined groups: ${signalRService.joinedGroups}');
       } else {
         print('❌ Failed to load schedules: HTTP ${response.statusCode}');
       }
     } catch (e) {
       print('❌ Error joining schedule groups: $e');
     }
+  }
+  
+  /// Wait for SignalR to be ready for operations
+  Future<void> _waitForSignalRReady() async {
+    const maxWaitTime = Duration(seconds: 10);
+    const checkInterval = Duration(milliseconds: 200);
+    final startTime = DateTime.now();
+    
+    print('⏳ Waiting for SignalR to be ready...');
+    
+    while (DateTime.now().difference(startTime) < maxWaitTime) {
+      if (signalRService.isReady) {
+        print('✅ SignalR is ready for operations');
+        return;
+      }
+      
+      final diagnostics = signalRService.getConnectionDiagnostics();
+      print('🔍 SignalR status: connected=${signalRService.isConnected}, state=${diagnostics['connectionState']}, ready=${signalRService.isReady}');
+      
+      await Future.delayed(checkInterval);
+    }
+    
+    final finalDiagnostics = signalRService.getConnectionDiagnostics();
+    print('❌ SignalR ready timeout. Final status: $finalDiagnostics');
+    throw Exception('SignalR is not ready for operations after timeout');
   }
 
   @override

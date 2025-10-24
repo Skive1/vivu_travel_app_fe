@@ -30,6 +30,11 @@ class _MainLayoutState extends State<MainLayout> {
       _pageManager.showScheduleList();
     }
     
+    // Handle profile navigation - if showing transaction pages, go back to profile main
+    if (index == 4 && _pageManager.profilePageManager.currentProfileIndex != 0) {
+      _pageManager.showProfileMain();
+    }
+    
     setState(() => _currentIndex = index);
   }
 

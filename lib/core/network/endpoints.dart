@@ -63,4 +63,7 @@ class Endpoints {
   // Notification endpoints
   static const String getNotifications = '/api/schedule/notification/recipients';
   static const String markNotificationAsRead = '/api/schedule/notification/recipients/read';
+  
+  // Transaction endpoints
+  static const String getAllTransactions = '/api/payment/transaction/all/by-current-account';
 }

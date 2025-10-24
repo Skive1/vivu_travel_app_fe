@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/onboarding_constants.dart';
-import '../../../../core/utils/responsive_utils.dart';
 import '../../../../routes.dart';
 import '../widgets/onboarding_page_widget.dart';
 import '../widgets/onboarding_skip_button.dart';
@@ -91,26 +90,24 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       backgroundColor: AppColors.white,
       body: SizedBox(
         width: screenSize.width,
-        height: screenSize.height,
+        height: screenSize.height ,
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: SafeArea(
-            child: Stack(
-              children: [
-                // PageView with onboarding pages
-                _buildPageView(),
-                
-                // Skip button
-                OnboardingSkipButton(onSkip: _skipOnboarding),
-                
-                // Bottom section with indicators and button
-                OnboardingBottomSection(
-                  currentPage: _currentPage,
-                  onNextPressed: _nextPage,
-                  onGetStartedPressed: _navigateToLogin,
-                ),
-              ],
-            ),
+          child: Stack(
+            children: [
+              // PageView with onboarding pages
+              _buildPageView(),
+              
+              // Skip button
+              OnboardingSkipButton(onSkip: _skipOnboarding),
+              
+              // Bottom section with indicators and button
+              OnboardingBottomSection(
+                currentPage: _currentPage,
+                onNextPressed: _nextPage,
+                onGetStartedPressed: _navigateToLogin,
+              ),
+            ],
           ),
         ),
       ),

@@ -90,6 +90,13 @@ import 'features/notification/domain/usecases/get_notifications_usecase.dart';
 import 'features/notification/domain/usecases/mark_notification_as_read_usecase.dart';
 import 'features/notification/presentation/bloc/notification_bloc.dart';
 
+// Transaction feature
+import 'features/transaction/data/datasources/transaction_remote_datasource.dart';
+import 'features/transaction/data/repositories/transaction_repository_impl.dart';
+import 'features/transaction/domain/repositories/transaction_repository.dart';
+import 'features/transaction/domain/usecases/get_all_transactions.dart';
+import 'features/transaction/presentation/bloc/transaction_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -129,6 +136,9 @@ Future<void> init() async {
 
   // Features - Notification
   _initNotification();
+
+  // Features - Transaction
+  _initTransaction();
 }
 
 void _initAuth() {
@@ -350,6 +360,30 @@ void _initNotification() {
       signalRService: sl(),
       apiClient: sl(),
       localNotificationService: sl(),
+    ),
+  );
+}
+
+void _initTransaction() {
+  // Data sources
+  sl.registerLazySingleton<TransactionRemoteDataSource>(
+    () => TransactionRemoteDataSourceImpl(apiClient: sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<TransactionRepository>(
+    () => TransactionRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => GetAllTransactions(sl()));
+
+  // Bloc
+  sl.registerFactory(
+    () => TransactionBloc(
+      getAllTransactions: sl(),
     ),
   );
 }

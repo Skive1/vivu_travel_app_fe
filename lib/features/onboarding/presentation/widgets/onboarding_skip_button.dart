@@ -15,18 +15,27 @@ class OnboardingSkipButton extends StatelessWidget {
     return Positioned(
       top: MediaQuery.of(context).padding.top + 16,
       right: 20,
-      child: TextButton(
-        onPressed: onSkip,
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: const Text(
-          AppStrings.skip,
-          style: TextStyle(
-            color: AppColors.bgColor,
-            fontSize: 18,
-            fontWeight: FontWeight.w400,
-            fontFamily: 'Gill Sans MT',
+        child: TextButton(
+          onPressed: onSkip,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: const Text(
+            AppStrings.skip,
+            style: TextStyle(
+              color: AppColors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Gill Sans MT',
+            ),
           ),
         ),
       ),

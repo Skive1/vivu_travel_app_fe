@@ -42,6 +42,7 @@ dev_dependencies:
 
   build_runner: ^2.9.0
   json_serializable: ^6.8.0
+  flutter_launcher_icons: ^0.14.1
 
 flutter:
   uses-material-design: true
@@ -59,3 +60,24 @@ flutter:
   #       - asset: assets/fonts/Roboto-Regular.ttf
   #       - asset: assets/fonts/Roboto-Bold.ttf
   #         weight: 700
+
+# Flutter Launcher Icons configuration
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  adaptive_icon_background: "#ffffff"  # Dark background to match logo
+  adaptive_icon_foreground: "assets/images/vivu_logo.png"
+  web:
+    generate: true
+    image_path: "assets/images/vivu_logo.png"
+    background_color: "#ffffff"  # Dark background to match logo
+    theme_color: "#2196F3"
+  windows:
+    generate: true
+    image_path: "assets/images/vivu_logo.png"
+    icon_size: 256 # Maximum size for Windows
+  macos:
+    generate: true
+    image_path: "assets/images/vivu_logo.png"
+  image_path: "assets/images/vivu_logo.png"

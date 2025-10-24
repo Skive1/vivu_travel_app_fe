@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/onboarding_constants.dart';
 import 'page_indicator.dart';
 import 'onboarding_action_button.dart';
@@ -18,39 +19,42 @@ class OnboardingBottomSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLastPage = currentPage == OnboardingConstants.onboardingPages.length - 1;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
     
     return Positioned(
       bottom: 0,
       left: 0,
       right: 0,
       child: Container(
-        padding: const EdgeInsets.only(
+        padding: EdgeInsets.only(
           left: 20,
           right: 20,
-          bottom: 40,
+          bottom: 20 + bottomPadding,
           top: 20,
         ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Page indicators centered
-              Center(
-                child: PageIndicator(
-                  currentIndex: currentPage,
-                  pageCount: OnboardingConstants.onboardingPages.length,
-                ),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Page indicators centered
+            Center(
+              child: PageIndicator(
+                currentIndex: currentPage,
+                pageCount: OnboardingConstants.onboardingPages.length,
               ),
-              
-              const SizedBox(height: 40),
-              
-              // Action button (Next/Get Started)
-              OnboardingActionButton(
-                isLastPage: isLastPage,
-                onPressed: isLastPage ? onGetStartedPressed : onNextPressed,
-              ),
-            ],
-          ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Action button (Next/Get Started)
+            OnboardingActionButton(
+              isLastPage: isLastPage,
+              onPressed: isLastPage ? onGetStartedPressed : onNextPressed,
+            ),
+          ],
         ),
       ),
     );

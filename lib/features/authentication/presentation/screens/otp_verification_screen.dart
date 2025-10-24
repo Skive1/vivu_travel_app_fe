@@ -93,181 +93,194 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           },
           child: AuthContainer(
             child: SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.only(
-                      left: 24.0,
-                      right: 24.0,
-                      bottom: keyboardHeight + 40,
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: Column(
-                        children: [
-                          SizedBox(height: screenSize.height * 0.08),
-                          
-                          // Back Button
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: GestureDetector(
-                              onTap: () => Navigator.of(context).pop(),
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF5F5F5),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_back_ios_new,
-                                  color: Color(0xFF1A1A1A),
-                                  size: 20,
-                                ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 24.0,
+                  right: 24.0,
+                  bottom: keyboardHeight + 40,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Top Section
+                    Column(
+                      children: [
+                        // Back Button
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: GestureDetector(
+                            onTap: () => Navigator.of(context).pop(),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5F5F5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new,
+                                color: Color(0xFF1A1A1A),
+                                size: 20,
                               ),
                             ),
                           ),
-                          
-                          SizedBox(height: screenSize.height * 0.04),
-                          
-                          // Header
-                          Column(
-                            children: [
-                              const Text(
-                                'OTP Verification',
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1A1A1A),
-                                ),
-                              ),
-                              
-                              const SizedBox(height: 16),
-                              
-                              Text(
-                                'Please check your email ${widget.email}\nto see the verification code',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF757575),
-                                  height: 1.5,
-                                ),
-                              ),
-                            ],
+                        ),
+                        
+                        SizedBox(height: screenSize.height * 0.02),
+                        
+                        // Vivu Travel Logo
+                        Container(
+                          width: 240.0,
+                          height: 240.0,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(120.0),
                           ),
-                          
-                          SizedBox(height: screenSize.height * 0.06),
-                          
-                          // OTP Code Label
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'OTP Code',
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(120.0),
+                            child: Image.asset(
+                              'assets/images/vivu_logo.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        
+                        SizedBox(height: screenSize.height * 0.02),
+                        
+                        // Header
+                        Column(
+                          children: [
+                            const Text(
+                              'OTP Verification',
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
                                 color: Color(0xFF1A1A1A),
                               ),
                             ),
+                            
+                            const SizedBox(height: 12),
+                            
+                            Text(
+                              'Please check your email ${widget.email}\nto see the verification code',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF757575),
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    
+                    // Form Section
+                    Column(
+                      children: [
+                        // OTP Code Label
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'OTP Code',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1A1A1A),
+                            ),
                           ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          // OTP Input Fields
-                          StatefulBuilder(
-                            builder: (context, setState) {
-                              return Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: List.generate(6, (index) {
-                                  return OtpInputField(
-                                    controller: _otpController.otpControllers[index],
-                                    focusNode: _otpController.otpFocusNodes[index],
-                                    onChanged: (value) {
-                                      _otpController.handleOtpChange(value, index);
-                                      if (_otpController.isOtpComplete()) {
-                                        // Auto verify when OTP is complete
-                                        _otpController.handleVerifyRegisterOtp(context, widget.email);
-                                      }
-                                      setState(() {}); // Rebuild to update button state
-                                    },
-                                    onBackspace: () => _otpController.handleBackspace(index),
-                                  );
-                                }),
-                              );
-                            },
-                          ),
-                          
-                          SizedBox(height: screenSize.height * 0.06),
-                          
-                          // Verify Button
-                          BlocBuilder<AuthBloc, AuthState>(
-                            builder: (context, state) {
-                              return SizedBox(
-                                width: double.infinity,
-                                child: AuthButton(
-                                  text: 'Verify',
-                                  isLoading: state is AuthLoading,
-                                  onPressed: _otpController.isOtpComplete() 
-                                      ? () => _otpController.handleVerifyRegisterOtp(context, widget.email)
-                                      : () {},
-                                ),
-                              );
-                            },
-                          ),
-                          
-                          const SizedBox(height: 24),
-                          
-                          // Resend Code Section
-                          StatefulBuilder(
-                            builder: (context, setState) {
-                              return Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text(
-                                    'Resend code to ',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF757575),
-                                    ),
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // OTP Input Fields
+                        StatefulBuilder(
+                          builder: (context, setState) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: List.generate(6, (index) {
+                                return OtpInputField(
+                                  controller: _otpController.otpControllers[index],
+                                  focusNode: _otpController.otpFocusNodes[index],
+                                  onChanged: (value) {
+                                    _otpController.handleOtpChange(value, index);
+                                    if (_otpController.isOtpComplete()) {
+                                      // Auto verify when OTP is complete
+                                      _otpController.handleVerifyRegisterOtp(context, widget.email);
+                                    }
+                                    setState(() {}); // Rebuild to update button state
+                                  },
+                                  onBackspace: () => _otpController.handleBackspace(index),
+                                );
+                              }),
+                            );
+                          },
+                        ),
+                        
+                        SizedBox(height: screenSize.height * 0.03),
+                        
+                        // Verify Button
+                        BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) {
+                            return SizedBox(
+                              width: double.infinity,
+                              child: AuthButton(
+                                text: 'Verify',
+                                isLoading: state is AuthLoading,
+                                onPressed: _otpController.isOtpComplete() 
+                                    ? () => _otpController.handleVerifyRegisterOtp(context, widget.email)
+                                    : () {},
+                              ),
+                            );
+                          },
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Resend Code Section
+                        StatefulBuilder(
+                          builder: (context, setState) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  'Resend code to ',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF757575),
                                   ),
-                                  if (_otpController.canResend)
-                                    GestureDetector(
-                                      onTap: () {
-                                        _otpController.handleResendRegisterOtp(context, widget.email);
-                                        setState(() {});
-                                      },
-                                      child: const Text(
-                                        'Resend',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Color(0xFF24BAEC),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    )
-                                  else
-                                    Text(
-                                      '${_otpController.resendCountdown.toString().padLeft(2, '0')}s',
-                                      style: const TextStyle(
+                                ),
+                                if (_otpController.canResend)
+                                  GestureDetector(
+                                    onTap: () {
+                                      _otpController.handleResendRegisterOtp(context, widget.email);
+                                      setState(() {});
+                                    },
+                                    child: const Text(
+                                      'Resend',
+                                      style: TextStyle(
                                         fontSize: 14,
-                                        color: Color(0xFF757575),
+                                        color: Color(0xFF24BAEC),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                ],
-                              );
-                            },
-                          ),
-                          
-                          const SizedBox(height: 40),
-                        ],
-                      ),
+                                  )
+                                else
+                                  Text(
+                                    '${_otpController.resendCountdown.toString().padLeft(2, '0')}s',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0xFF757575),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                  );
-                },
+                  ],
+                ),
               ),
             ),
           ),

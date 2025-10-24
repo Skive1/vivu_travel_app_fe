@@ -12,6 +12,8 @@ class SignalRService {
 
   HubConnection? _connection;
   bool _isConnected = false;
+  bool _isInitializing = false;
+  bool _isStarting = false;
   String? _currentUserId;
   List<String> _joinedGroups = [];
 
@@ -24,6 +26,9 @@ class SignalRService {
 
   // Getters
   bool get isConnected => _isConnected;
+  bool get isInitializing => _isInitializing;
+  bool get isStarting => _isStarting;
+  bool get isReady => _isConnected && _connection?.state == HubConnectionState.Connected;
   String? get currentUserId => _currentUserId;
   List<String> get joinedGroups => List.unmodifiable(_joinedGroups);
 
@@ -35,7 +40,16 @@ class SignalRService {
 
   /// Initialize SignalR connection
   Future<void> initialize() async {
+    // Prevent duplicate initialization
+    if (_isInitializing || _connection != null) {
+      log('⚠️ SignalR already initializing or initialized, skipping...');
+      return;
+    }
+
+    _isInitializing = true;
+    
     try {
+      log('🔄 Initializing SignalR connection...');
 
       _connection = HubConnectionBuilder()
           .withUrl(
@@ -48,7 +62,6 @@ class SignalRService {
           )
           .withAutomaticReconnect()
           .build();
-
 
       // Setup connection event handlers
       _setupConnectionHandlers();
@@ -65,21 +78,38 @@ class SignalRService {
       // Add a generic handler to catch any method calls
       _connection!.on('*', _handleGenericNotification);
 
+      log('✅ SignalR connection initialized successfully');
     } catch (e) {
       log('❌ Failed to initialize SignalR connection: $e');
+      _isInitializing = false;
       rethrow;
+    } finally {
+      _isInitializing = false;
     }
   }
 
   /// Start the connection with retry mechanism
   Future<void> start() async {
+    // Prevent duplicate starts
+    if (_isStarting) {
+      log('⚠️ SignalR already starting, waiting for completion...');
+      // Wait for the current start process to complete
+      while (_isStarting) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      return;
+    }
+
+    if (_isConnected) {
+      log('⚠️ SignalR already connected, skipping start...');
+      return;
+    }
+
     if (_connection == null) {
       await initialize();
     }
 
-    if (_isConnected) {
-      return;
-    }
+    _isStarting = true;
 
     const maxRetries = 3;
     const retryDelays = [Duration(seconds: 1), Duration(seconds: 3), Duration(seconds: 5)];
@@ -100,27 +130,38 @@ class SignalRService {
         
         _isConnected = true;
         _connectionStateController.add(SignalRConnectionState.connected);
+        _isStarting = false;
+        log('✅ SignalR connection started successfully');
         return; // Success, exit retry loop
         
       } catch (e) {
+        log('❌ SignalR connection attempt ${attempt + 1} failed: $e');
         
         // Add specific error handling
         if (e is TimeoutException) {
+          log('⏰ Connection timeout');
         } else if (e.toString().contains('timeout')) {
+          log('⏰ Connection timeout');
         } else if (e.toString().contains('connection refused')) {
+          log('🔌 Connection refused');
         }
         
         // If this is the last attempt, throw the error
         if (attempt == maxRetries - 1) {
           _connectionStateController.add(SignalRConnectionState.error);
+          _isStarting = false;
           rethrow;
         }
         
         // Wait before retrying with exponential backoff
         final delay = retryDelays[attempt];
+        log('⏳ Waiting ${delay.inSeconds}s before retry...');
         await Future.delayed(delay);
       }
     }
+    
+    // If we get here, all attempts failed
+    _isStarting = false;
   }
 
   /// Stop the connection
@@ -130,11 +171,15 @@ class SignalRService {
     }
 
     try {
+      log('🔄 Stopping SignalR connection...');
       await _connection!.stop();
       _isConnected = false;
+      _isStarting = false;
+      _isInitializing = false;
       _currentUserId = null;
       _joinedGroups.clear(); // Clear schedule groups
       _connectionStateController.add(SignalRConnectionState.disconnected);
+      log('✅ SignalR connection stopped successfully');
     } catch (e) {
       log('❌ Error stopping SignalR connection: $e');
     }
@@ -173,9 +218,16 @@ class SignalRService {
       return;
     }
     
-    if (!_isConnected || _connection == null) {
-      log('❌ Cannot join schedule group: SignalR is not connected');
+    // Check if already joined to prevent duplicates
+    if (_joinedGroups.contains(scheduleId)) {
+      log('⚠️ Schedule group $scheduleId already joined, skipping');
       return;
+    }
+    
+    // Check if SignalR is ready for operations
+    if (!isReady) {
+      log('❌ Cannot join schedule group: SignalR is not ready (connected: $_isConnected, state: ${_connection?.state})');
+      throw Exception('SignalR is not ready for operations');
     }
 
     try {

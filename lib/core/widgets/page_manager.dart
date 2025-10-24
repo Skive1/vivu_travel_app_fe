@@ -15,6 +15,10 @@ import '../../injection_container.dart' as di;
 import '../../features/schedule/domain/entities/schedule_entity.dart';
 import '../../features/advertisement/presentation/screens/explore_screen.dart';
 import '../../features/advertisement/presentation/bloc/advertisement_bloc.dart';
+import '../../features/transaction/presentation/screens/transaction_list_screen.dart';
+import '../../features/transaction/presentation/screens/transaction_detail_screen.dart';
+import '../../features/transaction/presentation/bloc/transaction_bloc.dart';
+import '../../features/transaction/domain/entities/transaction_entity.dart';
 
 class PageManager {
   List<Widget>? _pages;
@@ -25,11 +29,14 @@ class PageManager {
   VoidCallback? _onPageChanged;
   late final ScheduleBloc _scheduleBloc;
   late final AdvertisementBloc _advertisementBloc;
+  late final ProfilePageManager _profilePageManager;
 
   List<Widget> getPages(BuildContext context) {
     if (_pages == null) {
       _scheduleBloc = di.sl<ScheduleBloc>();
       _advertisementBloc = di.sl<AdvertisementBloc>();
+      _profilePageManager = ProfilePageManager();
+      _profilePageManager.setParentPageManager(this);
       
       _pages = [
         // Trang chủ
@@ -50,8 +57,10 @@ class PageManager {
         ),
         // Nhắn tin (placeholder)
         const ChatPage(),
-        // Hồ sơ
-        const ProfileContentWidget(),
+        // Hồ sơ với IndexedStack
+        ProfilePageWrapper(
+          profilePageManager: _profilePageManager,
+        ),
       ];
     }
     return _pages!;
@@ -145,9 +154,26 @@ class PageManager {
   }
 
   AdvertisementBloc get advertisementBloc => _advertisementBloc;
+  ProfilePageManager get profilePageManager => _profilePageManager;
+
+  void showTransactionList() {
+    _profilePageManager.showTransactionList();
+    _onPageChanged?.call();
+  }
+
+  void showTransactionDetail(TransactionEntity transaction) {
+    _profilePageManager.showTransactionDetail(transaction);
+    _onPageChanged?.call();
+  }
+
+  void showProfileMain() {
+    _profilePageManager.showProfileMain();
+    _onPageChanged?.call();
+  }
 
   void dispose() {
     _scheduleBloc.close();
+    _profilePageManager.dispose();
     // Don't close _advertisementBloc as it's a singleton and may be used elsewhere
   }
 }
@@ -346,6 +372,173 @@ class ChatPage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class ProfilePageManager {
+  List<Widget>? _profilePages;
+  TransactionEntity? _currentTransactionDetail;
+  int _currentIndex = 0; // 0: Profile main, 1: Transaction list, 2: Transaction detail
+  int _previousIndex = 0; // Track previous index for animation direction
+  late final TransactionBloc _transactionBloc;
+  PageManager? _parentPageManager;
+  VoidCallback? _onPageChanged;
+
+  List<Widget> getProfilePages(BuildContext context) {
+    if (_profilePages == null) {
+      _transactionBloc = di.sl<TransactionBloc>();
+      
+      _profilePages = [
+        // Profile main page
+        ProfileContentWidget(pageManager: _parentPageManager),
+        // Transaction list page
+        BlocProvider.value(
+          value: _transactionBloc,
+          child: TransactionListScreen(pageManager: _parentPageManager),
+        ),
+        // Transaction detail page (placeholder, will be updated when needed)
+        const SizedBox.shrink(),
+      ];
+    } else {
+      // Update existing pages with current pageManager reference
+      _profilePages![0] = ProfileContentWidget(pageManager: _parentPageManager);
+      _profilePages![1] = BlocProvider.value(
+        value: _transactionBloc,
+        child: TransactionListScreen(pageManager: _parentPageManager),
+      );
+    }
+    return _profilePages!;
+  }
+
+  void showProfileMain() {
+    _previousIndex = _currentIndex;
+    _currentTransactionDetail = null;
+    _currentIndex = 0;
+    _onPageChanged?.call();
+  }
+
+  void showTransactionList() {
+    _previousIndex = _currentIndex;
+    _currentTransactionDetail = null;
+    _currentIndex = 1;
+    
+    // Ensure _profilePages is initialized
+    if (_profilePages == null) {
+      _transactionBloc = di.sl<TransactionBloc>();
+      _profilePages = [
+        ProfileContentWidget(pageManager: _parentPageManager),
+        BlocProvider.value(
+          value: _transactionBloc,
+          child: TransactionListScreen(pageManager: _parentPageManager),
+        ),
+        const SizedBox.shrink(),
+      ];
+    } else {
+      // Update the transaction list page
+      _profilePages![1] = BlocProvider.value(
+        value: _transactionBloc,
+        child: TransactionListScreen(pageManager: _parentPageManager),
+      );
+    }
+    _onPageChanged?.call();
+  }
+
+  void setParentPageManager(PageManager parentPageManager) {
+    _parentPageManager = parentPageManager;
+    // Update existing pages if they exist
+    if (_profilePages != null) {
+      _profilePages![0] = ProfileContentWidget(pageManager: _parentPageManager);
+      _profilePages![1] = BlocProvider.value(
+        value: _transactionBloc,
+        child: TransactionListScreen(pageManager: _parentPageManager),
+      );
+    }
+  }
+
+  void showTransactionDetail(TransactionEntity transaction) {
+    _previousIndex = _currentIndex;
+    _currentTransactionDetail = transaction;
+    _currentIndex = 2;
+    // Update the transaction detail page
+    _profilePages![2] = TransactionDetailScreen(
+      transaction: transaction,
+      pageManager: _parentPageManager,
+    );
+    _onPageChanged?.call();
+  }
+
+  int get currentProfileIndex => _currentIndex;
+  int get previousProfileIndex => _previousIndex;
+  
+  // Determine animation direction: true = forward (right to left), false = backward (left to right)
+  bool get isForwardAnimation => _currentIndex > _previousIndex;
+
+  bool get isShowingTransactionDetail => _currentTransactionDetail != null;
+
+  void dispose() {
+    _transactionBloc.close();
+  }
+}
+
+class ProfilePageWrapper extends StatefulWidget {
+  final ProfilePageManager profilePageManager;
+
+  const ProfilePageWrapper({
+    super.key,
+    required this.profilePageManager,
+  });
+
+  @override
+  State<ProfilePageWrapper> createState() => _ProfilePageWrapperState();
+}
+
+class _ProfilePageWrapperState extends State<ProfilePageWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    // Listen to page changes and rebuild when needed
+    widget.profilePageManager._onPageChanged = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentIndex = widget.profilePageManager.currentProfileIndex;
+    final pages = widget.profilePageManager.getProfilePages(context);
+    final isForward = widget.profilePageManager.isForwardAnimation;
+    
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        // Determine slide direction based on navigation direction
+        final beginOffset = isForward 
+            ? const Offset(0.3, 0.0)  // Forward: slide from right (reduced distance)
+            : const Offset(-0.3, 0.0); // Backward: slide from left (reduced distance)
+        
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: beginOffset,
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          )),
+          child: FadeTransition(
+            opacity: animation,
+            child: child,
+          ),
+        );
+      },
+      child: RepaintBoundary(
+        key: ValueKey(currentIndex),
+        child: pages[currentIndex],
       ),
     );
   }

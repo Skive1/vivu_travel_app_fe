@@ -7,9 +7,15 @@ import '../../../authentication/presentation/bloc/auth_event.dart';
 import '../../../authentication/presentation/bloc/auth_state.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../widgets/profile_container.dart';
+import '../../../../core/widgets/page_manager.dart';
 
 class ProfileContentWidget extends StatefulWidget {
-  const ProfileContentWidget({super.key});
+  final PageManager? pageManager;
+  
+  const ProfileContentWidget({
+    super.key,
+    this.pageManager,
+  });
 
   @override
   State<ProfileContentWidget> createState() => _ProfileContentWidgetState();
@@ -39,7 +45,7 @@ class _ProfileContentWidgetState extends State<ProfileContentWidget> {
           DialogUtils.showErrorDialog(context: context, title: state.title ?? 'Error', message: state.message);
         }
       },
-      child: const ProfileContainer(),
+      child: ProfileContainer(pageManager: widget.pageManager),
     );
   }
 }

@@ -8,9 +8,15 @@ import 'profile_avatar.dart';
 import 'profile_user_info.dart';
 import 'profile_stats_section.dart';
 import 'profile_menu_section.dart';
+import '../../../../core/widgets/page_manager.dart';
 
 class ProfileContainer extends StatelessWidget {
-  const ProfileContainer({super.key});
+  final PageManager? pageManager;
+  
+  const ProfileContainer({
+    super.key,
+    this.pageManager,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +43,7 @@ class ProfileContainer extends StatelessWidget {
           return ProfileContent(
             topPadding: safePadding.top,
             authState: state,
+            pageManager: pageManager,
           );
         },
       ),
@@ -47,11 +54,13 @@ class ProfileContainer extends StatelessWidget {
 class ProfileContent extends StatelessWidget {
   final double topPadding;
   final AuthState authState;
+  final PageManager? pageManager;
   
   const ProfileContent({
     super.key,
     required this.topPadding,
     required this.authState,
+    this.pageManager,
   });
 
   @override
@@ -164,7 +173,7 @@ class ProfileContent extends StatelessWidget {
                   const SizedBox(height: 30),
                   
                   // Menu Items
-                  const ProfileMenuSection(),
+                  ProfileMenuSection(pageManager: pageManager),
                   
                   // Bottom safe area spacer
                   SizedBox(height: bottomPadding + 30),
