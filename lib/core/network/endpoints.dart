@@ -66,4 +66,8 @@ class Endpoints {
   
   // Transaction endpoints
   static const String getAllTransactions = '/api/payment/transaction/all/by-current-account';
+  
+  // AI endpoints
+  static const String aiChat = '/api/schedule/AI';
+  static const String addListActivities = '/api/schedule/activity/add-list-activities';
 }

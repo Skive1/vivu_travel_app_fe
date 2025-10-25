@@ -11,9 +11,11 @@ import 'features/authentication/presentation/screens/change_password_screen.dart
 import 'core/widgets/main_layout.dart';
 import 'features/user/presentation/screens/profile_detail_screen.dart';
 import 'features/user/presentation/screens/edit_profile_screen.dart';
+import 'features/ai_chat/presentation/pages/ai_chat_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'injection_container.dart';
 import 'features/user/presentation/bloc/user_bloc.dart';
+import 'features/ai_chat/presentation/bloc/ai_chat_bloc.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -29,6 +31,7 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String profileDetail = '/profile-detail';
   static const String editProfile = '/edit-profile';
+  static const String aiChat = '/ai-chat';
   
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -97,6 +100,14 @@ class AppRoutes {
           builder: (_) => BlocProvider(
             create: (context) => sl<UserBloc>(),
             child: const EditProfileScreen(),
+          ),
+        );
+        
+      case aiChat:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => sl<AIChatBloc>(),
+            child: const AIChatPage(),
           ),
         );
         

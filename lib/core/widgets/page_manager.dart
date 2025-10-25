@@ -19,6 +19,8 @@ import '../../features/transaction/presentation/screens/transaction_list_screen.
 import '../../features/transaction/presentation/screens/transaction_detail_screen.dart';
 import '../../features/transaction/presentation/bloc/transaction_bloc.dart';
 import '../../features/transaction/domain/entities/transaction_entity.dart';
+import '../../features/ai_chat/presentation/pages/ai_chat_page.dart';
+import '../../features/ai_chat/presentation/bloc/ai_chat_bloc.dart';
 
 class PageManager {
   List<Widget>? _pages;
@@ -55,8 +57,11 @@ class PageManager {
             onScheduleDetailLoaded: updateScheduleDetail,
           ),
         ),
-        // Nhắn tin (placeholder)
-        const ChatPage(),
+        // AI Chat
+        BlocProvider(
+          create: (context) => di.sl<AIChatBloc>(),
+          child: const AIChatPage(),
+        ),
         // Hồ sơ với IndexedStack
         ProfilePageWrapper(
           profilePageManager: _profilePageManager,
@@ -340,42 +345,6 @@ class _ScheduleViewWrapperState extends State<ScheduleViewWrapper> {
   }
 }
 
-class ChatPage extends StatelessWidget {
-  const ChatPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.chat_bubble,
-            size: 64,
-            color: Colors.grey,
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Nhắn tin',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Coming soon!',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class ProfilePageManager {
   List<Widget>? _profilePages;

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../bloc/schedule_bloc.dart';
+import '../bloc/schedule_event.dart';
 import '../widgets/schedule_calendar.dart';
 import '../widgets/schedule_container.dart';
 import '../../../../core/utils/user_storage.dart';
@@ -27,6 +28,7 @@ class _ScheduleContentState extends State<ScheduleContent>
   late Animation<double> _fadeAnimation;
   DateTime _selectedDate = DateTime.now();
   String? _currentUserId;
+  String? _ownerId;
 
   @override
   void initState() {
@@ -54,6 +56,11 @@ class _ScheduleContentState extends State<ScheduleContent>
     () async {
       final user = await UserStorage.getUserProfile();
       if (mounted) setState(() => _currentUserId = user?.id);
+      
+      // Fetch schedule info to get ownerId
+      if (widget.scheduleId != null && widget.scheduleId!.isNotEmpty) {
+        context.read<ScheduleBloc>().add(GetScheduleByIdEvent(scheduleId: widget.scheduleId!));
+      }
       // ignore: avoid_print
     }();
   }
@@ -178,32 +185,40 @@ class _ScheduleContentState extends State<ScheduleContent>
 
           // Main content
           Expanded(
-            child: BlocBuilder<ScheduleBloc, ScheduleState>(
-              builder: (context, state) {
-                final isLoading =
-                    state is CreateActivityLoading ||
-                    state is UpdateActivityLoading ||
-                    state is DeleteActivityLoading ||
-                    state is CreateScheduleLoading ||
-                    state is UpdateScheduleLoading;
-                return Stack(
-                  children: [
-                    SizedBox(
-                      width: screenSize.width,
-                      height: screenSize.height,
-                      child: FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: ScheduleContainer(
-                          scheduleId: widget.scheduleId,
-                          selectedDate: _selectedDate,
-                          currentUserId: _currentUserId,
+            child: BlocListener<ScheduleBloc, ScheduleState>(
+              listener: (context, state) {
+                if (state is GetScheduleByIdSuccess) {
+                  setState(() => _ownerId = state.schedule.ownerId);
+                }
+              },
+              child: BlocBuilder<ScheduleBloc, ScheduleState>(
+                builder: (context, state) {
+                  final isLoading =
+                      state is CreateActivityLoading ||
+                      state is UpdateActivityLoading ||
+                      state is DeleteActivityLoading ||
+                      state is CreateScheduleLoading ||
+                      state is UpdateScheduleLoading;
+                  return Stack(
+                    children: [
+                      SizedBox(
+                        width: screenSize.width,
+                        height: screenSize.height,
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: ScheduleContainer(
+                            scheduleId: widget.scheduleId,
+                            selectedDate: _selectedDate,
+                            currentUserId: _currentUserId,
+                            ownerId: _ownerId,
+                          ),
                         ),
                       ),
-                    ),
-                    LoadingOverlay(isLoading: isLoading),
-                  ],
-                );
-              },
+                      LoadingOverlay(isLoading: isLoading),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ],

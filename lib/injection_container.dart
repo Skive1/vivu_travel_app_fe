@@ -97,6 +97,15 @@ import 'features/transaction/domain/repositories/transaction_repository.dart';
 import 'features/transaction/domain/usecases/get_all_transactions.dart';
 import 'features/transaction/presentation/bloc/transaction_bloc.dart';
 
+// AI Chat feature
+import 'features/ai_chat/data/datasources/ai_remote_datasource.dart';
+import 'features/ai_chat/data/repositories/ai_repository_impl.dart';
+import 'features/ai_chat/domain/repositories/ai_repository.dart';
+import 'features/ai_chat/domain/usecases/send_ai_message.dart';
+import 'features/ai_chat/domain/usecases/add_list_activities.dart';
+import 'features/ai_chat/domain/usecases/create_schedule_from_ai.dart';
+import 'features/ai_chat/presentation/bloc/ai_chat_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -139,6 +148,9 @@ Future<void> init() async {
 
   // Features - Transaction
   _initTransaction();
+
+  // Features - AI Chat
+  _initAIChat();
 }
 
 void _initAuth() {
@@ -384,6 +396,35 @@ void _initTransaction() {
   sl.registerFactory(
     () => TransactionBloc(
       getAllTransactions: sl(),
+    ),
+  );
+}
+
+void _initAIChat() {
+  // Data sources
+  sl.registerLazySingleton<AIRemoteDataSource>(
+    () => AIRemoteDataSourceImpl(dio: sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<AIRepository>(
+    () => AIRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => SendAIMessage(repository: sl()));
+  sl.registerLazySingleton(() => AddListActivities(repository: sl()));
+  sl.registerLazySingleton(() => CreateScheduleFromAI(repository: sl()));
+
+  // Bloc
+  sl.registerFactory(
+    () => AIChatBloc(
+      sendAIMessage: sl(),
+      addListActivities: sl(),
+      createScheduleFromAI: sl(),
     ),
   );
 }

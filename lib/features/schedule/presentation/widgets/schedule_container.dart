@@ -6,12 +6,14 @@ class ScheduleContainer extends StatelessWidget {
   final String? scheduleId;
   final DateTime selectedDate;
   final String? currentUserId;
+  final String? ownerId;
 
   const ScheduleContainer({
     super.key, 
     this.scheduleId,
     required this.selectedDate,
     this.currentUserId,
+    this.ownerId,
   });
 
   @override
@@ -46,6 +48,7 @@ class ScheduleContainer extends StatelessWidget {
         selectedDate: selectedDate,
         scheduleId: scheduleId,
         currentUserId: currentUserId,
+        ownerId: ownerId,
       ),
     );
   }

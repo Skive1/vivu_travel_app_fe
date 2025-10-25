@@ -16,8 +16,9 @@ class ScheduleList extends StatefulWidget {
   final DateTime selectedDate;
   final String? scheduleId;
   final String? currentUserId;
+  final String? ownerId;
 
-  const ScheduleList({super.key, required this.selectedDate, this.scheduleId, this.currentUserId});
+  const ScheduleList({super.key, required this.selectedDate, this.scheduleId, this.currentUserId, this.ownerId});
 
   @override
   State<ScheduleList> createState() => _ScheduleListState();
@@ -61,10 +62,21 @@ class _ScheduleListState extends State<ScheduleList> {
 
   void _loadCachedRole() async {
     if (widget.scheduleId == null) return;
-    final role = await UserStorage.getScheduleRole(widget.scheduleId!);
-    if (!mounted) return;
-    if (role != null && role.isNotEmpty) {
-      setState(() => _cachedRole = role.toLowerCase());
+    
+    // First try to get cached role
+    final cachedRole = await UserStorage.getScheduleRole(widget.scheduleId!);
+    if (cachedRole != null && cachedRole.isNotEmpty) {
+      if (mounted) {
+        setState(() => _cachedRole = cachedRole.toLowerCase());
+      }
+      return;
+    }
+    
+    // If no cached role and we have currentUserId, try to determine role from schedule info
+    if (widget.currentUserId != null && widget.currentUserId!.isNotEmpty) {
+      // We need to fetch schedule details to check ownerId
+      // This will be handled by the parent component or bloc
+      // For now, we'll wait for the role to be set via bloc listener
     }
   }
 
@@ -76,6 +88,13 @@ class _ScheduleListState extends State<ScheduleList> {
       listener: (context, state) {
         if (state is KickParticipantSuccess) {
           // The schedule list will be refreshed automatically by the parent
+        }
+        
+        // Update role when we get activities with participantRole info
+        if (state is ActivitiesLoaded) {
+          // Check if we have participantRole info in the response
+          // This would come from the activities API response
+          // For now, we'll rely on the cached role mechanism
         }
         
       },
@@ -541,6 +560,16 @@ class _ScheduleListState extends State<ScheduleList> {
   String _getRole(BuildContext context) {
     // Use cached role immediately if available (fast path)
     if (_cachedRole != null) return _cachedRole!;
+    
+    // Smart role prediction: Check if current user is the owner
+    if (widget.currentUserId != null && 
+        widget.currentUserId!.isNotEmpty &&
+        widget.ownerId != null &&
+        widget.ownerId!.isNotEmpty &&
+        widget.currentUserId == widget.ownerId) {
+      // Optimistic prediction: If current user is owner, show owner UI immediately
+      return 'owner';
+    }
     
     // Fallback to viewer if no cached role
     return 'viewer';

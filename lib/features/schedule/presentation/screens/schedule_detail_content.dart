@@ -56,6 +56,11 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
       _currentIsShared = (widget.schedule.sharedCode != null && widget.schedule.sharedCode!.isNotEmpty);
     }
 
+    // Resolve current user id from storage if not passed in - do this first
+    if (widget.currentUserId == null) {
+      _resolveCurrentUserId();
+    }
+
     // Optimistic UI: Show UI immediately with available data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Show UI first, then fetch data
@@ -64,13 +69,40 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
       // Then fetch fresh data in background
       _fetchScheduleDetails();
     });
+  }
 
-    // Resolve current user id from storage if not passed in
-    if (widget.currentUserId == null) {
-      () async {
-        final user = await UserStorage.getUserProfile();
-        if (mounted) setState(() => _resolvedUserId = user?.id);
-      }();
+  Future<void> _resolveCurrentUserId() async {
+    try {
+      final user = await UserStorage.getUserProfile();
+      if (mounted) {
+        setState(() => _resolvedUserId = user?.id);
+        
+        // If we have a cached role for this schedule, use it immediately
+        if (user?.id != null) {
+          final cachedRole = await UserStorage.getScheduleRole(_currentSchedule.id);
+          if (cachedRole != null && cachedRole.isNotEmpty) {
+            // Update the schedule with cached role for immediate UI update
+            final updatedSchedule = ScheduleEntity(
+              id: _currentSchedule.id,
+              sharedCode: _currentSchedule.sharedCode,
+              ownerId: _currentSchedule.ownerId,
+              title: _currentSchedule.title,
+              startLocation: _currentSchedule.startLocation,
+              destination: _currentSchedule.destination,
+              startDate: _currentSchedule.startDate,
+              endDate: _currentSchedule.endDate,
+              participantsCount: _currentSchedule.participantsCount,
+              notes: _currentSchedule.notes,
+              isShared: _currentSchedule.isShared,
+              status: _currentSchedule.status,
+              participantRole: cachedRole,
+            );
+            _updateScheduleData(updatedSchedule);
+          }
+        }
+      }
+    } catch (e) {
+      // Handle error silently
     }
   }
 
@@ -169,6 +201,19 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
       UserStorage.setScheduleRole(
         scheduleId: newSchedule.id, 
         role: newSchedule.participantRole!.toLowerCase(),
+      );
+    }
+    
+    // Also cache owner role if current user is the owner
+    final currentUserId = widget.currentUserId ?? _resolvedUserId;
+    if (currentUserId != null && 
+        currentUserId.isNotEmpty && 
+        newSchedule.ownerId.isNotEmpty &&
+        newSchedule.ownerId == currentUserId) {
+      // ignore: unawaited_futures
+      UserStorage.setScheduleRole(
+        scheduleId: newSchedule.id, 
+        role: 'owner',
       );
     }
   }
@@ -347,10 +392,15 @@ class _ScheduleDetailContentState extends State<ScheduleDetailContent>
                   String role = 'viewer';
                   final currentUserId = widget.currentUserId ?? _resolvedUserId;
                   
-                  if (currentUserId != null && _currentSchedule.ownerId == currentUserId) {
+                  // First priority: Check if current user is the owner
+                  if (currentUserId != null && 
+                      currentUserId.isNotEmpty && 
+                      _currentSchedule.ownerId.isNotEmpty &&
+                      _currentSchedule.ownerId == currentUserId) {
                     // Optimistic prediction: If current user is owner, show owner UI immediately
                     role = 'owner';
-                  } else if (_currentSchedule.participantRole != null && _currentSchedule.participantRole!.isNotEmpty) {
+                  } else if (_currentSchedule.participantRole != null && 
+                           _currentSchedule.participantRole!.isNotEmpty) {
                     // Use actual participantRole from API if available
                     role = _currentSchedule.participantRole!.toLowerCase();
                   } else {

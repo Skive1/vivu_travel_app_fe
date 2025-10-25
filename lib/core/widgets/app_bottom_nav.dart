@@ -82,9 +82,9 @@ class AppBottomNav extends StatelessWidget {
               ),
               _buildNavItem(
                 context: context,
-                icon: Icons.chat_bubble_outline,
-                activeIcon: Icons.chat_bubble,
-                label: 'Nhắn tin',
+                icon: Icons.smart_toy_outlined,
+                activeIcon: Icons.smart_toy,
+                label: 'Chatbot',
                 index: 3,
                 isActive: currentIndex == 3,
               ),
