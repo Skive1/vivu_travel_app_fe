@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_text_field.dart';
 import '../bloc/auth_bloc.dart';
@@ -56,7 +57,11 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: context.responsiveSpacing(
+            verySmall: 16.0,
+            small: 20.0,
+            large: 24.0,
+          )),
 
           // New Password Field
           AuthTextField(
@@ -76,7 +81,11 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: context.responsiveSpacing(
+            verySmall: 16.0,
+            small: 20.0,
+            large: 24.0,
+          )),
 
           // Confirm Password Field
           AuthTextField(
@@ -96,7 +105,11 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
             ),
           ),
 
-          const SizedBox(height: 40),
+          SizedBox(height: context.responsiveSpacing(
+            verySmall: 24.0,
+            small: 32.0,
+            large: 40.0,
+          )),
 
           // Change Password Button
           BlocBuilder<AuthBloc, AuthState>(

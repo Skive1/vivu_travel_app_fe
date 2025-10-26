@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../controllers/otp_controller.dart';
 import 'otp_input_field.dart';
 
@@ -23,16 +24,24 @@ class _OtpInputFieldsState extends State<OtpInputFields> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // OTP Code Label
-        const Text(
+        Text(
           'OTP Code',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: context.responsiveFontSize(
+              verySmall: 14.0,
+              small: 15.0,
+              large: 16.0,
+            ),
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1A1A1A),
+            color: const Color(0xFF1A1A1A),
           ),
         ),
         
-        const SizedBox(height: 16),
+        SizedBox(height: context.responsiveSpacing(
+          verySmall: 12.0,
+          small: 14.0,
+          large: 16.0,
+        )),
         
         // OTP Input Fields
         Row(

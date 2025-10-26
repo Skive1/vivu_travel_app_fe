@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
 import '../bloc/auth_bloc.dart';
@@ -16,7 +17,6 @@ class ForgotPasswordForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
 
     return Form(
       key: controller.forgotPasswordFormKey,
@@ -29,7 +29,11 @@ class ForgotPasswordForm extends StatelessWidget {
             validator: controller.validateEmail,
           ),
           
-          SizedBox(height: screenSize.height * 0.06),
+          SizedBox(height: context.responsiveSpacing(
+            verySmall: 20.0,
+            small: 24.0,
+            large: 28.0,
+          )),
           
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/onboarding_constants.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../routes.dart';
 import '../widgets/onboarding_page_widget.dart';
 import '../widgets/onboarding_skip_button.dart';

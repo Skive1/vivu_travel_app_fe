@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/activity_data_entity.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class ActivitiesTable extends StatelessWidget {
   final List<ActivityDataEntity> activities;
@@ -20,15 +21,15 @@ class ActivitiesTable extends StatelessWidget {
     final groupedActivities = _groupActivitiesByDate(activities);
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8), // Reduced horizontal margin
+      margin: context.responsiveMargin(vertical: 8, horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
-            blurRadius: 4,
+            blurRadius: context.responsiveElevation(verySmall: 3, small: 3.5, large: 4),
             offset: const Offset(0, 2),
           ),
         ],
@@ -41,12 +42,12 @@ class ActivitiesTable extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: context.responsivePadding(all: 16),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
+                topRight: Radius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
               ),
             ),
             child: Row(
@@ -54,13 +55,13 @@ class ActivitiesTable extends StatelessWidget {
                 Icon(
                   Icons.schedule,
                   color: AppColors.primary,
-                  size: 20,
+                  size: context.responsiveIconSize(verySmall: 18, small: 19, large: 20),
                 ),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
+                Text(
                   'Lịch trình chi tiết',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -107,10 +108,10 @@ class ActivitiesTable extends StatelessWidget {
 
   Widget _buildDaySchedule(BuildContext context, String date, List<ActivityDataEntity> activities) {
     return Container(
-      margin: const EdgeInsets.all(8),
+      margin: context.responsiveMargin(all: 8),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 6, small: 7, large: 8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,12 +119,12 @@ class ActivitiesTable extends StatelessWidget {
           // Day header
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: context.responsivePadding(all: 12),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(context.responsiveBorderRadius(verySmall: 6, small: 7, large: 8)),
+                topRight: Radius.circular(context.responsiveBorderRadius(verySmall: 6, small: 7, large: 8)),
               ),
             ),
             child: Row(
@@ -131,13 +132,13 @@ class ActivitiesTable extends StatelessWidget {
                 Icon(
                   Icons.calendar_today,
                   color: AppColors.primary,
-                  size: 16,
+                  size: context.responsiveIconSize(verySmall: 14, small: 15, large: 16),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
                 Text(
                   'Ngày $date',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: context.responsiveFontSize(verySmall: 12, small: 13, large: 14),
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
                   ),
@@ -150,22 +151,22 @@ class ActivitiesTable extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                minWidth: MediaQuery.of(context).size.width - 32, // Full width minus margins
+                minWidth: context.screenWidth - context.responsiveSpacing(verySmall: 24, small: 28, large: 32),
               ),
               child: DataTable(
                 headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
                 border: TableBorder.all(color: Colors.grey[200]!),
-                columnSpacing: 16,
-                horizontalMargin: 12,
+                columnSpacing: context.responsiveSpacing(verySmall: 12, small: 14, large: 16),
+                horizontalMargin: context.responsiveSpacing(verySmall: 8, small: 10, large: 12),
                 columns: [
                   DataColumn(
                     label: Container(
-                      width: 100,
+                      width: context.responsiveIconSize(verySmall: 80, small: 90, large: 100),
                       child: Text(
                         'Thời gian',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: context.responsiveFontSize(verySmall: 10, small: 11, large: 12),
                           color: AppColors.primary,
                         ),
                         textAlign: TextAlign.center,
@@ -174,12 +175,12 @@ class ActivitiesTable extends StatelessWidget {
                   ),
                   DataColumn(
                     label: Container(
-                      width: 200,
+                      width: context.responsiveIconSize(verySmall: 160, small: 180, large: 200),
                       child: Text(
                         'Hoạt động',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: context.responsiveFontSize(verySmall: 10, small: 11, large: 12),
                           color: AppColors.primary,
                         ),
                         textAlign: TextAlign.center,
@@ -188,12 +189,12 @@ class ActivitiesTable extends StatelessWidget {
                   ),
                   DataColumn(
                     label: Container(
-                      width: 200,
+                      width: context.responsiveIconSize(verySmall: 160, small: 180, large: 200),
                       child: Text(
                         'Địa điểm',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: context.responsiveFontSize(verySmall: 10, small: 11, large: 12),
                           color: AppColors.primary,
                         ),
                         textAlign: TextAlign.center,
@@ -205,30 +206,30 @@ class ActivitiesTable extends StatelessWidget {
                   cells: [
                     DataCell(
                       Container(
-                        width: 100,
+                        width: context.responsiveIconSize(verySmall: 80, small: 90, large: 100),
                         child: Text(
                           '${_formatTime(activity.checkInTime)}\n${_formatTime(activity.checkOutTime)}',
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: context.responsiveFontSize(verySmall: 10, small: 11, large: 12)),
                           textAlign: TextAlign.center,
                         ),
                       ),
                     ),
                     DataCell(
                       Container(
-                        width: 200,
+                        width: context.responsiveIconSize(verySmall: 160, small: 180, large: 200),
                         child: Text(
                           activity.placeName,
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: context.responsiveFontSize(verySmall: 10, small: 11, large: 12)),
                           textAlign: TextAlign.left,
                         ),
                       ),
                     ),
                     DataCell(
                       Container(
-                        width: 200,
+                        width: context.responsiveIconSize(verySmall: 160, small: 180, large: 200),
                         child: Text(
                           activity.location,
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(fontSize: context.responsiveFontSize(verySmall: 10, small: 11, large: 12)),
                           textAlign: TextAlign.left,
                         ),
                       ),

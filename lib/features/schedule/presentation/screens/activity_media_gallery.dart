@@ -805,9 +805,10 @@ class _ActivityMediaGalleryState extends State<ActivityMediaGallery> {
             borderRadius: BorderRadius.circular(20),
             color: Colors.white,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               // Header
               Row(
                 children: [
@@ -953,6 +954,7 @@ class _ActivityMediaGalleryState extends State<ActivityMediaGallery> {
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),

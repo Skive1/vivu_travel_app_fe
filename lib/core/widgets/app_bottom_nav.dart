@@ -50,8 +50,8 @@ class AppBottomNav extends StatelessWidget {
         top: false,
         child: Padding(
           padding: context.responsivePadding(
-            horizontal: context.responsive(verySmall: 6.0, small: 8.0, large: 12.0),
-            vertical: context.responsive(verySmall: 4.0, small: 6.0, large: 8.0),
+            horizontal: context.responsive(verySmall: 8.0, small: 12.0, large: 16.0),
+            vertical: context.responsive(verySmall: 6.0, small: 8.0, large: 12.0),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -60,7 +60,7 @@ class AppBottomNav extends StatelessWidget {
                 context: context,
                 icon: Icons.home_outlined,
                 activeIcon: Icons.home,
-                label: 'Trang chủ',
+                label: 'Home',
                 index: 0,
                 isActive: currentIndex == 0,
               ),
@@ -68,7 +68,7 @@ class AppBottomNav extends StatelessWidget {
                 context: context,
                 icon: Icons.explore_outlined,
                 activeIcon: Icons.explore,
-                label: 'Khám phá',
+                label: 'Blog',
                 index: 1,
                 isActive: currentIndex == 1,
               ),
@@ -76,7 +76,7 @@ class AppBottomNav extends StatelessWidget {
                 context: context,
                 icon: Icons.calendar_today_outlined,
                 activeIcon: Icons.calendar_today,
-                label: 'Kế hoạch',
+                label: 'Schedule',
                 index: 2,
                 isActive: currentIndex == 2,
               ),
@@ -92,7 +92,7 @@ class AppBottomNav extends StatelessWidget {
                 context: context,
                 icon: Icons.person_outline,
                 activeIcon: Icons.person,
-                label: 'Hồ sơ',
+                label: 'Profile',
                 index: 4,
                 isActive: currentIndex == 4,
               ),
@@ -112,9 +112,9 @@ class AppBottomNav extends StatelessWidget {
     required bool isActive,
   }) {
     // Get responsive values using ResponsiveUtils
-    final verticalPadding = context.responsive(verySmall: 3.0, small: 4.0, large: 6.0);
-    final horizontalPadding = context.responsive(verySmall: 4.0, small: 6.0, large: 8.0);
-    final horizontalMargin = context.responsive(verySmall: 1.0, small: 2.0, large: 4.0);
+    final verticalPadding = context.responsive(verySmall: 5.0, small: 6.0, large: 8.0);
+    final horizontalPadding = context.responsive(verySmall: 6.0, small: 8.0, large: 12.0);
+    final horizontalMargin = context.responsive(verySmall: 2.0, small: 3.0, large: 6.0);
     final borderRadius = context.responsiveBorderRadius(
       verySmall: 10.0,
       small: 12.0,
@@ -126,38 +126,38 @@ class AppBottomNav extends StatelessWidget {
       large: 12.0,
     );
     final iconPadding = isActive 
-        ? context.responsive(verySmall: 1.5, small: 2.0, large: 3.0)
+        ? context.responsive(verySmall: 2.0, small: 3.0, large: 4.0)
         : 0.0;
     
     // Icon sizes
     final activeIconSize = context.responsiveIconSize(
-      verySmall: 18.0,
-      small: 20.0,
-      large: 24.0,
+      verySmall: 22.0,
+      small: 24.0,
+      large: 28.0,
     );
     final inactiveIconSize = context.responsiveIconSize(
-      verySmall: 16.0,
-      small: 18.0,
-      large: 22.0,
+      verySmall: 20.0,
+      small: 22.0,
+      large: 26.0,
     );
     
     // Font sizes
     final activeFontSize = context.responsiveFontSize(
-      verySmall: 9.0,
-      small: 10.0,
-      large: 12.0,
+      verySmall: 11.0,
+      small: 12.0,
+      large: 14.0,
     );
     final inactiveFontSize = context.responsiveFontSize(
-      verySmall: 8.0,
-      small: 9.0,
-      large: 11.0,
+      verySmall: 10.0,
+      small: 11.0,
+      large: 13.0,
     );
     
     // Spacing
     final spacing = context.responsiveSpacing(
-      verySmall: 1.0,
-      small: 2.0,
-      large: 4.0,
+      verySmall: 3.0,
+      small: 4.0,
+      large: 6.0,
     );
     
     return Expanded(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class ScheduleCalendar extends StatefulWidget {
   final Function(DateTime) onDateSelected;
@@ -20,17 +21,39 @@ class _ScheduleCalendarState extends State<ScheduleCalendar> {
 
   @override
   Widget build(BuildContext context) {
+    final marginValue = context.responsive(
+      verySmall: 12.0,
+      small: 14.0,
+      large: 16.0,
+    );
+    final paddingValue = context.responsive(
+      verySmall: 14.0,
+      small: 16.0,
+      large: 20.0,
+    );
+    
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.all(marginValue),
+      padding: EdgeInsets.all(paddingValue),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+          verySmall: 16.0,
+          small: 18.0,
+          large: 20.0,
+        )),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            blurRadius: context.responsive(
+              verySmall: 8.0,
+              small: 9.0,
+              large: 10.0,
+            ),
+            offset: Offset(
+              0,
+              context.responsive(verySmall: 1.5, small: 2.0, large: 2.0),
+            ),
           ),
         ],
       ),
@@ -46,15 +69,24 @@ class _ScheduleCalendarState extends State<ScheduleCalendar> {
                       _currentWeek = _currentWeek.subtract(const Duration(days: 7));
                     });
                   },
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.chevron_left,
                     color: AppColors.textPrimary,
+                    size: context.responsiveIconSize(
+                      verySmall: 20.0,
+                      small: 22.0,
+                      large: 24.0,
+                    ),
                   ),
                 ),
                 Text(
                   _getWeekRangeText(),
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: context.responsiveFontSize(
+                      verySmall: 16.0,
+                      small: 17.0,
+                      large: 18.0,
+                    ),
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
@@ -65,15 +97,24 @@ class _ScheduleCalendarState extends State<ScheduleCalendar> {
                       _currentWeek = _currentWeek.add(const Duration(days: 7));
                     });
                   },
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.chevron_right,
                     color: AppColors.textPrimary,
+                    size: context.responsiveIconSize(
+                      verySmall: 20.0,
+                      small: 22.0,
+                      large: 24.0,
+                    ),
                   ),
                 ),
               ],
             ),
             
-            const SizedBox(height: 16),
+            SizedBox(height: context.responsiveSpacing(
+              verySmall: 12.0,
+              small: 14.0,
+              large: 16.0,
+            )),
             
             // Week calendar row with weekday + date chips
             _buildWeekRow(),
@@ -86,78 +127,103 @@ class _ScheduleCalendarState extends State<ScheduleCalendar> {
     // Start of week (Monday)
     final startOfWeek = _getStartOfWeek(_currentWeek);
 
-    return Row(
-      children: List.generate(7, (index) {
-        final date = startOfWeek.add(Duration(days: index));
-        final isSelected = _selectedDate.year == date.year &&
-            _selectedDate.month == date.month &&
-            _selectedDate.day == date.day;
-        final isToday = DateTime.now().year == date.year &&
-            DateTime.now().month == date.month &&
-            DateTime.now().day == date.day;
+    return Builder(
+      builder: (context) {
+        return Row(
+          children: List.generate(7, (index) {
+            final date = startOfWeek.add(Duration(days: index));
+            final isSelected = _selectedDate.year == date.year &&
+                _selectedDate.month == date.month &&
+                _selectedDate.day == date.day;
+            final isToday = DateTime.now().year == date.year &&
+                DateTime.now().month == date.month &&
+                DateTime.now().day == date.day;
 
-        return Expanded(
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedDate = date;
-              });
-              widget.onDateSelected(date);
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.accentOrange
-                    : (isToday ? AppColors.accentOrange.withValues(alpha: 0.1) : Colors.transparent),
-                borderRadius: BorderRadius.circular(14),
-                border: isToday && !isSelected
-                    ? Border.all(
-                        color: AppColors.accentOrange,
-                        width: 2,
-                      )
-                    : null,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Weekday label
-                  Text(
-                    _weekdayLabel(date),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: isSelected
-                          ? Colors.white
-                          : (isToday ? AppColors.accentOrange : AppColors.textSecondary),
-                    ),
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedDate = date;
+                  });
+                  widget.onDateSelected(date);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  margin: EdgeInsets.symmetric(
+                    horizontal: context.responsive(verySmall: 2.0, small: 3.0, large: 4.0),
+                    vertical: context.responsive(verySmall: 1.0, small: 1.5, large: 2.0),
                   ),
-                  const SizedBox(height: 6),
-                  // Date number with today indicator
-                  Stack(
-                    alignment: Alignment.center,
+                  padding: EdgeInsets.symmetric(
+                    vertical: context.responsive(verySmall: 6.0, small: 7.0, large: 8.0),
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.accentOrange
+                        : (isToday ? AppColors.accentOrange.withValues(alpha: 0.1) : Colors.transparent),
+                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                      verySmall: 12.0,
+                      small: 13.0,
+                      large: 14.0,
+                    )),
+                    border: isToday && !isSelected
+                        ? Border.all(
+                            color: AppColors.accentOrange,
+                            width: context.responsive(verySmall: 1.5, small: 1.8, large: 2.0),
+                          )
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Weekday label
                       Text(
-                        '${date.day}',
+                        _weekdayLabel(date),
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontSize: context.responsiveFontSize(
+                            verySmall: 10.0,
+                            small: 11.0,
+                            large: 12.0,
+                          ),
+                          fontWeight: FontWeight.w500,
                           color: isSelected
                               ? Colors.white
-                              : (isToday ? AppColors.accentOrange : AppColors.textPrimary),
+                              : (isToday ? AppColors.accentOrange : AppColors.textSecondary),
                         ),
+                      ),
+                      SizedBox(height: context.responsive(
+                        verySmall: 4.0,
+                        small: 5.0,
+                        large: 6.0,
+                      )),
+                      // Date number with today indicator
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Text(
+                            '${date.day}',
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 14.0,
+                                small: 15.0,
+                                large: 16.0,
+                              ),
+                              fontWeight: FontWeight.w600,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isToday ? AppColors.accentOrange : AppColors.textPrimary),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          }),
         );
-      }),
+      },
     );
   }
 

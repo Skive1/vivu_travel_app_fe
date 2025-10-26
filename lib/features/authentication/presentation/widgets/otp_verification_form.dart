@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 import '../widgets/auth_button.dart';
 import '../widgets/otp_input_fields.dart';
@@ -24,7 +25,6 @@ class OtpVerificationForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
 
     return Column(
       children: [
@@ -32,14 +32,22 @@ class OtpVerificationForm extends StatelessWidget {
         Text(
           'Please check your email $email\nto see the verification code',
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 16,
-            color: Color(0xFF757575),
+          style: TextStyle(
+            fontSize: context.responsiveFontSize(
+              verySmall: 14.0,
+              small: 15.0,
+              large: 16.0,
+            ),
+            color: const Color(0xFF757575),
             height: 1.5,
           ),
         ),
         
-        SizedBox(height: screenSize.height * 0.06),
+        SizedBox(height: context.responsiveSpacing(
+          verySmall: 20.0,
+          small: 24.0,
+          large: 28.0,
+        )),
         
         // OTP Input Fields
         OtpInputFields(
@@ -47,7 +55,11 @@ class OtpVerificationForm extends StatelessWidget {
           onOtpComplete: onVerify,
         ),
         
-        SizedBox(height: screenSize.height * 0.06),
+        SizedBox(height: context.responsiveSpacing(
+          verySmall: 20.0,
+          small: 24.0,
+          large: 28.0,
+        )),
         
         // Verify Button
         BlocBuilder<AuthBloc, AuthState>(
@@ -63,7 +75,11 @@ class OtpVerificationForm extends StatelessWidget {
           },
         ),
         
-        const SizedBox(height: 24),
+        SizedBox(height: context.responsiveSpacing(
+          verySmall: 16.0,
+          small: 20.0,
+          large: 24.0,
+        )),
         
         // Resend Section
         OtpResendSection(

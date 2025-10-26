@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class MarkdownRenderer extends StatelessWidget {
   final String text;
@@ -15,15 +16,15 @@ class MarkdownRenderer extends StatelessWidget {
     final filteredText = _filterJsonContent(text);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: context.responsivePadding(all: 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: AppColors.textHint.withValues(alpha: 0.1),
-            blurRadius: 4,
+            blurRadius: context.responsiveElevation(verySmall: 3, small: 3.5, large: 4),
             offset: const Offset(0, 2),
           ),
         ],
@@ -33,7 +34,7 @@ class MarkdownRenderer extends StatelessWidget {
         styleSheet: MarkdownStyleSheet(
           // H1 styling (only level 1 headers)
           h1: TextStyle(
-            fontSize: 20,
+            fontSize: context.responsiveFontSize(verySmall: 18, small: 19, large: 20),
             fontWeight: FontWeight.bold,
             color: AppColors.primary,
             height: 1.3,
@@ -46,13 +47,16 @@ class MarkdownRenderer extends StatelessWidget {
           h6: const TextStyle(fontSize: 0, height: 0),
           // Paragraph styling
           p: TextStyle(
-            fontSize: 16,
+            fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
             color: AppColors.textPrimary,
             height: 1.5,
             letterSpacing: 0.2,
           ),
           // List styling
-          listBullet: TextStyle(color: AppColors.primary, fontSize: 16),
+          listBullet: TextStyle(
+            color: AppColors.primary, 
+            fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
+          ),
           // Strong/Bold styling
           strong: TextStyle(
             fontWeight: FontWeight.bold,
@@ -68,13 +72,13 @@ class MarkdownRenderer extends StatelessWidget {
             backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             color: AppColors.primary,
             fontFamily: 'monospace',
-            fontSize: 14,
+            fontSize: context.responsiveFontSize(verySmall: 12, small: 13, large: 14),
           ),
           // Blockquote styling
           blockquote: TextStyle(
             color: AppColors.textSecondary,
             fontStyle: FontStyle.italic,
-            fontSize: 15,
+            fontSize: context.responsiveFontSize(verySmall: 13, small: 14, large: 15),
           ),
           // Link styling
           a: TextStyle(

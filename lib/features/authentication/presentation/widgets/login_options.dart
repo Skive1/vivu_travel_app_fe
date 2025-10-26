@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../routes.dart';
 
 class LoginOptions extends StatelessWidget {
@@ -25,9 +26,15 @@ class LoginOptions extends StatelessWidget {
               onChanged: onRememberMeChanged,
               activeColor: const Color(0xFF0296E4),
             ),
-            const Text(
+            Text(
               'Remember me',
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(
+                fontSize: context.responsiveFontSize(
+                  verySmall: 12.0,
+                  small: 13.0,
+                  large: 14.0,
+                ),
+              ),
             ),
           ],
         ),
@@ -35,11 +42,15 @@ class LoginOptions extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
           },
-          child: const Text(
+          child: Text(
             'Forgot Password?',
             style: TextStyle(
               color: AppColors.accent,
-              fontSize: 14,
+              fontSize: context.responsiveFontSize(
+                verySmall: 12.0,
+                small: 13.0,
+                large: 14.0,
+              ),
             ),
           ),
         ),

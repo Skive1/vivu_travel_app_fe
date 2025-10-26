@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../controllers/otp_controller.dart';
 
 class OtpResendSection extends StatefulWidget {
@@ -30,11 +31,15 @@ class _OtpResendSectionState extends State<OtpResendSection> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           'Resend code to ',
           style: TextStyle(
-            fontSize: 14,
-            color: Color(0xFF757575),
+            fontSize: context.responsiveFontSize(
+              verySmall: 12.0,
+              small: 13.0,
+              large: 14.0,
+            ),
+            color: const Color(0xFF757575),
           ),
         ),
         if (widget.controller.canResend)
@@ -43,11 +48,15 @@ class _OtpResendSectionState extends State<OtpResendSection> {
               widget.onResend();
               setState(() {});
             },
-            child: const Text(
+            child: Text(
               'Resend',
               style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF24BAEC),
+                fontSize: context.responsiveFontSize(
+                  verySmall: 12.0,
+                  small: 13.0,
+                  large: 14.0,
+                ),
+                color: const Color(0xFF24BAEC),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -55,9 +64,13 @@ class _OtpResendSectionState extends State<OtpResendSection> {
         else
           Text(
             '${widget.controller.resendCountdown.toString().padLeft(2, '0')}s',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF757575),
+            style: TextStyle(
+              fontSize: context.responsiveFontSize(
+                verySmall: 12.0,
+                small: 13.0,
+                large: 14.0,
+              ),
+              color: const Color(0xFF757575),
               fontWeight: FontWeight.w600,
             ),
           ),

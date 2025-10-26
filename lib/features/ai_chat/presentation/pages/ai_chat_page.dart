@@ -12,6 +12,7 @@ import '../widgets/schedule_loading_progress.dart';
 import '../../domain/entities/activity_request_entity.dart';
 import '../../domain/entities/activity_data_entity.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class AIChatPage extends StatefulWidget {
   const AIChatPage({Key? key}) : super(key: key);
@@ -51,20 +52,23 @@ class _AIChatPageState extends State<AIChatPage> {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: context.responsivePadding(all: 8),
               child: ClipOval(
                 child: Image.asset(
                   'assets/images/ai_avt.png',
-                  width: 32,
-                  height: 32,
+                  width: context.responsiveIconSize(verySmall: 28, small: 30, large: 32),
+                  height: context.responsiveIconSize(verySmall: 28, small: 30, large: 32),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
-
-            const Text(
+            SizedBox(width: context.responsiveSpacing(verySmall: 8, small: 10, large: 12)),
+            Text(
               'Vivu AI',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+              style: TextStyle(
+                fontWeight: FontWeight.w600, 
+                fontSize: context.responsiveFontSize(verySmall: 16, small: 17, large: 18),
+              ),
             ),
           ],
         ),
@@ -74,13 +78,16 @@ class _AIChatPageState extends State<AIChatPage> {
         surfaceTintColor: Colors.transparent,
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 8),
+            margin: context.responsiveMargin(right: 8),
             decoration: BoxDecoration(
               color: AppColors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 6, small: 7, large: 8)),
             ),
             child: IconButton(
-              icon: const Icon(Icons.clear_all, size: 20),
+              icon: Icon(
+                Icons.clear_all, 
+                size: context.responsiveIconSize(verySmall: 18, small: 19, large: 20),
+              ),
               onPressed: () {
                 context.read<AIChatBloc>().add(ClearChat());
               },
@@ -287,16 +294,16 @@ class _AIChatPageState extends State<AIChatPage> {
 
   Widget _buildWelcomeMessage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: context.responsivePadding(all: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: context.responsivePadding(all: 24),
             child: Image.asset(
               'assets/images/ai_avt.png',
-              width: 120,
-              height: 120,
+              width: context.responsiveIconSize(verySmall: 100, small: 110, large: 120),
+              height: context.responsiveIconSize(verySmall: 100, small: 110, large: 120),
               fit: BoxFit.cover,
             ),
           ),
@@ -305,23 +312,25 @@ class _AIChatPageState extends State<AIChatPage> {
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.bold,
+              fontSize: context.responsiveFontSize(verySmall: 20, small: 22, large: 24),
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: context.responsiveSpacing(verySmall: 10, small: 11, large: 12)),
           Text(
             'Hãy mô tả chuyến du lịch mà bạn muốn thực hiện, tôi sẽ giúp bạn lên kế hoạch chi tiết!',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: AppColors.textSecondary,
               height: 1.5,
+              fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: context.responsiveSpacing(verySmall: 20, small: 22, large: 24)),
           _buildExampleCards(),
-          const SizedBox(height: 24),
+          SizedBox(height: context.responsiveSpacing(verySmall: 20, small: 22, large: 24)),
           _buildFeatureHighlights(),
-          const SizedBox(height: 20),
+          SizedBox(height: context.responsiveSpacing(verySmall: 16, small: 18, large: 20)),
         ],
       ),
     );
@@ -351,22 +360,23 @@ class _AIChatPageState extends State<AIChatPage> {
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
+            fontSize: context.responsiveFontSize(verySmall: 16, small: 17, large: 18),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: context.responsiveSpacing(verySmall: 12, small: 14, large: 16)),
         ...examples
             .map(
               (example) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
+                margin: EdgeInsets.only(bottom: context.responsiveSpacing(verySmall: 10, small: 11, large: 12)),
+                padding: context.responsivePadding(all: 16),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
                   border: Border.all(color: AppColors.border),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.textHint.withValues(alpha: 0.1),
-                      blurRadius: 4,
+                      blurRadius: context.responsiveElevation(verySmall: 3, small: 3.5, large: 4),
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -379,25 +389,26 @@ class _AIChatPageState extends State<AIChatPage> {
                         Icon(
                           example['icon'] as IconData,
                           color: AppColors.primary,
-                          size: 20,
+                          size: context.responsiveIconSize(verySmall: 18, small: 19, large: 20),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
                         Text(
                           example['title'] as String,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: AppColors.primary,
+                            fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
                     Text(
                       '"${example['example']}"',
                       style: TextStyle(
                         fontStyle: FontStyle.italic,
                         color: AppColors.textSecondary,
-                        fontSize: 14,
+                        fontSize: context.responsiveFontSize(verySmall: 12, small: 13, large: 14),
                       ),
                     ),
                   ],
@@ -432,17 +443,18 @@ class _AIChatPageState extends State<AIChatPage> {
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
+            fontSize: context.responsiveFontSize(verySmall: 16, small: 17, large: 18),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: context.responsiveSpacing(verySmall: 12, small: 14, large: 16)),
         ...features
             .map(
               (feature) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
+                margin: EdgeInsets.only(bottom: context.responsiveSpacing(verySmall: 10, small: 11, large: 12)),
+                padding: context.responsivePadding(all: 16),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
                   border: Border.all(
                     color: AppColors.primary.withValues(alpha: 0.2),
                   ),
@@ -450,18 +462,18 @@ class _AIChatPageState extends State<AIChatPage> {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: context.responsivePadding(all: 8),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 6, small: 7, large: 8)),
                       ),
                       child: Icon(
                         feature['icon'] as IconData,
                         color: AppColors.primary,
-                        size: 20,
+                        size: context.responsiveIconSize(verySmall: 18, small: 19, large: 20),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: context.responsiveSpacing(verySmall: 10, small: 11, large: 12)),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,14 +483,15 @@ class _AIChatPageState extends State<AIChatPage> {
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
+                              fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: context.responsiveSpacing(verySmall: 3, small: 3.5, large: 4)),
                           Text(
                             feature['description'] as String,
                             style: TextStyle(
                               color: AppColors.textSecondary,
-                              fontSize: 13,
+                              fontSize: context.responsiveFontSize(verySmall: 11, small: 12, large: 13),
                             ),
                           ),
                         ],
@@ -496,36 +509,37 @@ class _AIChatPageState extends State<AIChatPage> {
   Widget _buildErrorState(String message) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: context.responsivePadding(all: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: context.responsivePadding(all: 24),
               decoration: BoxDecoration(
                 color: AppColors.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.error_outline,
-                size: 80,
+                size: context.responsiveIconSize(verySmall: 70, small: 75, large: 80),
                 color: AppColors.error,
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: context.responsiveSpacing(verySmall: 28, small: 30, large: 32)),
             Text(
               'Có lỗi xảy ra',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: AppColors.error,
                 fontWeight: FontWeight.bold,
+                fontSize: context.responsiveFontSize(verySmall: 20, small: 22, large: 24),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: context.responsiveSpacing(verySmall: 14, small: 15, large: 16)),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: context.responsivePadding(all: 16),
               decoration: BoxDecoration(
                 color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
                 border: Border.all(
                   color: AppColors.error.withValues(alpha: 0.3),
                 ),
@@ -534,44 +548,90 @@ class _AIChatPageState extends State<AIChatPage> {
                 message,
                 style: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
+                ).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.error,
+                  fontSize: context.responsiveFontSize(verySmall: 13, small: 14, large: 15),
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () {
-                    context.read<AIChatBloc>().add(ClearChat());
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Làm mới'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.grey[600],
-                    side: BorderSide(color: Colors.grey[300]!),
-                  ),
+            SizedBox(height: context.responsiveSpacing(verySmall: 28, small: 30, large: 32)),
+            ResponsiveUtils.isVerySmallPhone(context) 
+              ? Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          context.read<AIChatBloc>().add(ClearChat());
+                        },
+                        icon: Icon(Icons.refresh, size: context.responsiveIconSize(verySmall: 16, small: 17, large: 18)),
+                        label: Text('Làm mới', style: TextStyle(fontSize: context.responsiveFontSize(verySmall: 13, small: 14, large: 15))),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.grey[600],
+                          side: BorderSide(color: Colors.grey[300]!),
+                          padding: context.responsivePadding(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: context.responsiveSpacing(verySmall: 12, small: 14, large: 16)),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // Retry last message
+                          if (_messageController.text.isNotEmpty) {
+                            context.read<AIChatBloc>().add(
+                              SendMessage(message: _messageController.text),
+                            );
+                          }
+                        },
+                        icon: Icon(Icons.replay, size: context.responsiveIconSize(verySmall: 16, small: 17, large: 18)),
+                        label: Text('Thử lại', style: TextStyle(fontSize: context.responsiveFontSize(verySmall: 13, small: 14, large: 15))),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: context.responsivePadding(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        context.read<AIChatBloc>().add(ClearChat());
+                      },
+                      icon: Icon(Icons.refresh, size: context.responsiveIconSize(verySmall: 16, small: 17, large: 18)),
+                      label: Text('Làm mới', style: TextStyle(fontSize: context.responsiveFontSize(verySmall: 13, small: 14, large: 15))),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey[600],
+                        side: BorderSide(color: Colors.grey[300]!),
+                        padding: context.responsivePadding(vertical: 12),
+                      ),
+                    ),
+                    SizedBox(width: context.responsiveSpacing(verySmall: 12, small: 14, large: 16)),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Retry last message
+                        if (_messageController.text.isNotEmpty) {
+                          context.read<AIChatBloc>().add(
+                            SendMessage(message: _messageController.text),
+                          );
+                        }
+                      },
+                      icon: Icon(Icons.replay, size: context.responsiveIconSize(verySmall: 16, small: 17, large: 18)),
+                      label: Text('Thử lại', style: TextStyle(fontSize: context.responsiveFontSize(verySmall: 13, small: 14, large: 15))),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: context.responsivePadding(vertical: 12),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Retry last message
-                    if (_messageController.text.isNotEmpty) {
-                      context.read<AIChatBloc>().add(
-                        SendMessage(message: _messageController.text),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.replay),
-                  label: const Text('Thử lại'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -581,7 +641,7 @@ class _AIChatPageState extends State<AIChatPage> {
   Widget _buildChatMessages(List messages) {
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: context.responsivePadding(vertical: 16),
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
@@ -596,14 +656,14 @@ class _AIChatPageState extends State<AIChatPage> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: context.responsivePadding(all: 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         boxShadow: [
           BoxShadow(
             color: AppColors.textHint.withValues(alpha: 0.1),
             spreadRadius: 1,
-            blurRadius: 8,
+            blurRadius: context.responsiveElevation(verySmall: 6, small: 7, large: 8),
             offset: const Offset(0, -2),
           ),
         ],
@@ -615,7 +675,7 @@ class _AIChatPageState extends State<AIChatPage> {
               child: Container(
                 decoration: BoxDecoration(
                   color: AppColors.background,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 20, small: 22, large: 24)),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: TextField(
@@ -624,10 +684,10 @@ class _AIChatPageState extends State<AIChatPage> {
                     hintText: 'Nhập tin nhắn của bạn...',
                     hintStyle: TextStyle(
                       color: AppColors.textHint,
-                      fontSize: 16,
+                      fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
                     ),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
+                    contentPadding: context.responsivePadding(
                       horizontal: 20,
                       vertical: 16,
                     ),
@@ -636,7 +696,7 @@ class _AIChatPageState extends State<AIChatPage> {
                             icon: Icon(
                               Icons.clear,
                               color: AppColors.textHint,
-                              size: 20,
+                              size: context.responsiveIconSize(verySmall: 18, small: 19, large: 20),
                             ),
                             onPressed: () {
                               _messageController.clear();
@@ -658,7 +718,7 @@ class _AIChatPageState extends State<AIChatPage> {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: context.responsiveSpacing(verySmall: 10, small: 11, large: 12)),
             Container(
               decoration: BoxDecoration(
                 color: _messageController.text.trim().isNotEmpty
@@ -669,7 +729,7 @@ class _AIChatPageState extends State<AIChatPage> {
                     ? [
                         BoxShadow(
                           color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 8,
+                          blurRadius: context.responsiveElevation(verySmall: 6, small: 7, large: 8),
                           offset: const Offset(0, 2),
                         ),
                       ]
@@ -681,7 +741,7 @@ class _AIChatPageState extends State<AIChatPage> {
                   color: _messageController.text.trim().isNotEmpty
                       ? AppColors.white
                       : AppColors.textSecondary,
-                  size: 24,
+                  size: context.responsiveIconSize(verySmall: 20, small: 22, large: 24),
                 ),
                 onPressed: _messageController.text.trim().isNotEmpty
                     ? () {

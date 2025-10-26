@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/onboarding_constants.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import 'page_indicator.dart';
 import 'onboarding_action_button.dart';
 
@@ -26,15 +27,34 @@ class OnboardingBottomSection extends StatelessWidget {
       left: 0,
       right: 0,
       child: Container(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          bottom: 20 + bottomPadding,
-          top: 20,
+        padding: context.responsivePadding(
+          horizontal: context.responsive(
+            verySmall: 16.0,
+            small: 18.0,
+            large: 20.0,
+          ),
+          bottom: context.responsive(
+            verySmall: 16.0,
+            small: 18.0,
+            large: 20.0,
+          ) + bottomPadding,
+          top: context.responsive(
+            verySmall: 16.0,
+            small: 18.0,
+            large: 20.0,
+          ),
         ),
         decoration: BoxDecoration(
           color: AppColors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(
+              context.responsiveBorderRadius(
+                verySmall: 24.0,
+                small: 27.0,
+                large: 30.0,
+              ),
+            ),
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -47,7 +67,13 @@ class OnboardingBottomSection extends StatelessWidget {
               ),
             ),
             
-            const SizedBox(height: 20),
+            SizedBox(
+              height: context.responsiveSpacing(
+                verySmall: 16.0,
+                small: 18.0,
+                large: 20.0,
+              ),
+            ),
             
             // Action button (Next/Get Started)
             OnboardingActionButton(

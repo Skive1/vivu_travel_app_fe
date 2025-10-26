@@ -66,20 +66,27 @@ class AuthHeader extends StatelessWidget {
           
           // Vivu Travel Logo
           Container(
-            width: 240.0,
-            height: 240.0,
+            width: context.responsive(
+              verySmall: 120.0,
+              small: 180.0,
+              large: 240.0,
+            ),
+            height: context.responsive(
+              verySmall: 120.0,
+              small: 180.0,
+              large: 240.0,
+            ),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
-                verySmall: 40.0,
-                small: 50.0,
+                verySmall: 30.0,
+                small: 40.0,
                 large: 60.0,
               )),
-
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
-                verySmall: 40.0,
-                small: 50.0,
+                verySmall: 30.0,
+                small: 40.0,
                 large: 60.0,
               )),
               child: Image.asset(

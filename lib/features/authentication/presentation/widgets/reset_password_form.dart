@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
@@ -24,7 +25,6 @@ class ResetPasswordForm extends StatefulWidget {
 class _ResetPasswordFormState extends State<ResetPasswordForm> {
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
 
     return Form(
       key: widget.controller.resetPasswordFormKey,
@@ -52,7 +52,11 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
             ),
           ),
           
-          const SizedBox(height: 24),
+          SizedBox(height: context.responsiveSpacing(
+            verySmall: 16.0,
+            small: 20.0,
+            large: 24.0,
+          )),
           
           AuthTextField(
             controller: widget.controller.confirmNewPasswordController,
@@ -75,7 +79,11 @@ class _ResetPasswordFormState extends State<ResetPasswordForm> {
             ),
           ),
           
-          SizedBox(height: screenSize.height * 0.06),
+          SizedBox(height: context.responsiveSpacing(
+            verySmall: 20.0,
+            small: 24.0,
+            large: 28.0,
+          )),
           
           BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {

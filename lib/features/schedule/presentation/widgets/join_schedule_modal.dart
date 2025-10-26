@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../../data/models/join_schedule_request.dart';
 import '../bloc/schedule_bloc.dart';

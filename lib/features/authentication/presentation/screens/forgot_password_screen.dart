@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/utils/dialog_utils.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../widgets/auth_container.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_text_field.dart';
@@ -63,10 +64,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: AuthContainer(
             child: SafeArea(
               child: Padding(
-                padding: EdgeInsets.only(
-                  left: 24.0,
-                  right: 24.0,
-                  bottom: keyboardHeight + 40,
+                padding: context.responsivePadding(
+                  horizontal: context.responsive(
+                    verySmall: 16.0,
+                    small: 20.0,
+                    large: 24.0,
+                  ),
+                  bottom: keyboardHeight + context.responsiveSpacing(
+                    verySmall: 24.0,
+                    small: 32.0,
+                    large: 40.0,
+                  ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -80,32 +88,68 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           child: GestureDetector(
                             onTap: () => Navigator.of(context).pop(),
                             child: Container(
-                              width: 44,
-                              height: 44,
+                              width: context.responsive(
+                                verySmall: 36.0,
+                                small: 40.0,
+                                large: 44.0,
+                              ),
+                              height: context.responsive(
+                                verySmall: 36.0,
+                                small: 40.0,
+                                large: 44.0,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF5F5F5),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                                  verySmall: 8.0,
+                                  small: 10.0,
+                                  large: 12.0,
+                                )),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.arrow_back_ios_new,
-                                color: Color(0xFF1A1A1A),
-                                size: 20,
+                                color: const Color(0xFF1A1A1A),
+                                size: context.responsiveIconSize(
+                                  verySmall: 16.0,
+                                  small: 18.0,
+                                  large: 20.0,
+                                ),
                               ),
                             ),
                           ),
                         ),
                         
-                        SizedBox(height: screenSize.height * 0.02),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 16.0,
+                          small: 20.0,
+                          large: 24.0,
+                        )),
                         
                         // Vivu Travel Logo
                         Container(
-                          width: 240.0,
-                          height: 240.0,
+                          width: context.responsive(
+                            verySmall: 120.0,
+                            small: 180.0,
+                            large: 240.0,
+                          ),
+                          height: context.responsive(
+                            verySmall: 120.0,
+                            small: 180.0,
+                            large: 240.0,
+                          ),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(90.0),
+                            borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                              verySmall: 30.0,
+                              small: 40.0,
+                              large: 120.0,
+                            )),
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(90.0),
+                            borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                              verySmall: 30.0,
+                              small: 40.0,
+                              large: 120.0,
+                            )),
                             child: Image.asset(
                               'assets/images/vivu_logo.png',
                               fit: BoxFit.cover,
@@ -113,28 +157,44 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                         ),
                         
-                        SizedBox(height: screenSize.height * 0.02),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 16.0,
+                          small: 20.0,
+                          large: 24.0,
+                        )),
                         
                         // Header
                         Column(
                           children: [
-                            const Text(
+                            Text(
                               'Forgot password',
                               style: TextStyle(
-                                fontSize: 28,
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 22.0,
+                                  small: 25.0,
+                                  large: 28.0,
+                                ),
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A1A1A),
+                                color: const Color(0xFF1A1A1A),
                               ),
                             ),
                             
-                            const SizedBox(height: 12),
+                            SizedBox(height: context.responsiveSpacing(
+                              verySmall: 8.0,
+                              small: 10.0,
+                              large: 12.0,
+                            )),
                             
-                            const Text(
+                            Text(
                               'Enter your email account to reset\nyour password',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF757575),
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 12.0,
+                                  small: 13.0,
+                                  large: 14.0,
+                                ),
+                                color: const Color(0xFF757575),
                                 height: 1.5,
                               ),
                             ),
@@ -161,7 +221,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                         ),
                         
-                        SizedBox(height: screenSize.height * 0.03),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 20.0,
+                          small: 24.0,
+                          large: 28.0,
+                        )),
                         
                         // Reset Password Button
                         BlocBuilder<AuthBloc, AuthState>(

@@ -200,7 +200,7 @@ class ExplorePage extends StatelessWidget {
           ),
           SizedBox(height: 16),
           Text(
-            'Khám phá',
+            'Blog',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,

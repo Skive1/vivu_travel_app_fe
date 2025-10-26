@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/activity_data_entity.dart';
 import '../../domain/entities/schedule_data_entity.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class AIActionButtons extends StatelessWidget {
   final ScheduleDataEntity? scheduleData;
@@ -24,7 +25,7 @@ class AIActionButtons extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin: context.responsiveMargin(vertical: 8, horizontal: 16),
       child: Column(
         children: [
           if (scheduleData != null) ...[
@@ -32,31 +33,45 @@ class AIActionButtons extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: onCreateSchedule,
-                icon: const Icon(Icons.calendar_today),
-                label: const Text('Tạo lịch trình'),
+                icon: Icon(
+                  Icons.calendar_today,
+                  size: context.responsiveIconSize(verySmall: 16, small: 17, large: 18),
+                ),
+                label: Text(
+                  'Tạo lịch trình',
+                  style: TextStyle(fontSize: context.responsiveFontSize(verySmall: 13, small: 14, large: 15)),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: context.responsivePadding(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 6, small: 7, large: 8)),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
           ],
           if (activitiesData != null && activitiesData!.isNotEmpty) ...[
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: onAddActivities,
-                icon: const Icon(Icons.add),
-                label: Text('Thêm ${activitiesData!.length} hoạt động'),
+                icon: Icon(
+                  Icons.add,
+                  size: context.responsiveIconSize(verySmall: 16, small: 17, large: 18),
+                ),
+                label: Text(
+                  'Thêm ${activitiesData!.length} hoạt động',
+                  style: TextStyle(fontSize: context.responsiveFontSize(verySmall: 13, small: 14, large: 15)),
+                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   side: BorderSide(color: AppColors.primary),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: context.responsivePadding(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 6, small: 7, large: 8)),
                   ),
                 ),
               ),

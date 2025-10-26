@@ -50,152 +50,181 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Get screen dimensions and safe area
     final screenSize = MediaQuery.of(context).size;
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
-        // Ensure full screen coverage
-        body: SizedBox(
-          width: screenSize.width,
-          height: screenSize.height,
-          child: BlocListener<AuthBloc, AuthState>(
-            listener: (context, state) {
-              if (state is AuthAuthenticated) {
-                Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-              } else if (state is AuthError) {
-                DialogUtils.showErrorDialog(
-                  context: context,
-                  title: state.title ?? 'Login Failed',
-                  message: state.message,
-                );
-              }
-            },
-            child: AuthContainer(
-              child: SafeArea(
-                child: Padding(
-                  padding: context.responsivePadding(
-                    horizontal: 16,
-                    vertical: 0,
-                    bottom: keyboardHeight + context.responsiveSpacing(
-                      verySmall: 24,
-                      small: 32,
-                      large: 40,
-                    ),
+      resizeToAvoidBottomInset: false,
+      // Ensure full screen coverage
+      body: SizedBox(
+        width: screenSize.width,
+        height: screenSize.height,
+        child: BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthAuthenticated) {
+              Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+            } else if (state is AuthError) {
+              DialogUtils.showErrorDialog(
+                context: context,
+                title: state.title ?? 'Login Failed',
+                message: state.message,
+              );
+            }
+          },
+          child: AuthContainer(
+            child: SafeArea(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: screenSize.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
                   ),
-                  child: Form(
-                    key: _loginController.formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header Section
-                        const AuthHeader(
-                          title: 'Sign In',
-                          subtitle: 'Sign in to continue your journey',
-                        ),
-
-                        // Form Fields Section
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Email Field
-                            AuthTextField(
-                              controller: _loginController.emailController,
-                              label: 'Email',
-                              keyboardType: TextInputType.emailAddress,
-                              validator: _loginController.validateEmail,
+                  child: Padding(
+                    padding: context.responsivePadding(
+                      horizontal: 16,
+                      vertical: 0,
+                    ),
+                    child: Form(
+                      key: _loginController.formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header Section
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: context.responsiveSpacing(
+                                verySmall: 20,
+                                small: 32,
+                                large: 40,
+                              ),
                             ),
-
-                            SizedBox(height: context.responsiveSpacing(
-                              verySmall: 12,
-                              small: 14,
-                              large: 16,
-                            )),
-
-                            // Password Field
-                            StatefulBuilder(
-                              builder: (context, setState) {
-                                return AuthTextField(
-                                  controller: _loginController.passwordController,
-                                  label: 'Password',
-                                  isPassword: true,
-                                  isPasswordVisible: _loginController.isPasswordVisible,
-                                  onTogglePassword: () {
-                                    setState(() {
-                                      _loginController.togglePasswordVisibility();
-                                    });
-                                  },
-                                );
-                              },
+                            child: const AuthHeader(
+                              title: 'Sign In',
+                              subtitle: 'Sign in to continue your journey',
                             ),
+                          ),
 
-                            SizedBox(height: context.responsiveSpacing(
-                              verySmall: 12,
-                              small: 14,
-                              large: 16,
-                            )),
+                          SizedBox(height: context.responsiveSpacing(
+                            verySmall: 24,
+                            small: 32,
+                            large: 40,
+                          )),
 
-                            // Remember Me & Forgot Password
-                            StatefulBuilder(
-                              builder: (context, setState) {
-                                return LoginOptions(
-                                  rememberMe: _loginController.rememberMe,
-                                  onRememberMeChanged: (value) {
-                                    setState(() {
-                                      _loginController.toggleRememberMe(value);
-                                    });
-                                  },
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                          // Form Fields Section
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Email Field
+                              AuthTextField(
+                                controller: _loginController.emailController,
+                                label: 'Email',
+                                keyboardType: TextInputType.emailAddress,
+                                validator: _loginController.validateEmail,
+                              ),
 
-                        // Action Buttons Section
-                        Column(
-                          children: [
-                            // Login Button
-                            BlocBuilder<AuthBloc, AuthState>(
-                              builder: (context, state) {
-                                return SizedBox(
-                                  width: double.infinity,
-                                  child: AuthButton(
-                                    isLoading: state is AuthLoading,
-                                    onPressed: () => _loginController.handleLogin(context),
-                                    text: 'Sign In',
-                                  ),
-                                );
-                              },
-                            ),
+                              SizedBox(height: context.responsiveSpacing(
+                                verySmall: 12,
+                                small: 14,
+                                large: 16,
+                              )),
 
-                            SizedBox(height: context.responsiveSpacing(
-                              verySmall: 20,
-                              small: 24,
-                              large: 32,
-                            )),
+                              // Password Field
+                              StatefulBuilder(
+                                builder: (context, setState) {
+                                  return AuthTextField(
+                                    controller: _loginController.passwordController,
+                                    label: 'Password',
+                                    isPassword: true,
+                                    isPasswordVisible: _loginController.isPasswordVisible,
+                                    onTogglePassword: () {
+                                      setState(() {
+                                        _loginController.togglePasswordVisibility();
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
 
-                            // Divider
-                            const AuthDivider(),
+                              SizedBox(height: context.responsiveSpacing(
+                                verySmall: 12,
+                                small: 14,
+                                large: 16,
+                              )),
 
-                            SizedBox(height: context.responsiveSpacing(
-                              verySmall: 20,
-                              small: 24,
-                              large: 32,
-                            )),
+                              // Remember Me & Forgot Password
+                              StatefulBuilder(
+                                builder: (context, setState) {
+                                  return LoginOptions(
+                                    rememberMe: _loginController.rememberMe,
+                                    onRememberMeChanged: (value) {
+                                      setState(() {
+                                        _loginController.toggleRememberMe(value);
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
 
-                            // Social Login Buttons
-                            const SocialAuthSection(),
+                          SizedBox(height: context.responsiveSpacing(
+                            verySmall: 24,
+                            small: 32,
+                            large: 40,
+                          )),
 
-                            SizedBox(height: context.responsiveSpacing(
-                              verySmall: 16,
-                              small: 20,
-                              large: 24,
-                            )),
+                          // Action Buttons Section
+                          Column(
+                            children: [
+                              // Login Button
+                              BlocBuilder<AuthBloc, AuthState>(
+                                builder: (context, state) {
+                                  return SizedBox(
+                                    width: double.infinity,
+                                    child: AuthButton(
+                                      isLoading: state is AuthLoading,
+                                      onPressed: () => _loginController.handleLogin(context),
+                                      text: 'Sign In',
+                                    ),
+                                  );
+                                },
+                              ),
 
-                            // Sign Up Link
-                            const SignUpLink(),
-                          ],
-                        ),
-                      ],
+                              SizedBox(height: context.responsiveSpacing(
+                                verySmall: 20,
+                                small: 24,
+                                large: 32,
+                              )),
+
+                              // Divider
+                              const AuthDivider(),
+
+                              SizedBox(height: context.responsiveSpacing(
+                                verySmall: 20,
+                                small: 24,
+                                large: 32,
+                              )),
+
+                              // Social Login Buttons
+                              const SocialAuthSection(),
+
+                              SizedBox(height: context.responsiveSpacing(
+                                verySmall: 16,
+                                small: 20,
+                                large: 24,
+                              )),
+
+                              // Sign Up Link
+                              const SignUpLink(),
+                            ],
+                          ),
+
+                          SizedBox(height: context.responsiveSpacing(
+                            verySmall: 24,
+                            small: 32,
+                            large: 40,
+                          )),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -203,6 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      );
+      ),
+    );
   }
 }

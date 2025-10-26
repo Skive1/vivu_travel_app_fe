@@ -2,6 +2,7 @@
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../domain/entities/activity_entity.dart';
 import '../bloc/schedule_bloc.dart';
 import '../bloc/schedule_event.dart';
@@ -40,46 +41,80 @@ class ActivityTimelineItem extends StatelessWidget {
       onLongPress: () {
         _showCheckInOptionsModal(context);
       },
-      child: Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Stack(
-        children: [
-          // Timeline indicator and connector, positioned relative to card height
-          Positioned(
-            top: 2,
-            left: 10,
-            child: Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [AppColors.primary, AppColors.accent]),
-                shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.25), blurRadius: 6, offset: const Offset(0, 2))],
-              ),
-            ),
-          ),
-          if (!isLast)
-            const Positioned(
-              left: 15, // center of the 12px dot (10 + 6 - 1)
-              top: 20,
-              bottom: 0,
-              child: _DashedLinePaint(color: AppColors.border),
-            ),
-
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(width: 32),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2))],
+      child: Builder(
+        builder: (context) {
+          return Container(
+            margin: EdgeInsets.only(bottom: context.responsiveSpacing(
+              verySmall: 12,
+              small: 14,
+              large: 16,
+            )),
+            child: Stack(
+              children: [
+                // Timeline indicator and connector, positioned relative to card height
+                Positioned(
+                  top: context.responsive(verySmall: 1.5, small: 2, large: 2),
+                  left: context.responsive(verySmall: 8, small: 9, large: 10),
+                  child: Container(
+                    width: context.responsiveIconSize(
+                      verySmall: 10,
+                      small: 11,
+                      large: 12,
+                    ),
+                    height: context.responsiveIconSize(
+                      verySmall: 10,
+                      small: 11,
+                      large: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [AppColors.primary, AppColors.accent]),
+                      shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.25), 
+                        blurRadius: context.responsive(verySmall: 4, small: 5, large: 6), 
+                        offset: Offset(0, context.responsive(verySmall: 1.5, small: 2, large: 2))
+                      )],
+                    ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
+                ),
+                if (!isLast)
+                  Positioned(
+                    left: context.responsive(verySmall: 13, small: 14, large: 15), // center of the dot
+                    top: context.responsive(verySmall: 16, small: 18, large: 20),
+                    bottom: 0,
+                    child: _DashedLinePaint(color: AppColors.border),
+                  ),
+
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(width: context.responsiveSpacing(
+                      verySmall: 28,
+                      small: 30,
+                      large: 32,
+                    )),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                            verySmall: 10,
+                            small: 11,
+                            large: 12,
+                          )),
+                          border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+                          boxShadow: [BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03), 
+                            blurRadius: context.responsive(verySmall: 6, small: 7, large: 8), 
+                            offset: Offset(0, context.responsive(verySmall: 1.5, small: 2, large: 2))
+                          )],
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(context.responsiveSpacing(
+                            verySmall: 10,
+                            small: 11,
+                            large: 12,
+                          )),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -89,14 +124,22 @@ class ActivityTimelineItem extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 '$emoji ${activity.placeName}',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                                style: TextStyle(
+                                  fontSize: context.responsiveFontSize(
+                                    verySmall: 14,
+                                    small: 15,
+                                    large: 16,
+                                  ),
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary
+                                ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: context.responsive(verySmall: 6, small: 7, large: 8)),
                             _TimeChip(text: '${_formatTime(activity.checkInTime)} - ${_formatTime(activity.checkOutTime)}'),
-                            const SizedBox(width: 4),
+                            SizedBox(width: context.responsive(verySmall: 3, small: 3.5, large: 4)),
                             if (canEdit || canDelete)
                               PopupMenuButton<String>(
                               color: Colors.white,
@@ -158,15 +201,27 @@ class ActivityTimelineItem extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 6,
+                          small: 7,
+                          large: 8,
+                        )),
                         
                         // Location with better visibility
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(10),
+                          padding: EdgeInsets.all(context.responsiveSpacing(
+                            verySmall: 8,
+                            small: 9,
+                            large: 10,
+                          )),
                           decoration: BoxDecoration(
                             color: AppColors.background,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                              verySmall: 6,
+                              small: 7,
+                              large: 8,
+                            )),
                             border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
                           ),
                           child: Row(
@@ -174,27 +229,39 @@ class ActivityTimelineItem extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.location_on_outlined,
-                                size: 16,
+                                size: context.responsiveIconSize(
+                                  verySmall: 14,
+                                  small: 15,
+                                  large: 16,
+                                ),
                                 color: AppColors.primary,
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: context.responsive(verySmall: 6, small: 7, large: 8)),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Địa chỉ',
                                       style: TextStyle(
-                                        fontSize: 11,
+                                        fontSize: context.responsiveFontSize(
+                                          verySmall: 10,
+                                          small: 10.5,
+                                          large: 11,
+                                        ),
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.textSecondary,
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
+                                    SizedBox(height: context.responsive(verySmall: 1.5, small: 2, large: 2)),
                                     Text(
                                       activity.location,
-                                      style: const TextStyle(
-                                        fontSize: 13,
+                                      style: TextStyle(
+                                        fontSize: context.responsiveFontSize(
+                                          verySmall: 12,
+                                          small: 12.5,
+                                          large: 13,
+                                        ),
                                         color: AppColors.textPrimary,
                                         height: 1.3,
                                       ),
@@ -209,22 +276,50 @@ class ActivityTimelineItem extends StatelessWidget {
                         ),
                         
                         if (activity.description.isNotEmpty) ...[
-                          const SizedBox(height: 8),
+                          SizedBox(height: context.responsiveSpacing(
+                            verySmall: 6,
+                            small: 7,
+                            large: 8,
+                          )),
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: EdgeInsets.all(context.responsiveSpacing(
+                              verySmall: 6,
+                              small: 7,
+                              large: 8,
+                            )),
                             decoration: BoxDecoration(
                               color: AppColors.background,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                                verySmall: 6,
+                                small: 7,
+                                large: 8,
+                              )),
                             ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.notes_rounded, size: 14, color: AppColors.textSecondary),
-                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.notes_rounded, 
+                                  size: context.responsiveIconSize(
+                                    verySmall: 12,
+                                    small: 13,
+                                    large: 14,
+                                  ), 
+                                  color: AppColors.textSecondary
+                                ),
+                                SizedBox(width: context.responsive(verySmall: 5, small: 5.5, large: 6)),
                                 Expanded(
                                   child: Text(
                                     activity.description,
-                                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
+                                    style: TextStyle(
+                                      fontSize: context.responsiveFontSize(
+                                        verySmall: 11,
+                                        small: 11.5,
+                                        large: 12,
+                                      ),
+                                      color: AppColors.textSecondary,
+                                      height: 1.3
+                                    ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -235,13 +330,13 @@ class ActivityTimelineItem extends StatelessWidget {
                         ],
                         
                         
-                        const SizedBox(height: 8),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 6,
+                          small: 7,
+                          large: 8,
+                        )),
                         Row(
                           children: [
-                            const Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
-                            const SizedBox(width: 4),
-                            Text('~ ${_calculateDuration()}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                            const Spacer(),
                             // Attendance status badges
                             if (activity.attendanceStatus == 'CheckOut') ...[
                               // Show both CheckIn and CheckOut when completed
@@ -254,6 +349,7 @@ class ActivityTimelineItem extends StatelessWidget {
                               _AttendanceStatusChip(status: activity.attendanceStatus),
                               const SizedBox(width: 8),
                             ],
+                            const Spacer(),
                             _TagChip(text: '#${activity.orderIndex}'),
                           ],
                         ),
@@ -266,7 +362,9 @@ class ActivityTimelineItem extends StatelessWidget {
           ),
         ],
       ),
-    )
+      );
+        },
+      ),
     );
   }
 
@@ -392,7 +490,7 @@ class ActivityTimelineItem extends StatelessWidget {
                           context,
                           icon: Icons.logout,
                           title: 'Check-out',
-                          subtitle: 'Hoàn thành hoạt động',
+                          subtitle: 'Kết thúc hoạt động',
                           color: AppColors.primary,
                           onTap: () {
                             Navigator.pop(bottomSheetContext);

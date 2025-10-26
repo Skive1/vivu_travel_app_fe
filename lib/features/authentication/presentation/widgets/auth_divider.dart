@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class AuthDivider extends StatelessWidget {
   const AuthDivider({super.key});
@@ -14,12 +15,22 @@ class AuthDivider extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: context.responsivePadding(
+            horizontal: context.responsive(
+              verySmall: 12.0,
+              small: 14.0,
+              large: 16.0,
+            ),
+          ),
           child: Text(
             'OR',
             style: TextStyle(
-              color: Color(0xFF757575), // Colors.grey[600] equivalent
-              fontSize: 14,
+              color: const Color(0xFF757575), // Colors.grey[600] equivalent
+              fontSize: context.responsiveFontSize(
+                verySmall: 12.0,
+                small: 13.0,
+                large: 14.0,
+              ),
             ),
           ),
         ),

@@ -33,7 +33,7 @@ class ExploreAppBar extends StatelessWidget implements PreferredSizeWidget {
               child: Row(
                 children: [
                   Text(
-                    'Khám phá',
+                    'Blog',
                     style: TextStyle(
                       fontSize: context.responsiveFontSize(
                         verySmall: 20.0,

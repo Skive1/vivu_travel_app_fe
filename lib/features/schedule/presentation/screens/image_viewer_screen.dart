@@ -571,7 +571,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                           )),
                         ),
                         child: Text(
-                          context.isVerySmallScreen || context.isSmallScreen
+                          context.isVerySmallPhone || context.isSmallPhone
                             ? 'Vuốt để xem hình khác • Chạm để ẩn/hiện'
                             : 'Vuốt để xem hình khác • Chạm để ẩn/hiện điều khiển • Double-tap để reset zoom',
                           style: TextStyle(

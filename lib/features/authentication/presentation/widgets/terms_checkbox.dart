@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class TermsCheckbox extends StatelessWidget {
   final bool isChecked;
@@ -15,24 +16,44 @@ class TermsCheckbox extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: 20,
-          height: 20,
+          width: context.responsive(
+            verySmall: 16.0,
+            small: 18.0,
+            large: 20.0,
+          ),
+          height: context.responsive(
+            verySmall: 16.0,
+            small: 18.0,
+            large: 20.0,
+          ),
           child: Checkbox(
             value: isChecked,
             onChanged: onChanged,
             activeColor: const Color(0xFF24BAEC),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                verySmall: 2.0,
+                small: 3.0,
+                large: 4.0,
+              )),
             ),
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: context.responsiveSpacing(
+          verySmall: 6.0,
+          small: 7.0,
+          large: 8.0,
+        )),
         Expanded(
           child: RichText(
-            text: const TextSpan(
+            text: TextSpan(
               style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF666666),
+                fontSize: context.responsiveFontSize(
+                  verySmall: 10.0,
+                  small: 11.0,
+                  large: 12.0,
+                ),
+                color: const Color(0xFF666666),
               ),
               children: [
                 TextSpan(text: 'I agree to the '),

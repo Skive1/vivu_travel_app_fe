@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/widgets/loading_overlay.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../bloc/schedule_bloc.dart';
@@ -350,50 +351,55 @@ class _CheckInModalState extends State<CheckInModal> {
         children: [
           Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 16, small: 18, large: 20)),
             ),
             child: Container(
-              padding: const EdgeInsets.all(24),
+              constraints: BoxConstraints(
+                maxWidth: context.responsiveIconSize(verySmall: 320, small: 360, large: 400),
+                maxHeight: context.responsiveHeightPercentage(verySmall: 0.85, small: 0.9, large: 0.95),
+              ),
+              padding: context.responsivePadding(all: 24),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 16, small: 18, large: 20)),
                 color: Colors.white,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header
-                  Row(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: context.responsivePadding(all: 12),
                         decoration: BoxDecoration(
                           color: _getStatusColor().withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
                         ),
                         child: Icon(
                           _getStatusIcon(),
                           color: _getStatusColor(),
-                          size: 24,
+                          size: context.responsiveIconSize(verySmall: 20, small: 22, large: 24),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: context.responsiveSpacing(verySmall: 12, small: 14, large: 16)),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               _getStatusTitle(),
-                              style: const TextStyle(
-                                fontSize: 20,
+                              style: TextStyle(
+                                fontSize: context.responsiveFontSize(verySmall: 18, small: 19, large: 20),
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: context.responsiveSpacing(verySmall: 3, small: 3.5, large: 4)),
                             Text(
                               _getStatusSubtitle(),
-                              style: const TextStyle(
-                                fontSize: 14,
+                              style: TextStyle(
+                                fontSize: context.responsiveFontSize(verySmall: 12, small: 13, large: 14),
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -402,24 +408,25 @@ class _CheckInModalState extends State<CheckInModal> {
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.close,
                           color: AppColors.textSecondary,
+                          size: context.responsiveIconSize(verySmall: 20, small: 22, large: 24),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: context.responsiveSpacing(verySmall: 20, small: 22, large: 24)),
 
                   // Show completion status or form
                   if (_isAlreadyCompleted()) ...[
                     // Already completed status
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(20),
+                      padding: context.responsivePadding(all: 20),
                       decoration: BoxDecoration(
                         color: _getStatusColor().withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
                         border: Border.all(
                           color: _getStatusColor().withValues(alpha: 0.3),
                           width: 1,
@@ -429,23 +436,23 @@ class _CheckInModalState extends State<CheckInModal> {
                         children: [
                           Icon(
                             Icons.check_circle,
-                            size: 48,
+                            size: context.responsiveIconSize(verySmall: 40, small: 44, large: 48),
                             color: _getStatusColor(),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: context.responsiveSpacing(verySmall: 10, small: 11, large: 12)),
                           Text(
                             _getStatusTitle(),
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: context.responsiveFontSize(verySmall: 16, small: 17, large: 18),
                               fontWeight: FontWeight.w600,
                               color: _getStatusColor(),
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
                           Text(
                             _getStatusSubtitle(),
-                            style: const TextStyle(
-                              fontSize: 14,
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(verySmall: 12, small: 13, large: 14),
                               color: AppColors.textSecondary,
                             ),
                             textAlign: TextAlign.center,
@@ -453,15 +460,15 @@ class _CheckInModalState extends State<CheckInModal> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.responsiveSpacing(verySmall: 20, small: 22, large: 24)),
                   ] else if (_isFullyCompleted()) ...[
                     // Fully completed - both CheckIn and CheckOut
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(20),
+                      padding: context.responsivePadding(all: 20),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
                         border: Border.all(
                           color: AppColors.primary.withValues(alpha: 0.3),
                           width: 1,
@@ -474,65 +481,65 @@ class _CheckInModalState extends State<CheckInModal> {
                             children: [
                               Icon(
                                 Icons.check_circle,
-                                size: 40,
+                                size: context.responsiveIconSize(verySmall: 32, small: 36, large: 40),
                                 color: AppColors.success,
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
                               Icon(
                                 Icons.check_circle,
-                                size: 40,
+                                size: context.responsiveIconSize(verySmall: 32, small: 36, large: 40),
                                 color: AppColors.primary,
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: context.responsiveSpacing(verySmall: 10, small: 11, large: 12)),
                           Text(
                             'Hoàn thành hoạt động',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: context.responsiveFontSize(verySmall: 16, small: 17, large: 18),
                               fontWeight: FontWeight.w600,
                               color: AppColors.primary,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
                           Text(
                             'Bạn đã tham gia và hoàn thành hoạt động này',
-                            style: const TextStyle(
-                              fontSize: 14,
+                            style: TextStyle(
+                              fontSize: context.responsiveFontSize(verySmall: 12, small: 13, large: 14),
                               color: AppColors.textSecondary,
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: context.responsiveSpacing(verySmall: 10, small: 11, large: 12)),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: context.responsivePadding(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: AppColors.success.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 12, small: 14, large: 16)),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Đã Check-in',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: context.responsiveFontSize(verySmall: 10, small: 11, large: 12),
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.success,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: context.responsivePadding(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: AppColors.primary.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 12, small: 14, large: 16)),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Đã Check-out',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: context.responsiveFontSize(verySmall: 10, small: 11, large: 12),
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.primary,
                                   ),
@@ -543,17 +550,17 @@ class _CheckInModalState extends State<CheckInModal> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.responsiveSpacing(verySmall: 20, small: 22, large: 24)),
                   ] else ...[
                     // Image picker
                     GestureDetector(
                       onTap: _showImageSourceDialog,
                       child: Container(
                         width: double.infinity,
-                        height: 200,
+                        height: context.responsiveIconSize(verySmall: 160, small: 180, large: 200),
                         decoration: BoxDecoration(
                           color: AppColors.background,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
                           border: Border.all(
                             color: _selectedImage != null 
                                 ? AppColors.primary 
@@ -599,23 +606,23 @@ class _CheckInModalState extends State<CheckInModal> {
                                 children: [
                                   Icon(
                                     Icons.add_a_photo,
-                                    size: 48,
+                                    size: context.responsiveIconSize(verySmall: 40, small: 44, large: 48),
                                     color: AppColors.textSecondary,
                                   ),
-                                  const SizedBox(height: 8),
+                                  SizedBox(height: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
                                   Text(
                                     'Chạm để chọn ảnh',
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
                                       color: AppColors.textSecondary,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  SizedBox(height: context.responsiveSpacing(verySmall: 3, small: 3.5, large: 4)),
                                   Text(
                                     'Chụp ảnh hoặc chọn từ thư viện',
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: context.responsiveFontSize(verySmall: 10, small: 11, large: 12),
                                       color: AppColors.textSecondary.withValues(alpha: 0.7),
                                     ),
                                   ),
@@ -623,7 +630,7 @@ class _CheckInModalState extends State<CheckInModal> {
                               ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: context.responsiveSpacing(verySmall: 16, small: 18, large: 20)),
 
                     // Description field
                     TextField(
@@ -635,16 +642,16 @@ class _CheckInModalState extends State<CheckInModal> {
                             ? 'Chia sẻ cảm xúc của bạn...'
                             : 'Cảm nhận về hoạt động...',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
                           borderSide: const BorderSide(color: AppColors.border),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 10, small: 11, large: 12)),
                           borderSide: const BorderSide(color: AppColors.primary, width: 2),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: context.responsiveSpacing(verySmall: 20, small: 22, large: 24)),
                   ],
 
                   // Action buttons
@@ -656,71 +663,126 @@ class _CheckInModalState extends State<CheckInModal> {
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _isFullyCompleted() ? AppColors.primary : _getStatusColor(),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: context.responsivePadding(vertical: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 8, small: 9, large: 10)),
                           ),
                           elevation: 0,
                         ),
                         child: Text(
                           _isFullyCompleted() ? 'Hoàn thành' : 'Đóng',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
+                            fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
                           ),
                         ),
                       ),
                     ),
                   ] else ...[
                     // Normal action buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                    ResponsiveUtils.isVerySmallPhone(context) 
+                      ? Column(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: OutlinedButton.styleFrom(
+                                  padding: context.responsivePadding(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 8, small: 9, large: 10)),
+                                  ),
+                                  side: const BorderSide(color: AppColors.border),
+                                ),
+                                child: Text(
+                                  'Hủy',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
+                                  ),
+                                ),
                               ),
-                              side: const BorderSide(color: AppColors.border),
                             ),
-                            child: const Text(
-                              'Hủy',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w500,
+                            SizedBox(height: context.responsiveSpacing(verySmall: 10, small: 12, large: 12)),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _selectedImage != null ? _submitCheckIn : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: widget.isCheckIn 
+                                      ? AppColors.success 
+                                      : AppColors.primary,
+                                  padding: context.responsivePadding(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 8, small: 9, large: 10)),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  widget.isCheckIn ? 'Check-in' : 'Check-out',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: OutlinedButton.styleFrom(
+                                  padding: context.responsivePadding(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 8, small: 9, large: 10)),
+                                  ),
+                                  side: const BorderSide(color: AppColors.border),
+                                ),
+                                child: Text(
+                                  'Hủy',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: context.responsiveSpacing(verySmall: 10, small: 11, large: 12)),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _selectedImage != null ? _submitCheckIn : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: widget.isCheckIn 
+                                      ? AppColors.success 
+                                      : AppColors.primary,
+                                  padding: context.responsivePadding(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 8, small: 9, large: 10)),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  widget.isCheckIn ? 'Check-in' : 'Check-out',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: context.responsiveFontSize(verySmall: 14, small: 15, large: 16),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _selectedImage != null ? _submitCheckIn : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: widget.isCheckIn 
-                                  ? AppColors.success 
-                                  : AppColors.primary,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              widget.isCheckIn ? 'Check-in' : 'Check-out',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
-                ],
+                  ],
+                ),
               ),
             ),
           ),

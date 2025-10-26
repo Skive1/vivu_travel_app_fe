@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class OtpInputField extends StatelessWidget {
   final TextEditingController controller;
@@ -19,11 +20,23 @@ class OtpInputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 48,
-      height: 56,
+      width: context.responsive(
+        verySmall: 40.0,
+        small: 44.0,
+        large: 48.0,
+      ),
+      height: context.responsive(
+        verySmall: 48.0,
+        small: 52.0,
+        large: 56.0,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+          verySmall: 8.0,
+          small: 10.0,
+          large: 12.0,
+        )),
         border: Border.all(
           color: focusNode.hasFocus ? AppColors.primary : Colors.grey[300]!,
           width: focusNode.hasFocus ? 2 : 1,
@@ -35,10 +48,14 @@ class OtpInputField extends StatelessWidget {
         textAlign: TextAlign.center,
         keyboardType: TextInputType.number,
         maxLength: 1,
-        style: const TextStyle(
-          fontSize: 24,
+        style: TextStyle(
+          fontSize: context.responsiveFontSize(
+            verySmall: 20.0,
+            small: 22.0,
+            large: 24.0,
+          ),
           fontWeight: FontWeight.bold,
-          color: Color(0xFF1A1A1A),
+          color: const Color(0xFF1A1A1A),
         ),
         decoration: const InputDecoration(
           border: InputBorder.none,

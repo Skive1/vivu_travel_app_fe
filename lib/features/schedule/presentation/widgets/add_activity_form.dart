@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../data/models/create_activity_request.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../bloc/schedule_bloc.dart';

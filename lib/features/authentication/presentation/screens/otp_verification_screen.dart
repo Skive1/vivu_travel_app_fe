@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../routes.dart';
 import '../../../../core/utils/dialog_utils.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../widgets/auth_container.dart';
 import '../widgets/auth_button.dart';
 import '../bloc/auth_bloc.dart';
@@ -94,10 +95,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           child: AuthContainer(
             child: SafeArea(
               child: Padding(
-                padding: EdgeInsets.only(
-                  left: 24.0,
-                  right: 24.0,
-                  bottom: keyboardHeight + 40,
+                padding: context.responsivePadding(
+                  horizontal: context.responsive(
+                    verySmall: 16.0,
+                    small: 20.0,
+                    large: 24.0,
+                  ),
+                  bottom: keyboardHeight + context.responsiveSpacing(
+                    verySmall: 24.0,
+                    small: 32.0,
+                    large: 40.0,
+                  ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -111,32 +119,68 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           child: GestureDetector(
                             onTap: () => Navigator.of(context).pop(),
                             child: Container(
-                              width: 44,
-                              height: 44,
+                              width: context.responsive(
+                                verySmall: 36.0,
+                                small: 40.0,
+                                large: 44.0,
+                              ),
+                              height: context.responsive(
+                                verySmall: 36.0,
+                                small: 40.0,
+                                large: 44.0,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF5F5F5),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                                  verySmall: 8.0,
+                                  small: 10.0,
+                                  large: 12.0,
+                                )),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.arrow_back_ios_new,
-                                color: Color(0xFF1A1A1A),
-                                size: 20,
+                                color: const Color(0xFF1A1A1A),
+                                size: context.responsiveIconSize(
+                                  verySmall: 16.0,
+                                  small: 18.0,
+                                  large: 20.0,
+                                ),
                               ),
                             ),
                           ),
                         ),
                         
-                        SizedBox(height: screenSize.height * 0.02),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 16.0,
+                          small: 20.0,
+                          large: 24.0,
+                        )),
                         
                         // Vivu Travel Logo
                         Container(
-                          width: 240.0,
-                          height: 240.0,
+                          width: context.responsive(
+                            verySmall: 180.0,
+                            small: 210.0,
+                            large: 240.0,
+                          ),
+                          height: context.responsive(
+                            verySmall: 180.0,
+                            small: 210.0,
+                            large: 240.0,
+                          ),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(120.0),
+                            borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                              verySmall: 80.0,
+                              small: 100.0,
+                              large: 120.0,
+                            )),
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(120.0),
+                            borderRadius: BorderRadius.circular(context.responsiveBorderRadius(
+                              verySmall: 80.0,
+                              small: 100.0,
+                              large: 120.0,
+                            )),
                             child: Image.asset(
                               'assets/images/vivu_logo.png',
                               fit: BoxFit.cover,
@@ -144,28 +188,44 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           ),
                         ),
                         
-                        SizedBox(height: screenSize.height * 0.02),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 16.0,
+                          small: 20.0,
+                          large: 24.0,
+                        )),
                         
                         // Header
                         Column(
                           children: [
-                            const Text(
+                            Text(
                               'OTP Verification',
                               style: TextStyle(
-                                fontSize: 28,
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 22.0,
+                                  small: 25.0,
+                                  large: 28.0,
+                                ),
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A1A1A),
+                                color: const Color(0xFF1A1A1A),
                               ),
                             ),
                             
-                            const SizedBox(height: 12),
+                            SizedBox(height: context.responsiveSpacing(
+                              verySmall: 8.0,
+                              small: 10.0,
+                              large: 12.0,
+                            )),
                             
                             Text(
                               'Please check your email ${widget.email}\nto see the verification code',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF757575),
+                              style: TextStyle(
+                                fontSize: context.responsiveFontSize(
+                                  verySmall: 12.0,
+                                  small: 13.0,
+                                  large: 14.0,
+                                ),
+                                color: const Color(0xFF757575),
                                 height: 1.5,
                               ),
                             ),
@@ -178,19 +238,27 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     Column(
                       children: [
                         // OTP Code Label
-                        const Align(
+                        Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
                             'OTP Code',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: context.responsiveFontSize(
+                                verySmall: 14.0,
+                                small: 15.0,
+                                large: 16.0,
+                              ),
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1A1A),
+                              color: const Color(0xFF1A1A1A),
                             ),
                           ),
                         ),
                         
-                        const SizedBox(height: 16),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 12.0,
+                          small: 14.0,
+                          large: 16.0,
+                        )),
                         
                         // OTP Input Fields
                         StatefulBuilder(
@@ -216,7 +284,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           },
                         ),
                         
-                        SizedBox(height: screenSize.height * 0.03),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 20.0,
+                          small: 24.0,
+                          large: 28.0,
+                        )),
                         
                         // Verify Button
                         BlocBuilder<AuthBloc, AuthState>(
@@ -234,7 +306,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           },
                         ),
                         
-                        const SizedBox(height: 16),
+                        SizedBox(height: context.responsiveSpacing(
+                          verySmall: 12.0,
+                          small: 14.0,
+                          large: 16.0,
+                        )),
                         
                         // Resend Code Section
                         StatefulBuilder(
@@ -242,11 +318,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             return Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text(
+                                Text(
                                   'Resend code to ',
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xFF757575),
+                                    fontSize: context.responsiveFontSize(
+                                      verySmall: 12.0,
+                                      small: 13.0,
+                                      large: 14.0,
+                                    ),
+                                    color: const Color(0xFF757575),
                                   ),
                                 ),
                                 if (_otpController.canResend)
@@ -255,11 +335,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                       _otpController.handleResendRegisterOtp(context, widget.email);
                                       setState(() {});
                                     },
-                                    child: const Text(
+                                    child: Text(
                                       'Resend',
                                       style: TextStyle(
-                                        fontSize: 14,
-                                        color: Color(0xFF24BAEC),
+                                        fontSize: context.responsiveFontSize(
+                                          verySmall: 12.0,
+                                          small: 13.0,
+                                          large: 14.0,
+                                        ),
+                                        color: const Color(0xFF24BAEC),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -267,9 +351,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 else
                                   Text(
                                     '${_otpController.resendCountdown.toString().padLeft(2, '0')}s',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0xFF757575),
+                                    style: TextStyle(
+                                      fontSize: context.responsiveFontSize(
+                                        verySmall: 12.0,
+                                        small: 13.0,
+                                        large: 14.0,
+                                      ),
+                                      color: const Color(0xFF757575),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),

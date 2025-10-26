@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../domain/entities/activity_data_entity.dart';
 
 class AddActivitiesModal extends StatelessWidget {
@@ -18,27 +19,28 @@ class AddActivitiesModal extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 20, small: 22, large: 24)),
       ),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.8,
+          maxWidth: context.responsiveIconSize(verySmall: 320, small: 360, large: 400),
+          maxHeight: context.responsiveHeightPercentage(verySmall: 0.8, small: 0.85, large: 0.9),
         ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 20, small: 22, large: 24)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 20,
+              blurRadius: context.responsiveElevation(verySmall: 16, small: 18, large: 20),
               spreadRadius: 0,
               offset: const Offset(0, 10),
             ),
             BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.1),
-              blurRadius: 40,
+              blurRadius: context.responsiveElevation(verySmall: 32, small: 36, large: 40),
               spreadRadius: 0,
               offset: const Offset(0, 20),
             ),
@@ -50,7 +52,7 @@ class AddActivitiesModal extends StatelessWidget {
             // Header with gradient
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: context.responsivePadding(all: 24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -60,9 +62,9 @@ class AddActivitiesModal extends StatelessWidget {
                     Colors.green.withValues(alpha: 0.8),
                   ],
                 ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(context.responsiveBorderRadius(verySmall: 20, small: 22, large: 24)),
+                  topRight: Radius.circular(context.responsiveBorderRadius(verySmall: 20, small: 22, large: 24)),
                 ),
               ),
               child: Column(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class SocialAuthButton extends StatefulWidget {
   final Widget icon;
@@ -107,8 +108,16 @@ class _SocialAuthButtonState extends State<SocialAuthButton>
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Container(
-              width: 60,
-              height: 60,
+              width: context.responsive(
+                verySmall: 48.0,
+                small: 54.0,
+                large: 60.0,
+              ),
+              height: context.responsive(
+                verySmall: 48.0,
+                small: 54.0,
+                large: 60.0,
+              ),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
@@ -124,14 +133,26 @@ class _SocialAuthButtonState extends State<SocialAuthButton>
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(context.responsive(
+                    verySmall: 24.0,
+                    small: 27.0,
+                    large: 30.0,
+                  )),
                   onTap: widget.isLoading ? null : _handleTap,
                   splashColor: Colors.grey.withValues(alpha: 0.1),
                   highlightColor: Colors.grey.withValues(alpha: 0.05),
                   child: Center(
                     child: SizedBox(
-                      width: 44,
-                      height: 44,
+                      width: context.responsive(
+                        verySmall: 36.0,
+                        small: 40.0,
+                        large: 44.0,
+                      ),
+                      height: context.responsive(
+                        verySmall: 36.0,
+                        small: 40.0,
+                        large: 44.0,
+                      ),
                       child: widget.isLoading
                           ? CircularProgressIndicator(
                               strokeWidth: 2.0,

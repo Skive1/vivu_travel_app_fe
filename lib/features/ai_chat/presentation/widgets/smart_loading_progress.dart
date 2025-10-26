@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/responsive_utils.dart';
 
 class SmartLoadingProgress extends StatefulWidget {
   final String title;
@@ -117,14 +118,14 @@ class _SmartLoadingProgressState extends State<SmartLoadingProgress>
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: context.responsivePadding(all: 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(context.responsiveBorderRadius(verySmall: 16, small: 18, large: 20)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
+            blurRadius: context.responsiveElevation(verySmall: 16, small: 18, large: 20),
             offset: const Offset(0, 10),
           ),
         ],
@@ -137,8 +138,8 @@ class _SmartLoadingProgressState extends State<SmartLoadingProgress>
             animation: _pulseAnimation,
             builder: (context, child) {
               return Container(
-                width: 80 * _pulseAnimation.value,
-                height: 80 * _pulseAnimation.value,
+                width: context.responsiveIconSize(verySmall: 70, small: 75, large: 80) * _pulseAnimation.value,
+                height: context.responsiveIconSize(verySmall: 70, small: 75, large: 80) * _pulseAnimation.value,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -152,7 +153,7 @@ class _SmartLoadingProgressState extends State<SmartLoadingProgress>
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 20,
+                      blurRadius: context.responsiveElevation(verySmall: 16, small: 18, large: 20),
                       spreadRadius: 5,
                     ),
                   ],
@@ -160,13 +161,13 @@ class _SmartLoadingProgressState extends State<SmartLoadingProgress>
                 child: Icon(
                   Icons.add_task,
                   color: Colors.white,
-                  size: 40 * _pulseAnimation.value,
+                  size: context.responsiveIconSize(verySmall: 35, small: 37, large: 40) * _pulseAnimation.value,
                 ),
               );
             },
           ),
           
-          const SizedBox(height: 24),
+          SizedBox(height: context.responsiveSpacing(verySmall: 20, small: 22, large: 24)),
           
           // Title
           Text(
@@ -174,22 +175,24 @@ class _SmartLoadingProgressState extends State<SmartLoadingProgress>
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
+              fontSize: context.responsiveFontSize(verySmall: 18, small: 20, large: 22),
             ),
             textAlign: TextAlign.center,
           ),
           
-          const SizedBox(height: 8),
+          SizedBox(height: context.responsiveSpacing(verySmall: 6, small: 7, large: 8)),
           
           // Subtitle
           Text(
             widget.subtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppColors.textSecondary,
+              fontSize: context.responsiveFontSize(verySmall: 13, small: 14, large: 15),
             ),
             textAlign: TextAlign.center,
           ),
           
-          const SizedBox(height: 32),
+          SizedBox(height: context.responsiveSpacing(verySmall: 28, small: 30, large: 32)),
           
           // Progress bar
           Container(

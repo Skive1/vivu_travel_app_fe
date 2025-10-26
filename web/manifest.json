@@ -1,11 +1,11 @@
 {
-    "name": "vivu_travel",
-    "short_name": "vivu_travel",
+    "name": "Vivu Travel",
+    "short_name": "Vivu Travel",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#2196F3",
-    "description": "A new Flutter project.",
+    "description": "Vivu Travel - A travel planning mobile app",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

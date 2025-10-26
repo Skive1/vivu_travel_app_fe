@@ -271,7 +271,7 @@ class _ScheduleListContentState extends State<ScheduleListContent>
               TextField(
                 onChanged: _onSearchChanged,
                 decoration: InputDecoration(
-                  hintText: context.isVerySmallScreen || context.isSmallScreen 
+                  hintText: context.isVerySmallPhone || context.isSmallPhone 
                     ? 'Tìm kiếm...' 
                     : 'Tìm kiếm theo tiêu đề, điểm đến...',
                   prefixIcon: Icon(
