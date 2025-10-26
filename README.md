@@ -449,4 +449,4 @@ This software is confidential and proprietary. Unauthorized copying, distributio
 
 **Developed with ❤️ by the Vivu Travel Engineering Team**
 
-*Last Updated: December 2024*
+*Last Updated: October 2025*
